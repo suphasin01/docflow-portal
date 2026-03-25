@@ -12,7 +12,9 @@ import { getFirebaseDb } from "@/lib/firebase/client";
 import { useCompanyStore } from "@/stores/company-store";
 import type {
   BusinessDocument,
+  CatalogItem,
   Company,
+  Contact,
   Customer,
   Payment,
   Product,
@@ -106,6 +108,47 @@ export function useProducts(companyId: string | null) {
   return useCompanyCollection<Product & { id: string }>(companyId, "products");
 }
 
+/** สินค้า/บริการ (catalog model) — กรอง isArchived = false และเรียงตาม codeNumber */
+export function useCatalogItems(companyId: string | null) {
+  const [data, setData] = useState<(CatalogItem & { id: string })[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!companyId) {
+      setData([]);
+      setLoading(false);
+      return;
+    }
+    const db = getFirebaseDb();
+    if (!db) {
+      setLoading(false);
+      return;
+    }
+
+    const q = query(
+      collection(db, "products"),
+      where("companyId", "==", companyId),
+      where("isArchived", "==", false)
+    );
+
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const rows = snap.docs
+          .map((d) => ({ id: d.id, ...(d.data() as CatalogItem) }))
+          .sort((a, b) => (a.codeNumber ?? 0) - (b.codeNumber ?? 0));
+        setData(rows);
+        setLoading(false);
+      },
+      () => setLoading(false)
+    );
+
+    return () => unsub();
+  }, [companyId]);
+
+  return { data, loading };
+}
+
 export function useCustomers(companyId: string | null) {
   return useCompanyCollection<Customer & { id: string }>(
     companyId,
@@ -115,6 +158,46 @@ export function useCustomers(companyId: string | null) {
 
 export function useVendors(companyId: string | null) {
   return useCompanyCollection<Vendor & { id: string }>(companyId, "vendors");
+}
+
+export function useContacts(companyId: string | null) {
+  const [data, setData] = useState<(Contact & { id: string })[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!companyId) {
+      setData([]);
+      setLoading(false);
+      return;
+    }
+    const db = getFirebaseDb();
+    if (!db) {
+      setLoading(false);
+      return;
+    }
+
+    const q = query(
+      collection(db, "contacts"),
+      where("companyId", "==", companyId),
+      where("isArchived", "==", false)
+    );
+
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const rows = snap.docs
+          .map((d) => ({ id: d.id, ...(d.data() as Contact) }))
+          .sort((a, b) => a.codeNumber - b.codeNumber);
+        setData(rows);
+        setLoading(false);
+      },
+      () => setLoading(false)
+    );
+
+    return () => unsub();
+  }, [companyId]);
+
+  return { data, loading };
 }
 
 export function usePayments(companyId: string | null) {

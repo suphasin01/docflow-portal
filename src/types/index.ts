@@ -34,6 +34,31 @@ export type PaymentStatus =
 
 export type VatType = "inclusive" | "exclusive" | "zero" | "exempt";
 
+/** ประเภทรายการ สินค้า หรือ บริการ */
+export type ItemType = "product" | "service";
+
+/** ประเภท VAT สำหรับ catalog */
+export type CatalogVatType = "vat3" | "vat7" | "custom";
+
+/** สินค้า/บริการ (catalog model) */
+export interface CatalogItem extends FirestoreTimestamps {
+  companyId: string;
+  /** รหัสสินค้า เช่น P0001 */
+  code: string;
+  /** ลำดับสำหรับ auto-increment */
+  codeNumber: number;
+  itemType: ItemType;
+  name: string;
+  description?: string;
+  unit?: string;
+  salePrice: number;
+  costPrice?: number;
+  vatType: CatalogVatType;
+  /** อัตรา VAT จริง (3, 7, หรือค่ากำหนดเอง) */
+  customVatRate?: number;
+  isArchived: boolean;
+}
+
 export interface UserProfile extends FirestoreTimestamps {
   companyId: string;
   email: string | null;
@@ -83,6 +108,30 @@ export interface Vendor extends BaseEntity {
   address?: string;
   notes?: string;
   active: boolean;
+}
+
+export type PartnerType = "customer" | "vendor";
+export type ContactOfficeType = "none" | "hq" | "branch";
+
+/** ลูกค้า/ผู้ขาย (unified contact model) */
+export interface Contact extends FirestoreTimestamps {
+  companyId: string;
+  partnerType: PartnerType;
+  /** รหัส เช่น C0001 */
+  code: string;
+  /** ลำดับตัวเลขสำหรับ auto-increment */
+  codeNumber: number;
+  nameTh: string;
+  nameEn?: string;
+  taxId?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  officeType: ContactOfficeType;
+  branchName?: string;
+  branchCode?: string;
+  logoBase64?: string;
+  isArchived: boolean;
 }
 
 export interface Product extends BaseEntity {

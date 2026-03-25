@@ -106,5 +106,17 @@ service cloud.firestore {
         && ownsCompany(resource.data.companyId);
       allow delete: if false;
     }
+
+    // ── Contacts (ลูกค้า/ผู้ขาย unified) ──
+    match /contacts/{docId} {
+      allow read: if isAllowedEmail()
+        && ownsCompany(resource.data.companyId);
+      allow create: if isAllowedEmail()
+        && ownsCompany(request.resource.data.companyId)
+        && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isAllowedEmail()
+        && ownsCompany(resource.data.companyId);
+      allow delete: if false;
+    }
   }
 }
