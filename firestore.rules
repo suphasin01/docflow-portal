@@ -1,0 +1,110 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // อีเมลที่อนุญาตเข้าถึงระบบ
+    function isAllowedEmail() {
+      return request.auth != null
+        && request.auth.token.email == "saksitpz1011@gmail.com"
+        && request.auth.token.email_verified == true;
+    }
+
+    // user เป็นเจ้าของ company นี้หรือไม่ (multi-company model)
+    function ownsCompany(companyId) {
+      return isAllowedEmail()
+        && get(/databases/$(database)/documents/companies/$(companyId)).data.ownerId == request.auth.uid;
+    }
+
+    // ── Users ──
+    match /users/{userId} {
+      allow read: if isAllowedEmail() && request.auth.uid == userId;
+      allow write: if isAllowedEmail() && request.auth.uid == userId;
+    }
+
+    // ── Companies (multi-company per user) ──
+    match /companies/{companyId} {
+      // อ่านได้ถ้าเป็นเจ้าของ
+      allow read: if isAllowedEmail()
+        && resource.data.ownerId == request.auth.uid;
+
+      // สร้างได้ถ้า login แล้วและ ownerId ตรงกับ uid
+      allow create: if isAllowedEmail()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.createdBy == request.auth.uid;
+
+      // แก้ไขได้ถ้าเป็นเจ้าของ
+      allow update: if isAllowedEmail()
+        && resource.data.ownerId == request.auth.uid;
+
+      allow delete: if false;
+    }
+
+    // ── Settings (per company) ──
+    match /settings/{companyId} {
+      allow read, write: if ownsCompany(companyId);
+    }
+
+    // ── Documents ──
+    match /documents/{docId} {
+      allow read: if isAllowedEmail()
+        && ownsCompany(resource.data.companyId);
+      allow create: if isAllowedEmail()
+        && request.resource.data.keys().hasAll(['companyId','createdAt','updatedAt','createdBy'])
+        && ownsCompany(request.resource.data.companyId)
+        && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isAllowedEmail()
+        && ownsCompany(resource.data.companyId);
+      allow delete: if isAllowedEmail()
+        && ownsCompany(resource.data.companyId);
+    }
+
+    // ── Products ──
+    match /products/{docId} {
+      allow read: if isAllowedEmail()
+        && ownsCompany(resource.data.companyId);
+      allow create: if isAllowedEmail()
+        && ownsCompany(request.resource.data.companyId)
+        && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isAllowedEmail()
+        && ownsCompany(resource.data.companyId);
+      allow delete: if false;
+    }
+
+    // ── Customers ──
+    match /customers/{docId} {
+      allow read: if isAllowedEmail()
+        && ownsCompany(resource.data.companyId);
+      allow create: if isAllowedEmail()
+        && ownsCompany(request.resource.data.companyId)
+        && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isAllowedEmail()
+        && ownsCompany(resource.data.companyId);
+      allow delete: if false;
+    }
+
+    // ── Vendors ──
+    match /vendors/{docId} {
+      allow read: if isAllowedEmail()
+        && ownsCompany(resource.data.companyId);
+      allow create: if isAllowedEmail()
+        && ownsCompany(request.resource.data.companyId)
+        && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isAllowedEmail()
+        && ownsCompany(resource.data.companyId);
+      allow delete: if false;
+    }
+
+    // ── Payments ──
+    match /payments/{docId} {
+      allow read: if isAllowedEmail()
+        && ownsCompany(resource.data.companyId);
+      allow create: if isAllowedEmail()
+        && ownsCompany(request.resource.data.companyId)
+        && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isAllowedEmail()
+        && ownsCompany(resource.data.companyId);
+      allow delete: if false;
+    }
+  }
+}
