@@ -23,7 +23,7 @@ type CompanyWithId = Company & { id: string };
  * 4. คืน companies ทั้งหมด
  */
 export async function bootstrapUserCompanies(
-  user: User
+  user: User,
 ): Promise<CompanyWithId[]> {
   const db = getFirebaseDb();
   if (!db) throw new Error("Firestore ยังไม่พร้อม");
@@ -38,7 +38,7 @@ export async function bootstrapUserCompanies(
       photoURL: user.photoURL,
       updatedAt: serverTimestamp(),
     },
-    { merge: true }
+    { merge: true },
   );
 
   // 2. โหลด companies ที่ user เป็นเจ้าของ
@@ -46,7 +46,7 @@ export async function bootstrapUserCompanies(
   const q = query(
     collection(db, "companies"),
     where("ownerId", "==", user.uid),
-    where("archived", "==", false)
+    where("archived", "==", false),
   );
   const snap = await getDocs(q);
   let companies: CompanyWithId[] = snap.docs.map((d) => ({
@@ -86,6 +86,7 @@ export async function bootstrapUserCompanies(
     try {
       await setDoc(doc(db, "settings", companyRef.id), {
         companyId: companyRef.id,
+        // legacy fields
         currency: "THB",
         vatRateDefault: 7,
         docNumberPrefixes: {
@@ -95,6 +96,14 @@ export async function bootstrapUserCompanies(
           purchase_order: "PO",
           billing_note: "BN",
         },
+        // document settings
+        defaultVatRate: 7,
+        defaultWithholdingTaxRate: 3,
+        documentNumberDateFormat: "TH_YYMM",
+        documentRunningDigits: 4,
+        documentNumberSeparator: "-",
+        deletedNumberBehavior: "continue_max",
+        documentDisplayDateFormat: "TH_SHORT_BE",
         createdBy: user.uid,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -104,7 +113,9 @@ export async function bootstrapUserCompanies(
       console.warn("สร้าง settings ไม่สำเร็จ:", settingsErr);
     }
 
-    companies = [{ id: companyRef.id, ...(defaultCompanyData as unknown as Company) }];
+    companies = [
+      { id: companyRef.id, ...(defaultCompanyData as unknown as Company) },
+    ];
   }
 
   return companies;

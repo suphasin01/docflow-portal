@@ -26,11 +26,7 @@ export type DocumentStatus =
   | "overdue"
   | "cancelled";
 
-export type PaymentStatus =
-  | "unpaid"
-  | "partial"
-  | "paid"
-  | "overdue";
+export type PaymentStatus = "unpaid" | "partial" | "paid" | "overdue";
 
 export type VatType = "inclusive" | "exclusive" | "zero" | "exempt";
 
@@ -193,4 +189,35 @@ export interface CompanySettings extends BaseEntity {
   currency: string;
   vatRateDefault: number;
   docNumberPrefixes: Partial<Record<DocumentType, string>>;
+}
+
+export type DocumentNumberDateFormat =
+  | "TH_YYMM"
+  | "TH_YY"
+  | "TH_YYYY"
+  | "AD_YYMM"
+  | "AD_YYYY";
+
+export type DeletedNumberBehavior = "fill_gap" | "continue_max";
+
+export type DocumentDisplayDateFormat =
+  | "TH_SHORT_BE"
+  | "TH_LONG_BE"
+  | "TH_NUMERIC_BE"
+  | "EN_SHORT_AD"
+  | "EN_LONG_AD"
+  | "EN_NUMERIC_AD"
+  | "ISO_8601";
+
+/** ตั้งค่าเอกสาร ต่อบริษัท — เก็บใน /settings/{companyId} */
+export interface DocumentSettings {
+  companyId: string;
+  defaultVatRate: number;
+  defaultWithholdingTaxRate: number;
+  documentNumberDateFormat: DocumentNumberDateFormat;
+  documentRunningDigits: number;
+  documentNumberSeparator: string;
+  deletedNumberBehavior: DeletedNumberBehavior;
+  documentDisplayDateFormat: DocumentDisplayDateFormat;
+  updatedAt?: unknown;
 }
