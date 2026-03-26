@@ -1,0 +1,79 @@
+export type FlowType = "income" | "expense";
+export type DocumentGroup = "sales" | "finance" | "purchase";
+export type ExtDocType = DocumentGroup extends never
+  ? never
+  : | "quotation" | "sales_order" | "invoice" | "billing_note" | "tax_invoice"
+    | "receipt" | "delivery_order" | "credit_note"
+    | "purchase_order" | "purchase_request" | "payment_voucher";
+
+export type PartnerRole = "customer" | "vendor";
+export type CompanyNameSize = "S" | "M" | "L" | "XL";
+
+interface DocTypeConfig {
+  label: string;
+  prefix: string;
+  group: DocumentGroup;
+  flow: FlowType;
+  /** null = ไม่มี extra date field */
+  extraDateLabel: "ใช้ได้ถึง" | "วันครบกำหนด" | null;
+  partnerRole: PartnerRole;
+}
+
+export const DOC_TYPE_CONFIG: Record<ExtDocType, DocTypeConfig> = {
+  // income — sales
+  quotation:      { label: "ใบเสนอราคา",    prefix: "QUO", group: "sales",    flow: "income",  extraDateLabel: "ใช้ได้ถึง",    partnerRole: "customer" },
+  sales_order:    { label: "ใบสั่งขาย",      prefix: "SO",  group: "sales",    flow: "income",  extraDateLabel: "วันครบกำหนด", partnerRole: "customer" },
+  invoice:        { label: "ใบแจ้งหนี้",     prefix: "INV", group: "sales",    flow: "income",  extraDateLabel: "วันครบกำหนด", partnerRole: "customer" },
+  billing_note:   { label: "ใบวางบิล",       prefix: "BN",  group: "sales",    flow: "income",  extraDateLabel: "วันครบกำหนด", partnerRole: "customer" },
+  tax_invoice:    { label: "ใบกำกับภาษี",    prefix: "TAX", group: "sales",    flow: "income",  extraDateLabel: null,           partnerRole: "customer" },
+  receipt:        { label: "ใบเสร็จรับเงิน", prefix: "RCP", group: "sales",    flow: "income",  extraDateLabel: null,           partnerRole: "customer" },
+  delivery_order: { label: "ใบส่งของ",       prefix: "DO",  group: "sales",    flow: "income",  extraDateLabel: "วันครบกำหนด", partnerRole: "customer" },
+  // income — finance
+  credit_note:    { label: "ใบลดหนี้",       prefix: "CN",  group: "finance",  flow: "income",  extraDateLabel: null,           partnerRole: "customer" },
+  // expense — purchase
+  purchase_order:   { label: "ใบสั่งซื้อ",   prefix: "PO",  group: "purchase", flow: "expense", extraDateLabel: "ใช้ได้ถึง",    partnerRole: "vendor" },
+  purchase_request: { label: "ใบขอซื้อ",     prefix: "PR",  group: "purchase", flow: "expense", extraDateLabel: "วันครบกำหนด", partnerRole: "vendor" },
+  // expense — finance
+  payment_voucher:  { label: "ใบสำคัญจ่าย", prefix: "PV",  group: "finance",  flow: "expense", extraDateLabel: null,           partnerRole: "vendor" },
+};
+
+export const ALL_EXT_DOC_TYPES = Object.keys(DOC_TYPE_CONFIG) as ExtDocType[];
+
+export function getDocTypesByFlowAndGroup(
+  flow: FlowType,
+  group: DocumentGroup
+): ExtDocType[] {
+  return ALL_EXT_DOC_TYPES.filter(
+    (k) => DOC_TYPE_CONFIG[k].flow === flow && DOC_TYPE_CONFIG[k].group === group
+  );
+}
+
+export function getDefaultDocGroupForFlow(flow: FlowType): DocumentGroup {
+  return flow === "income" ? "sales" : "purchase";
+}
+
+export function getDefaultDocTypeForFlowGroup(
+  flow: FlowType,
+  group: DocumentGroup
+): ExtDocType {
+  return getDocTypesByFlowAndGroup(flow, group)[0] ?? "quotation";
+}
+
+export function getGroupsForFlow(
+  flow: FlowType
+): { value: DocumentGroup; label: string }[] {
+  if (flow === "income") {
+    return [
+      { value: "sales",   label: "เอกสารขาย" },
+      { value: "finance", label: "เอกสารการเงิน" },
+    ];
+  }
+  return [
+    { value: "purchase", label: "เอกสารจัดซื้อ" },
+    { value: "finance",  label: "เอกสารการเงิน" },
+  ];
+}
+
+export const COMPANY_NAME_FONT_SIZE: Record<CompanyNameSize, number> = {
+  S: 14, M: 16, L: 18, XL: 20,
+};

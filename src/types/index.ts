@@ -13,10 +13,16 @@ export interface BaseEntity extends FirestoreTimestamps {
 
 export type DocumentType =
   | "quotation"
+  | "sales_order"
   | "invoice"
+  | "billing_note"
+  | "tax_invoice"
   | "receipt"
+  | "delivery_order"
+  | "credit_note"
   | "purchase_order"
-  | "billing_note";
+  | "purchase_request"
+  | "payment_voucher";
 
 export type DocumentStatus =
   | "draft"
