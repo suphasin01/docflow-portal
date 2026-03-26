@@ -129,7 +129,6 @@ interface ContactFormModalProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   editing: ContactRow | null;
-  nextCode: string;
   onSuccess: () => void;
   companyId: string;
   userId: string;
@@ -140,7 +139,6 @@ function ContactFormModal({
   open,
   onOpenChange,
   editing,
-  nextCode,
   onSuccess,
   companyId,
   userId,
@@ -226,6 +224,11 @@ function ContactFormModal({
     [setValue],
   );
 
+  // คำนวณรหัสแบบ real-time ตาม partnerType ที่เลือก
+  const computedCode = editing
+    ? editing.code
+    : `${partnerType === "vendor" ? "V" : "C"}${String(nextCodeNumber).padStart(4, "0")}`;
+
   const onSubmit = async (values: ContactFormValues) => {
     setSaving(true);
     try {
@@ -236,7 +239,7 @@ function ContactFormModal({
         await addContact({
           companyId,
           userId,
-          code: nextCode,
+          code: computedCode,
           codeNumber: nextCodeNumber,
           data: values,
         });
@@ -357,7 +360,7 @@ function ContactFormModal({
               <Label className="text-sm font-medium">รหัส</Label>
               <Input
                 className="rounded-xl bg-muted/50 font-mono"
-                value={editing ? editing.code : nextCode}
+                value={computedCode}
                 readOnly
                 disabled
               />
@@ -617,15 +620,14 @@ export function ContactsPage() {
   const [editing, setEditing] = useState<ContactRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ContactRow | null>(null);
 
-  const [nextCode, setNextCode] = useState("C0001");
   const [nextCodeNumber, setNextCodeNumber] = useState(1);
 
-  // โหลด nextCode ทุกครั้งที่เปิด modal (create เท่านั้น)
+  // โหลด nextCodeNumber ทุกครั้งที่เปิด modal (create เท่านั้น)
+  // prefix C/V คำนวณใน modal แบบ real-time ตาม partnerType ที่เลือก
   const openCreateModal = useCallback(async () => {
     if (!companyId) return;
     try {
-      const { code, codeNumber } = await getNextContactCode(companyId);
-      setNextCode(code);
+      const { codeNumber } = await getNextContactCode(companyId);
       setNextCodeNumber(codeNumber);
     } catch {
       // use default
@@ -859,7 +861,6 @@ export function ContactsPage() {
           open={modalOpen}
           onOpenChange={setModalOpen}
           editing={editing}
-          nextCode={nextCode}
           nextCodeNumber={nextCodeNumber}
           onSuccess={() => {}}
           companyId={companyId}

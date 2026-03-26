@@ -15,9 +15,14 @@ import {
 import { getFirebaseDb } from "./client";
 import type { ContactFormValues } from "@/lib/schemas/contact";
 
-/** คำนวณรหัสถัดไปของ contact ในบริษัทนั้น */
+/**
+ * คำนวณรหัสถัดไปของ contact ในบริษัทนั้น
+ * - running number ต่อเนื่องกันทั้ง customer และ vendor (ใช้ max ร่วมกัน)
+ * - prefix: C = ลูกค้า, V = ผู้ขาย
+ */
 export async function getNextContactCode(
-  companyId: string
+  companyId: string,
+  partnerType: "customer" | "vendor" = "customer",
 ): Promise<{ code: string; codeNumber: number }> {
   const db = getFirebaseDb();
   if (!db) throw new Error("Firestore ยังไม่พร้อม");
@@ -26,13 +31,15 @@ export async function getNextContactCode(
     collection(db, "contacts"),
     where("companyId", "==", companyId),
     orderBy("codeNumber", "desc"),
-    limit(1)
+    limit(1),
   );
   const snap = await getDocs(q);
-  const latestNum = (snap.docs[0]?.data()?.codeNumber as number | undefined) ?? 0;
+  const latestNum =
+    (snap.docs[0]?.data()?.codeNumber as number | undefined) ?? 0;
   const next = latestNum + 1;
+  const prefix = partnerType === "vendor" ? "V" : "C";
   return {
-    code: `C${String(next).padStart(4, "0")}`,
+    code: `${prefix}${String(next).padStart(4, "0")}`,
     codeNumber: next,
   };
 }
@@ -62,8 +69,10 @@ export async function addContact(params: {
     email: data.email?.trim() ?? "",
     address: data.address?.trim() ?? "",
     officeType: data.officeType,
-    branchName: data.officeType === "branch" ? (data.branchName?.trim() ?? "") : "",
-    branchCode: data.officeType === "branch" ? (data.branchCode?.trim() ?? "") : "",
+    branchName:
+      data.officeType === "branch" ? (data.branchName?.trim() ?? "") : "",
+    branchCode:
+      data.officeType === "branch" ? (data.branchCode?.trim() ?? "") : "",
     logoBase64: data.logoBase64?.trim() ?? "",
     isArchived: false,
     createdBy: userId,
@@ -92,8 +101,10 @@ export async function updateContact(params: {
     email: data.email?.trim() ?? "",
     address: data.address?.trim() ?? "",
     officeType: data.officeType,
-    branchName: data.officeType === "branch" ? (data.branchName?.trim() ?? "") : "",
-    branchCode: data.officeType === "branch" ? (data.branchCode?.trim() ?? "") : "",
+    branchName:
+      data.officeType === "branch" ? (data.branchName?.trim() ?? "") : "",
+    branchCode:
+      data.officeType === "branch" ? (data.branchCode?.trim() ?? "") : "",
     logoBase64: data.logoBase64?.trim() ?? "",
     updatedAt: serverTimestamp(),
   });
