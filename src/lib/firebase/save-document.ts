@@ -35,10 +35,16 @@ export async function saveBusinessDocument(input: SaveDraftInput) {
 
   const prefixMap: Record<DocumentType, string> = {
     quotation: "QT",
+    sales_order: "SO",
     invoice: "INV",
-    receipt: "RCP",
-    purchase_order: "PO",
     billing_note: "BN",
+    tax_invoice: "TI",
+    receipt: "RCP",
+    delivery_order: "DO",
+    credit_note: "CN",
+    purchase_order: "PO",
+    purchase_request: "PR",
+    payment_voucher: "PV",
   };
   const docNumber = `${prefixMap[input.type]}-${new Date().getFullYear()}-${docRef.id.slice(0, 6).toUpperCase()}`;
 

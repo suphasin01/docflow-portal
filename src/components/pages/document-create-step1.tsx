@@ -343,7 +343,11 @@ function extractPartnerSnapshot(
 // Main Page
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function DocumentCreateStep1() {
+export function DocumentCreateStep1({
+  onNext: onNextCallback,
+}: {
+  onNext?: (values: Step1FormValues) => void;
+} = {}) {
   const activeCompanyId = useCompanyStore((s) => s.activeCompanyId);
   const companies = useCompanyStore((s) => s.companies);
   const { data: contacts, loading: contactsLoading } =
@@ -512,8 +516,7 @@ export function DocumentCreateStep1() {
 
   function onNext(values: Step1FormValues) {
     if (docNumError) return;
-    console.log("Step 1 values:", values);
-    // TODO: navigate to Step 2
+    onNextCallback?.(values);
   }
 
   const partnerSectionTitle =
