@@ -6,8 +6,10 @@ import { cn } from "@/lib/utils";
 import { AppHeader } from "@/components/layout/app-header";
 import { DocumentCreateStep1 } from "./document-create-step1";
 import { DocumentCreateStep2 } from "./document-create-step2";
+import { DocumentCreateStep3 } from "./document-create-step3";
 import type { Step1FormValues } from "@/lib/schemas/document-draft";
 import type { Step2FormValues } from "@/lib/schemas/document-step2";
+import type { Step3FormValues } from "@/lib/schemas/document-step3";
 
 const STEPS = [
   { n: 1, label: "ส่วนหัว" },
@@ -56,8 +58,9 @@ function StepperHeader({ current }: { current: number }) {
 export function DocumentCreatePage() {
   const [step, setStep] = useState(1);
   const [step1Data, setStep1Data] = useState<Step1FormValues | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [step2Data, setStep2Data] = useState<Step2FormValues | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [step3Data, setStep3Data] = useState<Step3FormValues | null>(null);
 
   return (
     <div className="min-h-screen">
@@ -85,9 +88,16 @@ export function DocumentCreatePage() {
       )}
 
       {step === 3 && (
-        <div className="flex items-center justify-center py-24 text-muted-foreground text-sm">
-          ส่วนเสริม (Step 3) — กำลังพัฒนา
-        </div>
+        <DocumentCreateStep3
+          step1Data={step1Data}
+          step2Data={step2Data}
+          onBack={() => setStep(2)}
+          onSave={(values) => {
+            setStep3Data(values);
+            // TODO: persist full draft to Firestore
+            console.log("Draft complete", { step1Data, step2Data, values });
+          }}
+        />
       )}
     </div>
   );
