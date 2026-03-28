@@ -29,7 +29,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-
 import { useCompanyStore } from "@/stores/company-store";
 import { useContacts } from "@/hooks/use-workspace-data";
 import { loadDocumentSettings } from "@/lib/firebase/settings-mutations";
@@ -312,6 +311,8 @@ function extractCompanySnapshot(
 ): Step1FormValues["companySnapshot"] {
   return {
     name: c.name ?? "",
+    nameEn: c.nameEn ?? "",
+    logoUrl: c.logoUrl ?? "",
     address: c.address ?? "",
     phone: c.phone ?? "",
     email: c.email ?? "",
@@ -345,8 +346,10 @@ function extractPartnerSnapshot(
 
 export function DocumentCreateStep1({
   onNext: onNextCallback,
+  onPreview,
 }: {
   onNext?: (values: Step1FormValues) => void;
+  onPreview?: (values: Step1FormValues) => void;
 } = {}) {
   const activeCompanyId = useCompanyStore((s) => s.activeCompanyId);
   const companies = useCompanyStore((s) => s.companies);
@@ -360,7 +363,6 @@ export function DocumentCreateStep1({
   const [companyExpanded, setCompanyExpanded] = useState(false);
   const [docNumChecking, setDocNumChecking] = useState(false);
   const [docNumError, setDocNumError] = useState<string | null>(null);
-
   // Track whether user manually edited the doc number
   const userEditedDocNum = useRef(false);
 
@@ -377,6 +379,7 @@ export function DocumentCreateStep1({
     control,
     watch,
     setValue,
+    getValues,
     setError,
     clearErrors,
     handleSubmit,
@@ -407,8 +410,14 @@ export function DocumentCreateStep1({
     reset(buildDefaultStep1Values(company.id ?? "", company.name ?? ""), {
       keepDirty: false,
     });
+    // Ensure snapshot includes fields like nameEn even if selectedCompanyId doesn't "change".
+    setValue(
+      "companySnapshot",
+      extractCompanySnapshot(company as Company & { id: string }),
+      { shouldDirty: false },
+    );
     userEditedDocNum.current = false;
-  }, [activeCompanyId, companies, reset]);
+  }, [activeCompanyId, companies, reset, setValue]);
 
   // ── When selectedCompanyId changes (user picks different company) ──
   useEffect(() => {
@@ -418,6 +427,21 @@ export function DocumentCreateStep1({
     if (!company) return;
     setValue("companySnapshot", extractCompanySnapshot(company));
   }, [selectedCompanyId, companies, setValue]);
+
+  // โลโก้ไม่ได้ register — ซิงค์จาก Firestore store ให้ getValues/zod เห็น data URI
+  useEffect(() => {
+    if (!selectedCompanyId) return;
+    const company = companies.find((c) => c.id === selectedCompanyId);
+    if (!company) return;
+    const url = company.logoUrl?.trim() ?? "";
+    if (!url) return;
+    const current = getValues("companySnapshot.logoUrl")?.trim() ?? "";
+    if (current === url) return;
+    setValue("companySnapshot.logoUrl", company.logoUrl ?? "", {
+      shouldDirty: false,
+      shouldValidate: false,
+    });
+  }, [companies, selectedCompanyId, getValues, setValue]);
 
   // cascade helpers — called directly in onClick, no useEffect needed
   function applyFlowType(newFlow: FlowType) {
@@ -946,7 +970,7 @@ export function DocumentCreateStep1({
             type="button"
             variant="outline"
             className="rounded-xl"
-            disabled
+            onClick={() => onPreview?.(form.getValues())}
           >
             พรีวิว
           </Button>

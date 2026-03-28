@@ -1074,9 +1074,15 @@ interface Step2Props {
   step1Data: Step1FormValues | null;
   onBack: () => void;
   onNext: (values: Step2FormValues) => void;
+  onPreview?: (values: Step2FormValues) => void;
 }
 
-export function DocumentCreateStep2({ step1Data, onBack, onNext }: Step2Props) {
+export function DocumentCreateStep2({
+  step1Data,
+  onBack,
+  onNext,
+  onPreview,
+}: Step2Props) {
   const activeCompanyId = useCompanyStore((s) => s.activeCompanyId);
 
   const { control, watch, setValue, getValues, handleSubmit } =
@@ -1328,6 +1334,7 @@ export function DocumentCreateStep2({ step1Data, onBack, onNext }: Step2Props) {
               type="button"
               variant="outline"
               className="text-muted-foreground"
+              onClick={() => onPreview?.(getValues())}
             >
               พรีวิว
             </Button>

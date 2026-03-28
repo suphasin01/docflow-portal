@@ -7,9 +7,10 @@ import { AppHeader } from "@/components/layout/app-header";
 import { DocumentCreateStep1 } from "./document-create-step1";
 import { DocumentCreateStep2 } from "./document-create-step2";
 import { DocumentCreateStep3 } from "./document-create-step3";
+import { PreviewDialog } from "./document-preview-dialog";
 import type { Step1FormValues } from "@/lib/schemas/document-draft";
 import type { Step2FormValues } from "@/lib/schemas/document-step2";
-import type { Step3FormValues } from "@/lib/schemas/document-step3";
+import { buildDefaultStep3Values, type Step3FormValues } from "@/lib/schemas/document-step3";
 
 const STEPS = [
   { n: 1, label: "ส่วนหัว" },
@@ -59,8 +60,24 @@ export function DocumentCreatePage() {
   const [step, setStep] = useState(1);
   const [step1Data, setStep1Data] = useState<Step1FormValues | null>(null);
   const [step2Data, setStep2Data] = useState<Step2FormValues | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [step3Data, setStep3Data] = useState<Step3FormValues | null>(null);
+
+  // ── Centralized preview state ──────────────────────────────────────────────
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewSnapshot, setPreviewSnapshot] = useState<{
+    s1: Step1FormValues | null;
+    s2: Step2FormValues | null;
+    s3: Step3FormValues | null;
+  }>({ s1: null, s2: null, s3: null });
+
+  function openPreview(
+    s1: Step1FormValues | null,
+    s2: Step2FormValues | null,
+    s3: Step3FormValues | null,
+  ) {
+    setPreviewSnapshot({ s1, s2, s3 });
+    setPreviewOpen(true);
+  }
 
   return (
     <div className="min-h-screen">
@@ -73,6 +90,7 @@ export function DocumentCreatePage() {
             setStep1Data(values);
             setStep(2);
           }}
+          onPreview={(values) => openPreview(values, step2Data, step3Data)}
         />
       )}
 
@@ -84,6 +102,7 @@ export function DocumentCreatePage() {
             setStep2Data(values);
             setStep(3);
           }}
+          onPreview={(values) => openPreview(step1Data, values, step3Data)}
         />
       )}
 
@@ -94,11 +113,20 @@ export function DocumentCreatePage() {
           onBack={() => setStep(2)}
           onSave={(values) => {
             setStep3Data(values);
-            // TODO: persist full draft to Firestore
             console.log("Draft complete", { step1Data, step2Data, values });
           }}
+          onPreview={(values) => openPreview(step1Data, step2Data, values)}
         />
       )}
+
+      {/* Single shared PreviewDialog across all steps */}
+      <PreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        step1Data={previewSnapshot.s1}
+        step2Data={previewSnapshot.s2}
+        step3Data={previewSnapshot.s3 ?? buildDefaultStep3Values()}
+      />
     </div>
   );
 }

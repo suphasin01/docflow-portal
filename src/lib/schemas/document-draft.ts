@@ -15,6 +15,8 @@ const officeSnapshotSchema = z.object({
 export const companySnapshotSchema = z
   .object({
     name: z.string().min(1, "กรุณากรอกชื่อบริษัท"),
+    nameEn: optStr,
+    logoUrl: optStr,
     address: optStr,
     phone: optStr,
     email: optStr,
@@ -24,9 +26,17 @@ export const companySnapshotSchema = z
   .superRefine((d, ctx) => {
     if (d.officeType === "branch") {
       if (!d.branchName?.trim())
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["branchName"], message: "กรุณากรอกชื่อสาขา" });
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["branchName"],
+          message: "กรุณากรอกชื่อสาขา",
+        });
       if (!d.branchCode?.trim())
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["branchCode"], message: "กรุณากรอกรหัสสาขา" });
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["branchCode"],
+          message: "กรุณากรอกรหัสสาขา",
+        });
     }
   });
 
@@ -49,9 +59,17 @@ export const step1Schema = z.object({
   flowType: z.enum(["income", "expense"]),
   documentGroup: z.enum(["sales", "finance", "purchase"]),
   documentType: z.enum([
-    "quotation", "sales_order", "invoice", "billing_note", "tax_invoice",
-    "receipt", "delivery_order", "credit_note",
-    "purchase_order", "purchase_request", "payment_voucher",
+    "quotation",
+    "sales_order",
+    "invoice",
+    "billing_note",
+    "tax_invoice",
+    "receipt",
+    "delivery_order",
+    "credit_note",
+    "purchase_order",
+    "purchase_request",
+    "payment_voucher",
   ] as const),
   documentNumber: z.string().min(1, "กรุณากรอกเลขที่เอกสาร"),
   documentDate: z.string().min(1, "กรุณาเลือกวันที่เอกสาร"),
@@ -69,7 +87,7 @@ export type PartnerSnapshot = Step1FormValues["partnerSnapshot"];
 
 export function buildDefaultStep1Values(
   companyId = "",
-  companyName = ""
+  companyName = "",
 ): Step1FormValues {
   const flowType = "income" as const;
   const documentGroup = getDefaultDocGroupForFlow(flowType);
@@ -79,6 +97,8 @@ export function buildDefaultStep1Values(
     selectedCompanyId: companyId,
     companySnapshot: {
       name: companyName,
+      nameEn: "",
+      logoUrl: "",
       address: "",
       phone: "",
       email: "",

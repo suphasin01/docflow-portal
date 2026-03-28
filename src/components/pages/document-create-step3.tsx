@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import {
   X,
@@ -142,6 +142,17 @@ function fmt(n: number) {
   return n.toLocaleString("th-TH", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
+  });
+}
+
+function formatThaiDate(iso?: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("th-TH", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
   });
 }
 
@@ -856,6 +867,7 @@ interface Step3Props {
   step2Data: Step2FormValues | null;
   onBack: () => void;
   onSave: (values: Step3FormValues) => void;
+  onPreview?: (values: Step3FormValues) => void;
 }
 
 export function DocumentCreateStep3({
@@ -863,11 +875,16 @@ export function DocumentCreateStep3({
   step2Data,
   onBack,
   onSave,
+  onPreview,
 }: Step3Props) {
-  const activeCompanyId = useCompanyStore((s) => s.activeCompanyId);
   const companies = useCompanyStore((s) => s.companies);
-  const activeCompany = companies.find((c) => c.id === activeCompanyId);
-  const activeCompanyLogo = activeCompany?.logoUrl ?? "";
+  /** โลโก้ของบริษัทที่เลือกในเอกสาร (ไม่ใช่แค่ active company ใน store) */
+  const selectedCompanyLogoUrl =
+    step1Data?.companySnapshot.logoUrl?.trim() ||
+    companies
+      .find((c) => c.id === step1Data?.selectedCompanyId)
+      ?.logoUrl?.trim() ||
+    "";
 
   const docTypeName = step1Data
     ? (DOC_TYPE_CONFIG[step1Data.documentType as ExtDocType]?.label ?? "เอกสาร")
@@ -885,17 +902,18 @@ export function DocumentCreateStep3({
   const stampEnabled = watch("stamp.enabled");
   const stampSource = watch("stamp.sourceType");
   const stampImageUrl = watch("stamp.stampImageUrl");
+  const step3Values = watch();
 
   useEffect(() => {
     async function applyCompanyLogoStamp() {
       if (!stampEnabled || stampSource !== "logo") return;
-      if (!activeCompanyLogo) {
+      if (!selectedCompanyLogoUrl) {
         setValue("stamp.stampImageUrl", "");
         return;
       }
       try {
         const processed = await processImageFromUrlToDataUrl(
-          activeCompanyLogo,
+          selectedCompanyLogoUrl,
           200,
           200,
           0.5,
@@ -907,7 +925,7 @@ export function DocumentCreateStep3({
       }
     }
     void applyCompanyLogoStamp();
-  }, [stampEnabled, stampSource, activeCompanyLogo, setValue]);
+  }, [stampEnabled, stampSource, selectedCompanyLogoUrl, setValue]);
 
   // ── Signature preset helpers ──
   function saveSignaturePreset(role: SignatureRole, name: string) {
@@ -1045,7 +1063,12 @@ export function DocumentCreateStep3({
                         <button
                           key={src}
                           type="button"
-                          onClick={() => setValue("stamp.sourceType", src)}
+                          onClick={() =>
+                            setValue("stamp.sourceType", src, {
+                              shouldDirty: true,
+                              shouldTouch: true,
+                            })
+                          }
                           className={cn(
                             "flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm transition-colors",
                             stampSource === src
@@ -1060,76 +1083,87 @@ export function DocumentCreateStep3({
                       ))}
                     </div>
 
-                    {stampSource === "upload" && (
-                      <div className="flex items-center gap-3">
-                        {stampImageUrl ? (
-                          <div className="relative">
+                    {/* กรอบพรีวิวสี่เหลี่ยมจัตุรัส — ใช้ร่วมทั้งโหมด logo / upload */}
+                    <div className="relative flex size-[200px] shrink-0 flex-col overflow-hidden rounded-xl border bg-[#fafafa]">
+                      <input
+                        ref={stampFileRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const url = await resizeImageToDataUrl(
+                            file,
+                            200,
+                            200,
+                            0.5,
+                          );
+                          setValue("stamp.stampImageUrl", url, {
+                            shouldDirty: true,
+                          });
+                          e.target.value = "";
+                        }}
+                      />
+                      {stampSource === "logo" ? (
+                        stampImageUrl || selectedCompanyLogoUrl ? (
+                          <>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
-                              src={stampImageUrl}
-                              alt="stamp"
-                              className="size-20 object-contain border border-border/50 rounded opacity-50 bg-[#fafafa]"
+                              src={stampImageUrl || selectedCompanyLogoUrl}
+                              alt="ตราประทับจากโลโก้บริษัท"
+                              className="size-full object-contain p-4 opacity-60"
                             />
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setValue("stamp.stampImageUrl", "")
-                              }
-                              className="absolute -top-1.5 -right-1.5 rounded-full bg-destructive text-white size-4 flex items-center justify-center"
-                            >
-                              <X className="size-2.5" />
-                            </button>
-                          </div>
+                            <p className="pointer-events-none absolute bottom-2 left-0 right-0 text-center text-[10px] text-muted-foreground">
+                              ใช้ Logo บริษัท
+                            </p>
+                          </>
                         ) : (
+                          <div className="flex size-full flex-col items-center justify-center gap-2 border border-dashed border-border/60 p-4 text-center">
+                            <p className="text-xs text-muted-foreground">
+                              ไม่พบโลโก้บริษัท
+                            </p>
+                            <p className="text-[11px] text-muted-foreground/80">
+                              เพิ่มโลโก้ใน step บริษัท หรือเลือกอัพโหลดรูป
+                            </p>
+                          </div>
+                        )
+                      ) : stampImageUrl ? (
+                        <div className="relative size-full">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={stampImageUrl}
+                            alt="stamp"
+                            className="size-full object-contain p-4 opacity-60"
+                          />
                           <button
                             type="button"
-                            onClick={() => stampFileRef.current?.click()}
-                            className="flex items-center gap-1.5 rounded-lg border border-dashed border-border/60 px-4 py-3 text-xs text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors"
+                            onClick={() =>
+                              setValue("stamp.stampImageUrl", "", {
+                                shouldDirty: true,
+                              })
+                            }
+                            className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-destructive text-white shadow-sm"
+                            aria-label="ลบรูป"
                           >
-                            <Upload className="size-3.5" />
-                            อัพโหลดรูปตราประทับ (200×200 px)
+                            <X className="size-3.5" />
                           </button>
-                        )}
-                        <input
-                          ref={stampFileRef}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            const url = await resizeImageToDataUrl(
-                              file,
-                              200,
-                              200,
-                              0.5,
-                            );
-                            setValue("stamp.stampImageUrl", url);
-                            e.target.value = "";
-                          }}
-                        />
-                      </div>
-                    )}
-
-                    {stampSource === "logo" && (
-                      <div className="space-y-2">
-                        {stampImageUrl ? (
-                          <div className="relative inline-flex">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={stampImageUrl}
-                              alt="company stamp"
-                              className="size-20 object-contain border border-border/50 rounded opacity-50 bg-[#fafafa]"
-                            />
-                          </div>
-                        ) : (
-                          <p className="text-xs text-muted-foreground">
-                            ไม่พบโลโก้บริษัท กรุณาเพิ่มโลโก้บริษัทก่อน
-                            หรือเลือกอัพโหลดรูปใหม่
-                          </p>
-                        )}
-                      </div>
-                    )}
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => stampFileRef.current?.click()}
+                          className="flex size-full flex-col items-center justify-center gap-2 border border-dashed border-border/60 p-4 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                        >
+                          <Upload className="size-8 opacity-70" />
+                          <span className="text-center leading-snug">
+                            อัพโหลดรูปตราประทับ
+                            <br />
+                            <span className="text-[10px]">(200×200 px)</span>
+                          </span>
+                        </button>
+                      )}
+                    </div>
 
                     {/* Stamp presets */}
                     <div className="flex gap-2">
@@ -1270,6 +1304,7 @@ export function DocumentCreateStep3({
               type="button"
               variant="outline"
               className="text-muted-foreground"
+              onClick={() => onPreview?.(watch())}
             >
               พรีวิว
             </Button>

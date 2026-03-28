@@ -128,3 +128,5 @@
     @apply font-sans;
   }
 }
+
+/* ── ไม่มี @media print แล้ว — ใช้ html2canvas render ทั้ง print และ download ── */
