@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/layout/app-header";
-import { PageHeader } from "@/components/business/page-header";
 import { EmptyState } from "@/components/business/empty-state";
 import {
   FormFieldError,
@@ -241,63 +240,60 @@ export function CompanyPage() {
 
   return (
     <div className="min-h-screen">
-      <AppHeader minimal showTrialBanner={false} />
-      <div className="px-6 py-10">
-        <PageHeader
-          title="บริษัทของฉัน"
-          description="จัดการข้อมูลบริษัทและสลับบริษัทที่ใช้งาน"
-          action={
-            <Button type="button" className="rounded-xl" onClick={openCreate}>
-              <Plus className="mr-2 size-4" />
-              เพิ่มบริษัท
-            </Button>
-          }
-        />
+      <AppHeader
+        title="บริษัทของฉัน"
+        subtitle="จัดการข้อมูลบริษัทและสลับบริษัทที่ใช้งาน"
+        actions={
+          <Button type="button" className="rounded-xl" onClick={openCreate}>
+            <Plus className="mr-1.5 size-4" />
+            เพิ่มบริษัท
+          </Button>
+        }
+      />
 
-        <div className="mt-8">
-          {companiesLoading ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="h-40 animate-pulse rounded-2xl bg-muted/50"
-                />
-              ))}
-            </div>
-          ) : companies.length === 0 ? (
-            <EmptyState
-              icon={Building2}
-              title="ยังไม่มีบริษัท"
-              description="เริ่มต้นเพิ่มบริษัทเพื่อใช้งานเอกสารธุรกิจ"
-              action={
-                <Button
-                  type="button"
-                  className="rounded-xl"
-                  onClick={openCreate}
-                >
-                  <Plus className="mr-2 size-4" />
-                  เพิ่มบริษัท
-                </Button>
-              }
-              className="max-w-xl"
-            />
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {companies.map((company) => (
-                <CompanyCard
-                  key={company.id}
-                  company={company}
-                  isActive={company.id === activeCompanyId}
-                  archiving={archiving === company.id}
-                  onSelect={() => setActiveCompanyId(company.id)}
-                  onEdit={() => openEdit(company)}
-                  onArchive={() => void onArchive(company)}
-                  canArchive={companies.length > 1}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+      <div className="space-y-5 px-6 py-8">
+        {companiesLoading ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-40 animate-pulse rounded-2xl bg-muted/50"
+              />
+            ))}
+          </div>
+        ) : companies.length === 0 ? (
+          <EmptyState
+            icon={Building2}
+            title="ยังไม่มีบริษัท"
+            description="เริ่มต้นเพิ่มบริษัทเพื่อใช้งานเอกสารธุรกิจ"
+            action={
+              <Button
+                type="button"
+                className="rounded-xl"
+                onClick={openCreate}
+              >
+                <Plus className="mr-2 size-4" />
+                เพิ่มบริษัท
+              </Button>
+            }
+            className="max-w-xl"
+          />
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {companies.map((company) => (
+              <CompanyCard
+                key={company.id}
+                company={company}
+                isActive={company.id === activeCompanyId}
+                archiving={archiving === company.id}
+                onSelect={() => setActiveCompanyId(company.id)}
+                onEdit={() => openEdit(company)}
+                onArchive={() => void onArchive(company)}
+                canArchive={companies.length > 1}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Dialog สร้าง / แก้ไขบริษัท */}

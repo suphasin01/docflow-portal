@@ -34,13 +34,7 @@ export function AppHeader({
     <header className="sticky top-0 z-30 border-b border-border/80 bg-[#f6f7f9]/95 backdrop-blur supports-[backdrop-filter]:bg-[#f6f7f9]/80">
       {showTrialBanner ? (
         <div className="flex items-center justify-between gap-3 border-b border-border/60 bg-white px-6 py-2 text-xs text-muted-foreground">
-          <span>
-            ทดลองใช้งานแบบมืออาชีพ — ข้อมูลของคุณแยกตามบริษัท (workspace
-            เดียวต่อผู้ใช้)
-          </span>
-          <Badge variant="secondary" className="rounded-full font-normal">
-            แผน: ธุรกิจ SME
-          </Badge>
+          <span>ข้อมูลของคุณแยกตามบริษัท (workspace เดียวต่อผู้ใช้)</span>
         </div>
       ) : null}
       <div className="flex flex-wrap items-start justify-between gap-4 px-6 py-4">
