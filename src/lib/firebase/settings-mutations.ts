@@ -9,6 +9,11 @@ import {
 import { getFirebaseDb } from "./client";
 import type { DocumentSettingsFormValues } from "@/lib/schemas/settings";
 import { DEFAULT_DOCUMENT_SETTINGS } from "@/lib/schemas/settings";
+import {
+  buildDefaultPresets,
+  coerceStep3PresetStore,
+  type Step3PresetStore,
+} from "@/lib/schemas/document-step3";
 
 /** โหลด document settings ของบริษัท (คืน default ถ้ายังไม่มี) */
 export async function loadDocumentSettings(
@@ -41,6 +46,39 @@ export async function loadDocumentSettings(
       data.documentDisplayDateFormat ??
       DEFAULT_DOCUMENT_SETTINGS.documentDisplayDateFormat,
   };
+}
+
+/** Preset ขั้นตอนที่ 3 ต่อบริษัท — เก็บใน settings/{companyId}.step3Presets */
+export async function loadStep3Presets(
+  companyId: string,
+): Promise<Step3PresetStore> {
+  const db = getFirebaseDb();
+  if (!db) return buildDefaultPresets();
+
+  const ref = doc(db, "settings", companyId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return buildDefaultPresets();
+
+  return coerceStep3PresetStore(snap.data().step3Presets);
+}
+
+export async function saveStep3Presets(
+  companyId: string,
+  store: Step3PresetStore,
+): Promise<void> {
+  const db = getFirebaseDb();
+  if (!db) throw new Error("Firestore ยังไม่พร้อม");
+
+  const ref = doc(db, "settings", companyId);
+  await setDoc(
+    ref,
+    {
+      companyId,
+      step3Presets: store,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
 }
 
 /** บันทึก document settings ของบริษัท */

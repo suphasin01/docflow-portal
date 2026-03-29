@@ -156,6 +156,79 @@ export function buildDefaultPresets(): Step3PresetStore {
   };
 }
 
+function isSignaturePreset(x: unknown): x is SignaturePreset {
+  if (!x || typeof x !== "object") return false;
+  const o = x as Record<string, unknown>;
+  return (
+    typeof o.id === "string" &&
+    typeof o.name === "string" &&
+    typeof o.titleText === "string" &&
+    typeof o.signerName === "string" &&
+    typeof o.signatureImageUrl === "string"
+  );
+}
+
+function isStampPreset(x: unknown): x is StampPreset {
+  if (!x || typeof x !== "object") return false;
+  const o = x as Record<string, unknown>;
+  return (
+    typeof o.id === "string" &&
+    typeof o.name === "string" &&
+    (o.sourceType === "logo" || o.sourceType === "upload") &&
+    typeof o.stampImageUrl === "string"
+  );
+}
+
+function isPaymentTermPreset(x: unknown): x is PaymentTermPreset {
+  if (!x || typeof x !== "object") return false;
+  const o = x as Record<string, unknown>;
+  return (
+    typeof o.id === "string" &&
+    typeof o.name === "string" &&
+    typeof o.paymentTermType === "string" &&
+    typeof o.customPaymentTermText === "string"
+  );
+}
+
+function isTextPreset(x: unknown): x is TextPreset {
+  if (!x || typeof x !== "object") return false;
+  const o = x as Record<string, unknown>;
+  return (
+    typeof o.id === "string" &&
+    typeof o.name === "string" &&
+    typeof o.text === "string"
+  );
+}
+
+/** อ่านค่า step3Presets จาก Firestore / local — คำนวณใหม่ถ้าโครงสร้างไม่ถูกต้อง */
+export function coerceStep3PresetStore(raw: unknown): Step3PresetStore {
+  const d = buildDefaultPresets();
+  if (!raw || typeof raw !== "object") return d;
+  const o = raw as Record<string, unknown>;
+
+  const signatures = { ...d.signatures };
+  const sigRaw = o.signatures;
+  if (sigRaw && typeof sigRaw === "object") {
+    const sr = sigRaw as Record<string, unknown>;
+    for (const role of ["receiver", "approver", "issuer"] as const) {
+      const arr = sr[role];
+      if (Array.isArray(arr)) {
+        signatures[role] = arr.filter(isSignaturePreset);
+      }
+    }
+  }
+
+  return {
+    signatures,
+    stamp: Array.isArray(o.stamp) ? o.stamp.filter(isStampPreset) : d.stamp,
+    paymentTerm: Array.isArray(o.paymentTerm)
+      ? o.paymentTerm.filter(isPaymentTermPreset)
+      : d.paymentTerm,
+    note: Array.isArray(o.note) ? o.note.filter(isTextPreset) : d.note,
+    terms: Array.isArray(o.terms) ? o.terms.filter(isTextPreset) : d.terms,
+  };
+}
+
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
 export function genId(): string {

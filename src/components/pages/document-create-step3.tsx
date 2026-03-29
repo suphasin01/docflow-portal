@@ -27,6 +27,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DOC_TYPE_CONFIG, type ExtDocType } from "@/lib/doc-types";
+import {
+  loadStep3Presets,
+  saveStep3Presets,
+} from "@/lib/firebase/settings-mutations";
 import { useCompanyStore } from "@/stores/company-store";
 import type { Step1FormValues } from "@/lib/schemas/document-draft";
 import type { Step2FormValues } from "@/lib/schemas/document-step2";
@@ -929,7 +933,56 @@ export function DocumentCreateStep3({
   const [presets, setPresets] = useState<Step3PresetStore>(
     buildDefaultPresets(),
   );
+  /** หลังโหลด preset จาก Firestore ครั้งล่าสุด — กันไม่ให้เขียนทับก่อนโหลดเสร็จ */
+  const [presetsRemoteReady, setPresetsRemoteReady] = useState(false);
+  const presetsRef = useRef(presets);
+  presetsRef.current = presets;
   const stampFileRef = useRef<HTMLInputElement>(null);
+  const presetLoadGenRef = useRef(0);
+
+  const presetCompanyId = step1Data?.selectedCompanyId ?? null;
+
+  useEffect(() => {
+    if (!presetCompanyId) {
+      setPresetsRemoteReady(false);
+      setPresets(buildDefaultPresets());
+      return;
+    }
+
+    const gen = ++presetLoadGenRef.current;
+    setPresetsRemoteReady(false);
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const loaded = await loadStep3Presets(presetCompanyId);
+        if (cancelled || gen !== presetLoadGenRef.current) return;
+        setPresets(loaded);
+        setPresetsRemoteReady(true);
+      } catch (e) {
+        console.error(e);
+        if (cancelled || gen !== presetLoadGenRef.current) return;
+        setPresets(buildDefaultPresets());
+        setPresetsRemoteReady(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [presetCompanyId]);
+
+  useEffect(() => {
+    if (!presetCompanyId || !presetsRemoteReady) return;
+
+    const t = window.setTimeout(() => {
+      void saveStep3Presets(presetCompanyId, presetsRef.current).catch(
+        (err) => console.error("บันทึก preset ขั้นตอนที่ 3 ไม่สำเร็จ", err),
+      );
+    }, 600);
+
+    return () => window.clearTimeout(t);
+  }, [presets, presetCompanyId, presetsRemoteReady]);
 
   const stampEnabled = watch("stamp.enabled");
   const stampSource = watch("stamp.sourceType");

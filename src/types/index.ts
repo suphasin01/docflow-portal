@@ -254,5 +254,7 @@ export interface DocumentSettings {
   documentNumberSeparator: string;
   deletedNumberBehavior: DeletedNumberBehavior;
   documentDisplayDateFormat: DocumentDisplayDateFormat;
+  /** preset wizard ขั้น 3 — โครงสร้างจริงดู `Step3PresetStore` */
+  step3Presets?: unknown;
   updatedAt?: unknown;
 }
