@@ -69,9 +69,8 @@ export async function createBusinessDocumentDraft(
   const partnerSummary = buildPartnerSummary(step1Data);
   const chainId =
     payload.sourceDocument?.chainId || payload.sourceDocument?.id || docRef.id;
-  const paymentStatus: PaymentStatus = payload.sourceDocument
-    ? (payload.sourceDocument.paymentStatus ?? "unpaid")
-    : "unpaid";
+  /** เอกสารใหม่ (รวมถึงสร้างต่อจากโซ่) — สถานะชำระเริ่มที่ยังไม่ชำระเสมอ ไม่สืบทอดจากต้นทาง */
+  const paymentStatus: PaymentStatus = "unpaid";
   const documentNumber =
     step1Data.documentNumber.trim() ||
     buildDocNumber(

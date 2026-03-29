@@ -236,11 +236,13 @@ function buildChains(docs: RowDoc[]): ChainGroup[] {
   return out;
 }
 
-function collectChainHistory(chainDocs: RowDoc[]): PaymentStatusHistoryEntry[] {
-  const list: PaymentStatusHistoryEntry[] = [];
-  for (const d of chainDocs) {
-    for (const h of d.paymentStatusHistory ?? []) list.push(h);
-  }
+/** ประวัติชำระเงิน: ใช้เฉพาะเอกสารล่าสุดในโซ่ (main) ไม่รวมจากเอกสารอื่น — เฉพาะรายการที่สถานะเปลี่ยนจริง */
+function latestDocPaymentStatusHistory(
+  main: RowDoc,
+): PaymentStatusHistoryEntry[] {
+  const list = (main.paymentStatusHistory ?? []).filter(
+    (h) => h.from !== h.to,
+  );
   return list.sort((a, b) => b.at.toMillis() - a.at.toMillis());
 }
 
@@ -888,8 +890,8 @@ function ChainTableBlock({
   const main = group.main;
   const hasChildren = group.children.length > 0;
   const chainHistory = useMemo(
-    () => collectChainHistory(group.docs),
-    [group.docs],
+    () => latestDocPaymentStatusHistory(main),
+    [main],
   );
 
   const eff = effectivePaymentStatus(main);
