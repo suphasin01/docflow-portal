@@ -42,6 +42,8 @@ export type PaymentStatusHistoryEntry = {
   to: PaymentStatus;
   userId: string;
   userEmail?: string | null;
+  /** บันทึกเมื่อเปลี่ยนเป็น paid */
+  paymentMethod?: string | null;
 };
 
 export type VatType = "inclusive" | "exclusive" | "zero" | "exempt";
@@ -185,6 +187,8 @@ export interface BusinessDocument extends BaseEntity {
   total: number;
   notes?: string;
   paymentStatus?: PaymentStatus;
+  /** ช่องทางชำระเงิน (key เช่น cash, transfer) — ตั้งเมื่อชำระแล้ว */
+  paymentMethod?: string | null;
   /** ประวัติการเปลี่ยนสถานะชำระเงิน (ล่าสุดต่อท้ายเมื่อใช้ arrayUnion) */
   paymentStatusHistory?: PaymentStatusHistoryEntry[];
   refDocumentId?: string | null;

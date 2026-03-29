@@ -21,7 +21,11 @@ import {
 import { DOC_TYPE_CONFIG, type ExtDocType } from "@/lib/doc-types";
 import type { Step1FormValues } from "@/lib/schemas/document-draft";
 import type { Step3FormValues } from "@/lib/schemas/document-step3";
-import type { BusinessDocument, PaymentStatus } from "@/types";
+import type {
+  BusinessDocument,
+  PaymentStatus,
+  PaymentStatusHistoryEntry,
+} from "@/types";
 import { DEFAULT_DOCUMENT_SETTINGS } from "@/lib/schemas/settings";
 import {
   buildDocNumber,
@@ -232,6 +236,7 @@ export async function updateDocumentPaymentStatus(params: {
   userId: string;
   userEmail?: string | null;
   nextStatus: PaymentStatus;
+  paymentMethod?: string | null;
 }) {
   const db = getFirebaseDb();
   if (!db) throw new Error("Firestore ยังไม่พร้อม");
@@ -248,17 +253,29 @@ export async function updateDocumentPaymentStatus(params: {
   const from = (data.paymentStatus ?? "unpaid") as PaymentStatus;
   if (from === params.nextStatus) return;
 
-  await updateDoc(ref, {
+  const hist: PaymentStatusHistoryEntry = {
+    at: Timestamp.now(),
+    from,
+    to: params.nextStatus,
+    userId: params.userId,
+    userEmail: params.userEmail?.trim() || null,
+  };
+  if (params.nextStatus === "paid" && params.paymentMethod?.trim()) {
+    hist.paymentMethod = params.paymentMethod.trim();
+  }
+
+  const patch: Record<string, unknown> = {
     paymentStatus: params.nextStatus,
     updatedAt: serverTimestamp(),
-    paymentStatusHistory: arrayUnion({
-      at: Timestamp.now(),
-      from,
-      to: params.nextStatus,
-      userId: params.userId,
-      userEmail: params.userEmail?.trim() || null,
-    }),
-  });
+    paymentStatusHistory: arrayUnion(hist),
+  };
+  if (params.nextStatus === "paid") {
+    patch.paymentMethod = params.paymentMethod?.trim() || null;
+  } else {
+    patch.paymentMethod = null;
+  }
+
+  await updateDoc(ref, patch);
 }
 
 export async function getBusinessDocumentById(

@@ -26,7 +26,7 @@ const variants: Record<
     label: "ชำระบางส่วน",
   },
   unpaid: {
-    className: "bg-orange-50 text-orange-900 border-orange-200",
+    className: "bg-slate-50 text-slate-600 border-slate-200",
     label: "ยังไม่ชำระ",
   },
   overdue: {

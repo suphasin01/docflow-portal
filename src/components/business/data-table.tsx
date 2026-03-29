@@ -6,6 +6,8 @@ import {
   getPaginationRowModel,
   useReactTable,
   type ColumnDef,
+  type OnChangeFn,
+  type RowSelectionState,
 } from "@tanstack/react-table";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,16 +20,22 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-type DataTableProps<T> = {
+type DataTableProps<T extends { id: string }> = {
   columns: ColumnDef<T, unknown>[];
   data: T[];
   pageSize?: number;
+  enableRowSelection?: boolean;
+  rowSelection?: RowSelectionState;
+  onRowSelectionChange?: OnChangeFn<RowSelectionState>;
 };
 
-export function DataTable<T>({
+export function DataTable<T extends { id: string }>({
   columns,
   data,
   pageSize = 10,
+  enableRowSelection = false,
+  rowSelection,
+  onRowSelectionChange,
 }: DataTableProps<T>) {
   const table = useReactTable({
     data,
@@ -35,13 +43,21 @@ export function DataTable<T>({
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: { pagination: { pageSize } },
+    getRowId: (row) => row.id,
+    ...(enableRowSelection
+      ? {
+          enableRowSelection: true,
+          onRowSelectionChange,
+          state: { rowSelection: rowSelection ?? {} },
+        }
+      : { enableRowSelection: false }),
   });
 
   return (
     <div className="space-y-3">
       <div className="overflow-hidden rounded-2xl border border-border/80 bg-white">
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_hsl(var(--border))]">
             {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id} className="hover:bg-transparent">
                 {hg.headers.map((h) => (
@@ -58,7 +74,11 @@ export function DataTable<T>({
           <TableBody>
             {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="hover:bg-muted/30">
+                <TableRow
+                  key={row.id}
+                  className="transition-colors hover:bg-slate-50/90"
+                  data-state={row.getIsSelected() ? "selected" : undefined}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="align-middle text-sm">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
