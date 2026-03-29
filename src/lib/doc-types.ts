@@ -13,6 +13,7 @@ export type ExtDocType = DocumentGroup extends never
       | "credit_note"
       | "purchase_order"
       | "purchase_request"
+      | "goods_receipt"
       | "payment_voucher";
 
 export type PartnerRole = "customer" | "vendor";
@@ -124,6 +125,15 @@ export const DOC_TYPE_CONFIG: Record<ExtDocType, DocTypeConfig> = {
     extraDateLabel: "วันครบกำหนด",
     partnerRole: "vendor",
   },
+  goods_receipt: {
+    label: "ใบรับสินค้า",
+    labelEn: "Goods Receipt",
+    prefix: "GR",
+    group: "purchase",
+    flow: "expense",
+    extraDateLabel: null,
+    partnerRole: "vendor",
+  },
   // expense — finance
   payment_voucher: {
     label: "ใบสำคัญจ่าย",
@@ -135,6 +145,24 @@ export const DOC_TYPE_CONFIG: Record<ExtDocType, DocTypeConfig> = {
     partnerRole: "vendor",
   },
 };
+
+/** ประเภทเอกสารที่ใช้สถานะการชำระเงิน (แสดงในรายละเอียด / แดชบอร์ด) */
+export const DOCUMENT_TYPES_WITH_PAYMENT_STATUS = new Set<ExtDocType>([
+  "receipt",
+  "invoice",
+  "payment_voucher",
+  "sales_order",
+  "purchase_order",
+  "billing_note",
+  "tax_invoice",
+]);
+
+export function documentTypeSupportsPaymentStatus(
+  type: string | undefined | null,
+): boolean {
+  if (!type) return false;
+  return DOCUMENT_TYPES_WITH_PAYMENT_STATUS.has(type as ExtDocType);
+}
 
 export const ALL_EXT_DOC_TYPES = Object.keys(DOC_TYPE_CONFIG) as ExtDocType[];
 

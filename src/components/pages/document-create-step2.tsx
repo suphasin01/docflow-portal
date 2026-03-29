@@ -982,7 +982,9 @@ function TotalsCard({
                 />
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>
-                    {vatRate > 0 ? `VAT ${vatRate}% (รวมแล้ว)` : "VAT (รวมแล้ว)"}
+                    {vatRate > 0
+                      ? `VAT ${vatRate}% (รวมแล้ว)`
+                      : "VAT (รวมแล้ว)"}
                   </span>
                   <span className="tabular-nums">
                     {fmt(totals.vatIncludedAmount)}
@@ -1070,11 +1072,30 @@ function TotalLine({
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 
+export function mergeStep2Initial(
+  initial: Step2FormValues | null | undefined,
+): Step2FormValues {
+  const base = buildDefaultStep2Values();
+  if (!initial) return base;
+  return {
+    ...base,
+    ...initial,
+    visibleColumns: { ...base.visibleColumns, ...initial.visibleColumns },
+    items:
+      initial.items && initial.items.length > 0 ? initial.items : base.items,
+    summaryBlockOrder:
+      initial.summaryBlockOrder && initial.summaryBlockOrder.length > 0
+        ? initial.summaryBlockOrder
+        : base.summaryBlockOrder,
+  };
+}
+
 interface Step2Props {
   step1Data: Step1FormValues | null;
   onBack: () => void;
   onNext: (values: Step2FormValues) => void;
   onPreview?: (values: Step2FormValues) => void;
+  initialValues?: Step2FormValues | null;
 }
 
 export function DocumentCreateStep2({
@@ -1082,12 +1103,15 @@ export function DocumentCreateStep2({
   onBack,
   onNext,
   onPreview,
+  initialValues,
 }: Step2Props) {
   const activeCompanyId = useCompanyStore((s) => s.activeCompanyId);
 
+  const mergedDefaults = mergeStep2Initial(initialValues ?? undefined);
+
   const { control, watch, setValue, getValues, handleSubmit } =
     useForm<Step2FormValues>({
-      defaultValues: buildDefaultStep2Values(),
+      defaultValues: mergedDefaults,
     });
 
   const { fields, append, remove, move } = useFieldArray({
@@ -1096,9 +1120,11 @@ export function DocumentCreateStep2({
   });
 
   // Summary block DnD order (local state, synced on submit)
-  const [summaryOrder, setSummaryOrder] = useState<SummaryBlockKey[]>([
-    ...DEFAULT_SUMMARY_BLOCK_ORDER,
-  ]);
+  const [summaryOrder, setSummaryOrder] = useState<SummaryBlockKey[]>(() =>
+    mergedDefaults.summaryBlockOrder.length
+      ? [...mergedDefaults.summaryBlockOrder]
+      : [...DEFAULT_SUMMARY_BLOCK_ORDER],
+  );
 
   // Item picker modal state
   const [pickerOpen, setPickerOpen] = useState(false);

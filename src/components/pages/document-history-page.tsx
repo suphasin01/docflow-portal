@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal, Copy, Eye, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -23,12 +25,17 @@ import {
 } from "@/components/ui/select";
 import { useCompanyStore } from "@/stores/company-store";
 import { useDocuments } from "@/hooks/use-workspace-data";
-import { documentStatusLabels, documentTypeLabels } from "@/lib/navigation";
+import {
+  documentStatusLabels,
+  documentTypeLabels,
+  getDocumentStatusDisplay,
+} from "@/lib/navigation";
 import type { BusinessDocument, DocumentType } from "@/types";
 
 type Row = BusinessDocument & { id: string };
 
 export function DocumentHistoryPage() {
+  const router = useRouter();
   const companyId = useCompanyStore((s) => s.activeCompanyId);
   const { data, loading } = useDocuments(companyId);
   const [q, setQ] = useState("");
@@ -47,7 +54,18 @@ export function DocumentHistoryPage() {
 
   const columns: ColumnDef<Row>[] = useMemo(
     () => [
-      { accessorKey: "docNumber", header: "เลขที่" },
+      {
+        accessorKey: "docNumber",
+        header: "เลขที่",
+        cell: ({ row }) => (
+          <Link
+            href={`/documents/detail?id=${encodeURIComponent(row.original.id)}`}
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            {row.original.docNumber}
+          </Link>
+        ),
+      },
       {
         accessorKey: "type",
         header: "ประเภท",
@@ -80,10 +98,7 @@ export function DocumentHistoryPage() {
         accessorKey: "status",
         header: "สถานะ",
         cell: ({ row }) => (
-          <StatusBadge
-            status={row.original.status}
-            label={documentStatusLabels[row.original.status]}
-          />
+          <StatusBadge {...getDocumentStatusDisplay(row.original)} />
         ),
       },
       {
@@ -96,12 +111,16 @@ export function DocumentHistoryPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 rounded-xl">
               <DropdownMenuItem
-                onClick={() => toast.message("ดูเอกสาร (ตัวอย่าง)")}
+                onClick={() =>
+                  router.push(`/documents/detail?id=${row.original.id}`)
+                }
               >
                 <Eye className="mr-2 size-4" /> ดู
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => toast.message("แก้ไข (ตัวอย่าง)")}
+                onClick={() =>
+                  router.push(`/documents/detail?id=${row.original.id}`)
+                }
               >
                 <Pencil className="mr-2 size-4" /> แก้ไข
               </DropdownMenuItem>
@@ -121,7 +140,7 @@ export function DocumentHistoryPage() {
         ),
       },
     ],
-    []
+    [router],
   );
 
   return (
@@ -153,7 +172,7 @@ export function DocumentHistoryPage() {
                       <SelectItem key={t} value={t}>
                         {documentTypeLabels[t]}
                       </SelectItem>
-                    )
+                    ),
                   )}
                 </SelectContent>
               </Select>

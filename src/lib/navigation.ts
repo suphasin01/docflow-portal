@@ -10,6 +10,7 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react";
+import { documentTypeSupportsPaymentStatus } from "@/lib/doc-types";
 
 export type NavItem = {
   href: string;
@@ -30,14 +31,21 @@ export const mainNav: NavItem[] = [
 
 export const documentTypeLabels: Record<string, string> = {
   quotation: "ใบเสนอราคา",
+  sales_order: "ใบสั่งขาย",
   invoice: "ใบแจ้งหนี้",
-  receipt: "ใบเสร็จ",
-  purchase_order: "ใบสั่งซื้อ",
   billing_note: "ใบวางบิล",
+  tax_invoice: "ใบกำกับภาษี",
+  receipt: "ใบเสร็จรับเงิน",
+  delivery_order: "ใบส่งของ",
+  credit_note: "ใบลดหนี้",
+  purchase_order: "ใบสั่งซื้อ",
+  purchase_request: "ใบขอซื้อ",
+  goods_receipt: "ใบรับสินค้า",
+  payment_voucher: "ใบสำคัญจ่าย",
 };
 
 export const documentStatusLabels: Record<string, string> = {
-  draft: "ฉบับร่าง",
+  draft: "ร่าง",
   issued: "ออกแล้ว",
   paid: "ชำระแล้ว",
   partial: "ชำระบางส่วน",
@@ -46,8 +54,45 @@ export const documentStatusLabels: Record<string, string> = {
 };
 
 export const paymentStatusLabels: Record<string, string> = {
-  unpaid: "ค้างชำระ",
+  unpaid: "ยังไม่ชำระ",
   partial: "ชำระบางส่วน",
-  paid: "ชำระครบ",
+  paid: "ชำระแล้ว",
   overdue: "เกินกำหนด",
 };
+
+/** สถานะแสดงผล — ถ้ามีเอกสารต่อเนื่องแล้ว (workflow billed) ให้ขึ้น «ออกบิลแล้ว» */
+export function getDocumentStatusDisplay(doc: {
+  status: string;
+  workflowStatus?: "draft" | "billed" | null;
+}): { status: string; label: string } {
+  if (doc.workflowStatus === "billed") {
+    return { status: "billed", label: "ออกบิลแล้ว" };
+  }
+  return {
+    status: doc.status,
+    label: documentStatusLabels[doc.status] ?? doc.status,
+  };
+}
+
+/** แดชบอร์ด: โฟกัสสถานะชำระเงินเฉพาะประเภทที่รองรับ — ถ้าออกบิลต่อแล้วให้แสดงก่อน */
+export function getDashboardDocumentStatusDisplay(doc: {
+  status: string;
+  type?: string;
+  workflowStatus?: "draft" | "billed" | null;
+  paymentStatus?: string;
+}): { status: string; label: string } {
+  if (doc.workflowStatus === "billed") {
+    return { status: "billed", label: "ออกบิลแล้ว" };
+  }
+  const payment = doc.paymentStatus;
+  if (documentTypeSupportsPaymentStatus(doc.type) && payment) {
+    return {
+      status: payment,
+      label: paymentStatusLabels[payment] ?? payment,
+    };
+  }
+  return {
+    status: doc.status,
+    label: documentStatusLabels[doc.status] ?? doc.status,
+  };
+}

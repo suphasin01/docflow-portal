@@ -37,6 +37,9 @@ import {
 } from "@/lib/schemas/document-step2";
 import {
   buildDefaultStep3Values,
+  DEFAULT_STAMP_POSITION_X,
+  DEFAULT_STAMP_POSITION_Y,
+  DEFAULT_STAMP_ROTATION_DEG,
   getPaymentTermLabel,
   PAYMENT_METHODS,
   SIGNATURE_ROLE_PREFIX,
@@ -342,6 +345,13 @@ export interface PreviewDialogProps {
   step1Data: Step1FormValues | null;
   step2Data: Step2FormValues | null;
   step3Data?: Step3FormValues | null;
+  /** เรียกเมื่อลาก/หมุนตราประทับเสร็จ — บันทึกลง step3 เพื่อใช้ในหน้า detail / PDF */
+  onStampLayoutChange?: (
+    layout: Pick<
+      Step3FormValues["stamp"],
+      "positionX" | "positionY" | "rotationDeg"
+    >,
+  ) => void;
 }
 
 const A4_WIDTH_MM = 210;
@@ -362,6 +372,7 @@ export function PreviewDialog({
   step1Data,
   step2Data,
   step3Data,
+  onStampLayoutChange,
 }: PreviewDialogProps) {
   const pageRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -372,9 +383,17 @@ export function PreviewDialog({
     startAngle: number;
     startRotation: number;
   } | null>(null);
-  const [stampPos, setStampPos] = useState({ x: 430, y: 240 });
+  const stampPosRef = useRef({
+    x: DEFAULT_STAMP_POSITION_X,
+    y: DEFAULT_STAMP_POSITION_Y,
+  });
+  const stampRotationRef = useRef(DEFAULT_STAMP_ROTATION_DEG);
+  const [stampPos, setStampPos] = useState({
+    x: DEFAULT_STAMP_POSITION_X,
+    y: DEFAULT_STAMP_POSITION_Y,
+  });
   /** องศาหมุนตราประทับ (รอบจุดศูนย์กลาง) — ตรงกับ PDF */
-  const [stampRotation, setStampRotation] = useState(0);
+  const [stampRotation, setStampRotation] = useState(DEFAULT_STAMP_ROTATION_DEG);
   const [dragging, setDragging] = useState(false);
   const [fitScale, setFitScale] = useState(1);
   const [zoomScale, setZoomScale] = useState<number | null>(null);
@@ -474,6 +493,21 @@ export function PreviewDialog({
     }
   }, [open]);
 
+  /** ซิงก์ตำแหน่งตราประทับจาก step3 (รวมหลังบันทึกจากลาก/หมุน) */
+  useEffect(() => {
+    if (!open) return;
+    const s = (step3Data ?? buildDefaultStep3Values()).stamp;
+    const pos = {
+      x: s.positionX ?? DEFAULT_STAMP_POSITION_X,
+      y: s.positionY ?? DEFAULT_STAMP_POSITION_Y,
+    };
+    const r = s.rotationDeg ?? DEFAULT_STAMP_ROTATION_DEG;
+    stampPosRef.current = pos;
+    stampRotationRef.current = r;
+    setStampPos(pos);
+    setStampRotation(r);
+  }, [open, step3Data]);
+
   // Guard: need at least step1
   if (!step1Data) return null;
 
@@ -556,7 +590,7 @@ export function PreviewDialog({
     function onMove(ev: MouseEvent) {
       const w = STAMP_SIZE_PX;
       const h = STAMP_SIZE_PX;
-      setStampPos({
+      const next = {
         x: Math.max(
           0,
           Math.min(ox + (ev.clientX - sx) / scaleX, A4_WIDTH_PX - w),
@@ -565,12 +599,19 @@ export function PreviewDialog({
           0,
           Math.min(oy + (ev.clientY - sy) / scaleY, A4_HEIGHT_PX - h),
         ),
-      });
+      };
+      stampPosRef.current = next;
+      setStampPos(next);
     }
     function onUp() {
       setDragging(false);
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
+      onStampLayoutChange?.({
+        positionX: stampPosRef.current.x,
+        positionY: stampPosRef.current.y,
+        rotationDeg: stampRotationRef.current,
+      });
     }
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
@@ -588,7 +629,7 @@ export function PreviewDialog({
       cx,
       cy,
       startAngle: Math.atan2(e.clientY - cy, e.clientX - cx),
-      startRotation: stampRotation,
+      startRotation: stampRotationRef.current,
     };
     e.currentTarget.setPointerCapture(e.pointerId);
 
@@ -600,7 +641,9 @@ export function PreviewDialog({
       if (delta > Math.PI) delta -= 2 * Math.PI;
       if (delta < -Math.PI) delta += 2 * Math.PI;
       const deg = r.startRotation + (delta * 180) / Math.PI;
-      setStampRotation(((deg % 360) + 360) % 360);
+      const normalized = ((deg % 360) + 360) % 360;
+      stampRotationRef.current = normalized;
+      setStampRotation(normalized);
     }
 
     function onRotateEnd() {
@@ -608,6 +651,11 @@ export function PreviewDialog({
       window.removeEventListener("pointermove", onRotateMove);
       window.removeEventListener("pointerup", onRotateEnd);
       window.removeEventListener("pointercancel", onRotateEnd);
+      onStampLayoutChange?.({
+        positionX: stampPosRef.current.x,
+        positionY: stampPosRef.current.y,
+        rotationDeg: stampRotationRef.current,
+      });
     }
 
     window.addEventListener("pointermove", onRotateMove);

@@ -69,6 +69,7 @@ export const step1Schema = z.object({
     "credit_note",
     "purchase_order",
     "purchase_request",
+    "goods_receipt",
     "payment_voucher",
   ] as const),
   documentNumber: z.string().min(1, "กรุณากรอกเลขที่เอกสาร"),
@@ -84,6 +85,11 @@ export const step1Schema = z.object({
 export type Step1FormValues = z.infer<typeof step1Schema>;
 export type CompanySnapshot = Step1FormValues["companySnapshot"];
 export type PartnerSnapshot = Step1FormValues["partnerSnapshot"];
+
+/** prefill จากเอกสารต้นทาง — เลขที่ว่างได้จนกว่าจะ gen ตอนบันทึก */
+export const step1PrefillSchema = step1Schema.extend({
+  documentNumber: z.string(),
+});
 
 export function buildDefaultStep1Values(
   companyId = "",

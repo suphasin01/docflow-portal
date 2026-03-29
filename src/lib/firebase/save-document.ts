@@ -44,6 +44,7 @@ export async function saveBusinessDocument(input: SaveDraftInput) {
     credit_note: "CN",
     purchase_order: "PO",
     purchase_request: "PR",
+    goods_receipt: "GR",
     payment_voucher: "PV",
   };
   const docNumber = `${prefixMap[input.type]}-${new Date().getFullYear()}-${docRef.id.slice(0, 6).toUpperCase()}`;

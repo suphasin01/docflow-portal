@@ -2,10 +2,17 @@ import { z } from "zod";
 
 export const documentTypeSchema = z.enum([
   "quotation",
+  "sales_order",
   "invoice",
-  "receipt",
-  "purchase_order",
   "billing_note",
+  "tax_invoice",
+  "receipt",
+  "delivery_order",
+  "credit_note",
+  "purchase_order",
+  "purchase_request",
+  "goods_receipt",
+  "payment_voucher",
 ]);
 
 export const documentItemRowSchema = z.object({

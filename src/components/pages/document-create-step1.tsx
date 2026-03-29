@@ -347,9 +347,15 @@ function extractPartnerSnapshot(
 export function DocumentCreateStep1({
   onNext: onNextCallback,
   onPreview,
+  initialValues,
+  lockChainReference = false,
 }: {
   onNext?: (values: Step1FormValues) => void;
   onPreview?: (values: Step1FormValues) => void;
+  /** โหลดจากโหมดแก้ไข — ข้าม reset ตาม active company และล็อกเลขที่เอกสาร */
+  initialValues?: Step1FormValues | null;
+  /** สร้างต่อจากโซ่ — ล็อกเลขอ้างอิง (ผูก chain ไม่ใช่ ref ทั่วไป) */
+  lockChainReference?: boolean;
 } = {}) {
   const activeCompanyId = useCompanyStore((s) => s.activeCompanyId);
   const companies = useCompanyStore((s) => s.companies);
@@ -363,15 +369,19 @@ export function DocumentCreateStep1({
   const [companyExpanded, setCompanyExpanded] = useState(false);
   const [docNumChecking, setDocNumChecking] = useState(false);
   const [docNumError, setDocNumError] = useState<string | null>(null);
-  // Track whether user manually edited the doc number
-  const userEditedDocNum = useRef(false);
+  /** ถ้ามีเลขที่ในข้อมูลตั้งต้นแล้ว (เช่น แก้ไข) ถือว่าผู้ใช้กำหนดแล้ว — ไม่ gen ทับ */
+  const userEditedDocNum = useRef(
+    Boolean(initialValues?.documentNumber?.trim()),
+  );
 
   const form = useForm<Step1FormValues>({
     resolver: zodResolver(step1Schema),
-    defaultValues: buildDefaultStep1Values(
-      activeCompanyId ?? "",
-      companies.find((c) => c.id === activeCompanyId)?.name ?? "",
-    ),
+    defaultValues:
+      initialValues ??
+      buildDefaultStep1Values(
+        activeCompanyId ?? "",
+        companies.find((c) => c.id === activeCompanyId)?.name ?? "",
+      ),
   });
 
   const {
@@ -402,8 +412,14 @@ export function DocumentCreateStep1({
     });
   }, [activeCompanyId]);
 
+  useEffect(() => {
+    if (!lockChainReference) return;
+    setValue("showReferenceNumber", true, { shouldValidate: false });
+  }, [lockChainReference, setValue]);
+
   // ── Init form when active company changes ──
   useEffect(() => {
+    if (initialValues) return;
     if (!activeCompanyId || !companies.length) return;
     const company = companies.find((c) => c.id === activeCompanyId);
     if (!company) return;
@@ -417,7 +433,7 @@ export function DocumentCreateStep1({
       { shouldDirty: false },
     );
     userEditedDocNum.current = false;
-  }, [activeCompanyId, companies, reset, setValue]);
+  }, [initialValues, activeCompanyId, companies, reset, setValue]);
 
   // ── When selectedCompanyId changes (user picks different company) ──
   useEffect(() => {
@@ -812,7 +828,12 @@ export function DocumentCreateStep1({
 
           {/* 2.7 showReferenceNumber */}
           <div className="space-y-3">
-            <label className="flex cursor-pointer items-center gap-2.5">
+            <label
+              className={cn(
+                "flex items-center gap-2.5",
+                lockChainReference ? "cursor-default" : "cursor-pointer",
+              )}
+            >
               <Controller
                 control={control}
                 name="showReferenceNumber"
@@ -821,12 +842,18 @@ export function DocumentCreateStep1({
                     type="checkbox"
                     className="accent-primary h-4 w-4"
                     checked={field.value}
+                    disabled={lockChainReference}
                     onChange={(e) => field.onChange(e.target.checked)}
                   />
                 )}
               />
               <span className="text-sm font-medium">
                 แสดงเลขอ้างอิงในเอกสาร
+                {lockChainReference ? (
+                  <span className="ml-2 text-xs font-normal text-muted-foreground">
+                    (ล็อคจากเอกสารก่อนหน้า — เอกสารต่อเนื่อง)
+                  </span>
+                ) : null}
               </span>
             </label>
             {showReferenceNumber && (
@@ -836,6 +863,7 @@ export function DocumentCreateStep1({
                   className="rounded-xl"
                   placeholder="เช่น PO-2025-001"
                   {...register("referenceNumber")}
+                  disabled={lockChainReference}
                 />
               </div>
             )}

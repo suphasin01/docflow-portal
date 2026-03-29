@@ -22,6 +22,7 @@ export type DocumentType =
   | "credit_note"
   | "purchase_order"
   | "purchase_request"
+  | "goods_receipt"
   | "payment_voucher";
 
 export type DocumentStatus =
@@ -33,6 +34,15 @@ export type DocumentStatus =
   | "cancelled";
 
 export type PaymentStatus = "unpaid" | "partial" | "paid" | "overdue";
+
+/** บันทึกเมื่อเปลี่ยนสถานะการชำระเงิน (เก็บในเอกสาร) */
+export type PaymentStatusHistoryEntry = {
+  at: Timestamp;
+  from: PaymentStatus;
+  to: PaymentStatus;
+  userId: string;
+  userEmail?: string | null;
+};
 
 export type VatType = "inclusive" | "exclusive" | "zero" | "exempt";
 
@@ -162,6 +172,7 @@ export interface BusinessDocument extends BaseEntity {
   docNumber: string;
   type: DocumentType;
   status: DocumentStatus;
+  workflowStatus?: "draft" | "billed";
   customerId?: string;
   customerName?: string;
   vendorId?: string;
@@ -174,6 +185,20 @@ export interface BusinessDocument extends BaseEntity {
   total: number;
   notes?: string;
   paymentStatus?: PaymentStatus;
+  /** ประวัติการเปลี่ยนสถานะชำระเงิน (ล่าสุดต่อท้ายเมื่อใช้ arrayUnion) */
+  paymentStatusHistory?: PaymentStatusHistoryEntry[];
+  refDocumentId?: string | null;
+  sourceDocumentId?: string | null;
+  chainId?: string | null;
+  createdFromFlowAction?: string | null;
+  nextDocumentsCreated?: string[];
+  companySnapshot?: Record<string, unknown>;
+  partnerSnapshot?: Record<string, unknown>;
+  previewData?: {
+    step1Data?: Record<string, unknown> | null;
+    step2Data?: Record<string, unknown> | null;
+    step3Data?: Record<string, unknown> | null;
+  };
 }
 
 export interface Payment extends BaseEntity {

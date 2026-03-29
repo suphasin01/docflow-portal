@@ -40,12 +40,20 @@ export interface SignatureBlock {
   signatureDate: string;
 }
 
+/** พิกัด px บนหน้า A4 (เดียวกับพรีวิว/PDF) — มุมซ้ายบนของกรอบตราประทับ */
+export const DEFAULT_STAMP_POSITION_X = 430;
+export const DEFAULT_STAMP_POSITION_Y = 240;
+export const DEFAULT_STAMP_ROTATION_DEG = 0;
+
 export interface Step3FormValues {
   signatures: Record<SignatureRole, SignatureBlock>;
   stamp: {
     enabled: boolean;
     sourceType: "logo" | "upload";
     stampImageUrl: string;
+    positionX: number;
+    positionY: number;
+    rotationDeg: number;
   };
   paymentMethods: {
     visibleMethods: string[];
@@ -123,7 +131,14 @@ export function buildDefaultStep3Values(): Step3FormValues {
       approver: emptySignatureBlock(),
       issuer: { ...emptySignatureBlock(), enabled: true },
     },
-    stamp: { enabled: false, sourceType: "upload", stampImageUrl: "" },
+    stamp: {
+      enabled: false,
+      sourceType: "upload",
+      stampImageUrl: "",
+      positionX: DEFAULT_STAMP_POSITION_X,
+      positionY: DEFAULT_STAMP_POSITION_Y,
+      rotationDeg: DEFAULT_STAMP_ROTATION_DEG,
+    },
     paymentMethods: { visibleMethods: [], checkedMethods: [], customOtherLabel: "" },
     paymentTerm: { enabled: false, paymentTermType: "cash", customPaymentTermText: "" },
     note: { text: "" },

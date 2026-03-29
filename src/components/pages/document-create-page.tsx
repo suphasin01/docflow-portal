@@ -1,16 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Check } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { AppHeader } from "@/components/layout/app-header";
+import { Button } from "@/components/ui/button";
 import { DocumentCreateStep1 } from "./document-create-step1";
-import { DocumentCreateStep2 } from "./document-create-step2";
-import { DocumentCreateStep3 } from "./document-create-step3";
+import {
+  DocumentCreateStep2,
+  mergeStep2Initial,
+} from "./document-create-step2";
+import {
+  DocumentCreateStep3,
+  mergeStep3Initial,
+} from "./document-create-step3";
 import { PreviewDialog } from "./document-preview-dialog";
-import type { Step1FormValues } from "@/lib/schemas/document-draft";
+import { useAuth } from "@/components/providers/auth-provider";
+import { useCompanyStore } from "@/stores/company-store";
+import {
+  step1PrefillSchema,
+  step1Schema,
+  type Step1FormValues,
+} from "@/lib/schemas/document-draft";
 import type { Step2FormValues } from "@/lib/schemas/document-step2";
-import { buildDefaultStep3Values, type Step3FormValues } from "@/lib/schemas/document-step3";
+import {
+  buildDefaultStep3Values,
+  type Step3FormValues,
+} from "@/lib/schemas/document-step3";
+import { DOC_TYPE_CONFIG, type ExtDocType } from "@/lib/doc-types";
+import type { BusinessDocument } from "@/types";
+import {
+  buildRelatedDocumentDraftPayload,
+  createBusinessDocumentDraft,
+  getBusinessDocumentById,
+  updateBusinessDocumentFromWizard,
+} from "@/lib/firebase/document-detail-mutations";
+
+function isExtDocType(s: string): s is ExtDocType {
+  return Object.prototype.hasOwnProperty.call(DOC_TYPE_CONFIG, s);
+}
 
 const STEPS = [
   { n: 1, label: "ส่วนหัว" },
@@ -57,10 +87,38 @@ function StepperHeader({ current }: { current: number }) {
 }
 
 export function DocumentCreatePage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
+  const fromDocParam = searchParams.get("fromDoc");
+  const nextParam = searchParams.get("next");
+  const { user } = useAuth();
+  const companyId = useCompanyStore((s) => s.activeCompanyId);
+  const setActiveCompanyId = useCompanyStore((s) => s.setActiveCompanyId);
+
   const [step, setStep] = useState(1);
   const [step1Data, setStep1Data] = useState<Step1FormValues | null>(null);
   const [step2Data, setStep2Data] = useState<Step2FormValues | null>(null);
   const [step3Data, setStep3Data] = useState<Step3FormValues | null>(null);
+
+  /** ค่า step1 ตอนโหลดโหมดแก้ไข (ส่งให้ฟอร์มครั้งแรกเท่านั้น) */
+  const [initialStep1ForEdit, setInitialStep1ForEdit] =
+    useState<Step1FormValues | null>(null);
+  const [editDocumentId, setEditDocumentId] = useState<string | null>(null);
+  const [editLoadStatus, setEditLoadStatus] = useState<
+    "idle" | "loading" | "ready"
+  >("idle");
+
+  /** เอกสารต้นทางเมื่อมาจาก «สร้างต่อเนื่อง» — ส่งตอนบันทึกเพื่อผูกโซ่ / workflow */
+  const [sourceDocumentForCreate, setSourceDocumentForCreate] = useState<
+    (BusinessDocument & { id: string }) | null
+  >(null);
+  const [chainPrefillStatus, setChainPrefillStatus] = useState<
+    "idle" | "loading" | "ready"
+  >("idle");
+
+  /** ใช้ไม่ให้ effect ของโหมดแก้ไขล้างฟอร์มตอนไม่มี editId แต่กำลัง prefill จาก chain */
+  const hadEditInUrlRef = useRef(false);
 
   // ── Centralized preview state ──────────────────────────────────────────────
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -69,6 +127,189 @@ export function DocumentCreatePage() {
     s2: Step2FormValues | null;
     s3: Step3FormValues | null;
   }>({ s1: null, s2: null, s3: null });
+  /** ซิงก์ตำแหน่งตราประทับจากพรีวิวเข้าฟอร์ม step 3 */
+  const [previewStampLayout, setPreviewStampLayout] = useState<{
+    x: number;
+    y: number;
+    r: number;
+  } | null>(null);
+
+  const step3ForPreview = useMemo(
+    () => step3Data ?? previewSnapshot.s3 ?? null,
+    [step3Data, previewSnapshot.s3],
+  );
+
+  const handleStampLayoutChange = useCallback(
+    (
+      layout: Pick<
+        Step3FormValues["stamp"],
+        "positionX" | "positionY" | "rotationDeg"
+      >,
+    ) => {
+      setPreviewSnapshot((prev) => {
+        const base = prev.s3 ?? buildDefaultStep3Values();
+        return {
+          ...prev,
+          s3: {
+            ...base,
+            stamp: { ...base.stamp, ...layout },
+          },
+        };
+      });
+      setPreviewStampLayout({
+        x: layout.positionX,
+        y: layout.positionY,
+        r: layout.rotationDeg,
+      });
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!editId) {
+      setEditDocumentId(null);
+      setEditLoadStatus("idle");
+      if (hadEditInUrlRef.current) {
+        setInitialStep1ForEdit(null);
+        setStep1Data(null);
+        setStep2Data(null);
+        setStep3Data(null);
+        setSourceDocumentForCreate(null);
+      }
+      hadEditInUrlRef.current = false;
+      return;
+    }
+
+    hadEditInUrlRef.current = true;
+    if (!user) return;
+
+    let cancelled = false;
+    setEditLoadStatus("loading");
+
+    void (async () => {
+      try {
+        setSourceDocumentForCreate(null);
+        const docRow = await getBusinessDocumentById(editId);
+        if (cancelled) return;
+        if (!docRow?.previewData?.step1Data) {
+          toast.error("ไม่พบข้อมูลฟอร์มของเอกสาร");
+          router.replace("/documents/create");
+          return;
+        }
+
+        const p1 = step1Schema.safeParse(docRow.previewData.step1Data);
+        if (!p1.success) {
+          toast.error("ข้อมูลเอกสารไม่สมบูรณ์");
+          router.replace("/documents/create");
+          return;
+        }
+
+        setActiveCompanyId(docRow.companyId);
+        const s2 = mergeStep2Initial(
+          docRow.previewData.step2Data as Step2FormValues | undefined,
+        );
+        const s3 = mergeStep3Initial(
+          docRow.previewData.step3Data as Step3FormValues | undefined,
+        );
+
+        setInitialStep1ForEdit(p1.data);
+        setStep1Data(p1.data);
+        setStep2Data(s2);
+        setStep3Data(s3);
+        setEditDocumentId(editId);
+        setStep(1);
+        setEditLoadStatus("ready");
+      } catch (e) {
+        console.error(e);
+        if (!cancelled) {
+          toast.error("โหลดเอกสารไม่สำเร็จ");
+          router.replace("/documents/create");
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [editId, user, router, setActiveCompanyId]);
+
+  /** prefill step1–3 จากเอกสารต้นทาง (ปุ่มสร้างต่อเนื่องบนหน้ารายละเอียด) */
+  useEffect(() => {
+    if (editId) {
+      setChainPrefillStatus("ready");
+      return;
+    }
+
+    if (!fromDocParam || !nextParam) {
+      setChainPrefillStatus("ready");
+      return;
+    }
+    if (!user) return;
+
+    if (!isExtDocType(nextParam)) {
+      toast.error("ประเภทเอกสารไม่ถูกต้อง");
+      router.replace("/documents/create");
+      return;
+    }
+
+    let cancelled = false;
+    setChainPrefillStatus("loading");
+
+    void (async () => {
+      try {
+        const docRow = await getBusinessDocumentById(fromDocParam);
+        if (cancelled) return;
+        if (!docRow?.previewData?.step1Data) {
+          toast.error("ไม่พบข้อมูลฟอร์มของเอกสารต้นทาง");
+          router.replace("/documents/create");
+          return;
+        }
+
+        const cloned = buildRelatedDocumentDraftPayload({
+          sourceDocument: { ...docRow, id: fromDocParam },
+          nextType: nextParam,
+        });
+
+        const p1 = step1PrefillSchema.safeParse(cloned.step1Data);
+        if (!p1.success) {
+          toast.error("ข้อมูลเอกสารต้นทางไม่สมบูรณ์");
+          router.replace("/documents/create");
+          return;
+        }
+
+        setActiveCompanyId(docRow.companyId);
+        const s2 = mergeStep2Initial(cloned.step2Data);
+        const s3 = mergeStep3Initial(cloned.step3Data);
+
+        setSourceDocumentForCreate({ ...docRow, id: fromDocParam });
+        setInitialStep1ForEdit(p1.data);
+        setStep1Data(p1.data);
+        setStep2Data(s2);
+        setStep3Data(s3);
+        setEditDocumentId(null);
+        setStep(1);
+        setChainPrefillStatus("ready");
+        router.replace("/documents/create", { scroll: false });
+      } catch (e) {
+        console.error(e);
+        if (!cancelled) {
+          toast.error("โหลดข้อมูลสำหรับสร้างต่อไม่สำเร็จ");
+          router.replace("/documents/create");
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    editId,
+    fromDocParam,
+    nextParam,
+    user,
+    router,
+    setActiveCompanyId,
+  ]);
 
   function openPreview(
     s1: Step1FormValues | null,
@@ -79,41 +320,143 @@ export function DocumentCreatePage() {
     setPreviewOpen(true);
   }
 
+  const isEditMode = Boolean(editDocumentId);
+  const showEditLoader = Boolean(editId) && editLoadStatus !== "ready";
+  const showChainPrefillLoader =
+    !editId &&
+    Boolean(fromDocParam && nextParam) &&
+    chainPrefillStatus !== "ready";
+  const showPageLoader = showEditLoader || showChainPrefillLoader;
+
+  const formRootKey =
+    editDocumentId ??
+    (sourceDocumentForCreate
+      ? `from-${sourceDocumentForCreate.id}`
+      : "new");
+
+  const previewDialogStep3 = useMemo(
+    () => previewSnapshot.s3 ?? buildDefaultStep3Values(),
+    [previewSnapshot.s3],
+  );
+
   return (
     <div className="min-h-screen">
-      <AppHeader title="ออกเอกสาร" subtitle="สร้างเอกสารธุรกิจ" />
+      <AppHeader
+        title={isEditMode ? "แก้ไขเอกสาร" : "ออกเอกสาร"}
+        subtitle={
+          isEditMode ? "ปรับปรุงรายละเอียดแล้วบันทึก" : "สร้างเอกสารธุรกิจ"
+        }
+        actions={
+          editId ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-xl"
+              onClick={() =>
+                router.push(
+                  `/documents/detail?id=${encodeURIComponent(editDocumentId ?? editId)}`,
+                )
+              }
+            >
+              ยกเลิกการแก้ไข
+            </Button>
+          ) : null
+        }
+      />
       <StepperHeader current={step} />
 
-      {step === 1 && (
+      {showPageLoader && (
+        <div className="px-6 py-16 text-center text-sm text-muted-foreground">
+          {showChainPrefillLoader
+            ? "กำลังเตรียมแบบฟอร์มจากเอกสารต้นทาง…"
+            : "กำลังโหลดเอกสาร…"}
+        </div>
+      )}
+
+      {!showPageLoader && step === 1 && (
         <DocumentCreateStep1
+          key={`${formRootKey}-1`}
+          initialValues={initialStep1ForEdit}
+          lockChainReference={!!sourceDocumentForCreate}
           onNext={(values) => {
             setStep1Data(values);
             setStep(2);
           }}
-          onPreview={(values) => openPreview(values, step2Data, step3Data)}
+          onPreview={(values) =>
+            openPreview(values, step2Data, step3ForPreview)
+          }
         />
       )}
 
-      {step === 2 && (
+      {!showPageLoader && step === 2 && (
         <DocumentCreateStep2
+          key={`${formRootKey}-2`}
           step1Data={step1Data}
+          initialValues={step2Data}
           onBack={() => setStep(1)}
           onNext={(values) => {
             setStep2Data(values);
             setStep(3);
           }}
-          onPreview={(values) => openPreview(step1Data, values, step3Data)}
+          onPreview={(values) =>
+            openPreview(step1Data, values, step3ForPreview)
+          }
         />
       )}
 
-      {step === 3 && (
+      {!showPageLoader && step === 3 && (
         <DocumentCreateStep3
+          key={`${formRootKey}-3`}
           step1Data={step1Data}
           step2Data={step2Data}
+          initialValues={mergeStep3Initial(step3Data ?? previewSnapshot.s3)}
+          previewStampLayout={previewStampLayout}
           onBack={() => setStep(2)}
-          onSave={(values) => {
-            setStep3Data(values);
-            console.log("Draft complete", { step1Data, step2Data, values });
+          onSave={async (values) => {
+            if (!user || !companyId || !step1Data || !step2Data) {
+              toast.error("ข้อมูลเอกสารยังไม่พร้อมสำหรับบันทึก");
+              return;
+            }
+
+            try {
+              setStep3Data(values);
+              if (editDocumentId) {
+                await updateBusinessDocumentFromWizard({
+                  documentId: editDocumentId,
+                  companyId,
+                  step1Data,
+                  step2Data,
+                  step3Data: values,
+                });
+                toast.success("บันทึกการแก้ไขเรียบร้อยแล้ว");
+                router.push(`/documents/detail?id=${editDocumentId}`);
+              } else {
+                const id = await createBusinessDocumentDraft({
+                  companyId,
+                  userId: user.uid,
+                  step1Data,
+                  step2Data,
+                  step3Data: values,
+                  sourceDocument: sourceDocumentForCreate ?? undefined,
+                  nextType: sourceDocumentForCreate
+                    ? step1Data.documentType
+                    : undefined,
+                  createdFromFlowAction: sourceDocumentForCreate
+                    ? step1Data.documentType
+                    : null,
+                });
+                setSourceDocumentForCreate(null);
+                toast.success("บันทึกเอกสารเรียบร้อยแล้ว");
+                router.push(`/documents/detail?id=${id}`);
+              }
+            } catch (error) {
+              console.error(error);
+              toast.error(
+                editDocumentId
+                  ? "ไม่สามารถบันทึกการแก้ไขได้"
+                  : "ไม่สามารถบันทึกเอกสารได้",
+              );
+            }
           }}
           onPreview={(values) => openPreview(step1Data, step2Data, values)}
         />
@@ -125,7 +468,8 @@ export function DocumentCreatePage() {
         onOpenChange={setPreviewOpen}
         step1Data={previewSnapshot.s1}
         step2Data={previewSnapshot.s2}
-        step3Data={previewSnapshot.s3 ?? buildDefaultStep3Values()}
+        step3Data={previewDialogStep3}
+        onStampLayoutChange={handleStampLayoutChange}
       />
     </div>
   );

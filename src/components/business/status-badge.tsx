@@ -7,11 +7,15 @@ const variants: Record<
 > = {
   draft: {
     className: "bg-slate-100 text-slate-700 border-slate-200",
-    label: "ฉบับร่าง",
+    label: "ร่าง",
   },
   issued: {
     className: "bg-sky-50 text-sky-800 border-sky-200",
     label: "ออกแล้ว",
+  },
+  billed: {
+    className: "bg-violet-50 text-violet-900 border-violet-200",
+    label: "ออกบิลแล้ว",
   },
   paid: {
     className: "bg-emerald-50 text-emerald-800 border-emerald-200",
@@ -23,7 +27,7 @@ const variants: Record<
   },
   unpaid: {
     className: "bg-orange-50 text-orange-900 border-orange-200",
-    label: "ค้างชำระ",
+    label: "ยังไม่ชำระ",
   },
   overdue: {
     className: "bg-red-50 text-red-800 border-red-200",

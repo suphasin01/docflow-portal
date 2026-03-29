@@ -862,12 +862,42 @@ function Step3TotalsCard({ step2Data }: { step2Data: Step2FormValues | null }) {
 
 // ─── Main Step 3 Component ────────────────────────────────────────────────────
 
+export function mergeStep3Initial(
+  initial: Step3FormValues | null | undefined,
+): Step3FormValues {
+  const base = buildDefaultStep3Values();
+  if (!initial) return base;
+  return {
+    ...base,
+    ...initial,
+    signatures: {
+      receiver: {
+        ...base.signatures.receiver,
+        ...initial.signatures?.receiver,
+      },
+      approver: {
+        ...base.signatures.approver,
+        ...initial.signatures?.approver,
+      },
+      issuer: { ...base.signatures.issuer, ...initial.signatures?.issuer },
+    },
+    stamp: { ...base.stamp, ...initial.stamp },
+    paymentMethods: { ...base.paymentMethods, ...initial.paymentMethods },
+    paymentTerm: { ...base.paymentTerm, ...initial.paymentTerm },
+    note: { ...base.note, ...initial.note },
+    terms: { ...base.terms, ...initial.terms },
+  };
+}
+
 interface Step3Props {
   step1Data: Step1FormValues | null;
   step2Data: Step2FormValues | null;
   onBack: () => void;
   onSave: (values: Step3FormValues) => void;
   onPreview?: (values: Step3FormValues) => void;
+  initialValues?: Step3FormValues | null;
+  /** จากพรีวิวเมื่อลาก/หมุนตราประทับ — sync เข้าฟอร์ม */
+  previewStampLayout?: { x: number; y: number; r: number } | null;
 }
 
 export function DocumentCreateStep3({
@@ -876,6 +906,8 @@ export function DocumentCreateStep3({
   onBack,
   onSave,
   onPreview,
+  initialValues,
+  previewStampLayout,
 }: Step3Props) {
   const companies = useCompanyStore((s) => s.companies);
   /** โลโก้ของบริษัทที่เลือกในเอกสาร (ไม่ใช่แค่ active company ใน store) */
@@ -891,7 +923,7 @@ export function DocumentCreateStep3({
     : "เอกสาร";
 
   const { control, watch, setValue, handleSubmit } = useForm<Step3FormValues>({
-    defaultValues: buildDefaultStep3Values(),
+    defaultValues: mergeStep3Initial(initialValues ?? undefined),
   });
 
   const [presets, setPresets] = useState<Step3PresetStore>(
@@ -903,6 +935,13 @@ export function DocumentCreateStep3({
   const stampSource = watch("stamp.sourceType");
   const stampImageUrl = watch("stamp.stampImageUrl");
   const step3Values = watch();
+
+  useEffect(() => {
+    if (!previewStampLayout) return;
+    setValue("stamp.positionX", previewStampLayout.x, { shouldDirty: true });
+    setValue("stamp.positionY", previewStampLayout.y, { shouldDirty: true });
+    setValue("stamp.rotationDeg", previewStampLayout.r, { shouldDirty: true });
+  }, [previewStampLayout, setValue]);
 
   useEffect(() => {
     async function applyCompanyLogoStamp() {

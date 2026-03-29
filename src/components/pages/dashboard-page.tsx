@@ -19,7 +19,11 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { useCompanyStore } from "@/stores/company-store";
 import { useDashboardStats } from "@/hooks/use-workspace-data";
 import { seedDemoData } from "@/lib/data/seed-demo";
-import { documentTypeLabels, paymentStatusLabels } from "@/lib/navigation";
+import {
+  documentTypeLabels,
+  getDashboardDocumentStatusDisplay,
+  paymentStatusLabels,
+} from "@/lib/navigation";
 import { StatusBadge } from "@/components/business/status-badge";
 import { toast } from "sonner";
 import {
@@ -207,11 +211,7 @@ export function DashboardPage() {
                       </td>
                       <td className="py-3">
                         <StatusBadge
-                          status={d.paymentStatus ?? d.status}
-                          label={
-                            paymentStatusLabels[d.paymentStatus ?? ""] ??
-                            documentStatusLabel(d.status)
-                          }
+                          {...getDashboardDocumentStatusDisplay(d)}
                         />
                       </td>
                     </tr>
@@ -236,14 +236,3 @@ function Row({ label, value }: { label: string; value: number }) {
   );
 }
 
-function documentStatusLabel(s: string) {
-  const map: Record<string, string> = {
-    draft: "ฉบับร่าง",
-    issued: "ออกแล้ว",
-    paid: "ชำระแล้ว",
-    partial: "ชำระบางส่วน",
-    overdue: "เกินกำหนด",
-    cancelled: "ยกเลิก",
-  };
-  return map[s] ?? s;
-}
