@@ -100,6 +100,36 @@ function fixOklchInClone(clonedDoc: Document) {
     clonedDoc.head.appendChild(style);
   }
 
+  const exportStyle = clonedDoc.createElement("style");
+  exportStyle.textContent = `
+    [data-pdf-text-box] {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
+    [data-pdf-text-box="row"] {
+      justify-content: space-between !important;
+    }
+
+    [data-pdf-text-box] > span {
+      position: relative !important;
+      top: -7px !important;
+      line-height: 1 !important;
+      display: block !important;
+    }
+
+    [data-pdf-text-box="table-cell"] {
+      display: table-cell !important;
+      vertical-align: middle !important;
+    }
+
+    [data-pdf-text-box="left"] {
+      display: block !important;
+    }
+  `;
+  clonedDoc.head.appendChild(exportStyle);
+
   // แปลง inline style attribute ที่อาจมี oklch ด้วย
   clonedDoc.querySelectorAll<HTMLElement>("[style]").forEach((el) => {
     const s = el.getAttribute("style") ?? "";
@@ -647,12 +677,18 @@ export function PreviewDialog({
                       {/* Preview badge */}
                       <div className="mb-4 flex justify-end">
                         {docVariant === "original" ? (
-                          <div className="inline-flex items-center gap-1 rounded-md border border-[#C9D4EE] bg-[#EEF2FF] px-4 py-2 text-[13px] font-semibold text-[#334FA3]">
-                            ต้นฉบับ
+                          <div
+                            data-pdf-text-box="inline"
+                            className="inline-flex items-center gap-1 rounded-md border border-[#C9D4EE] bg-[#EEF2FF] px-4 py-2 text-[13px] font-semibold text-[#334FA3]"
+                          >
+                            <span>ต้นฉบับ</span>
                           </div>
                         ) : (
-                          <div className="inline-flex rounded-md bg-[#F1F3F6] px-4 py-2 text-[13px] font-medium text-[#7B8190]">
-                            สำเนา
+                          <div
+                            data-pdf-text-box="inline"
+                            className="inline-flex rounded-md bg-[#F1F3F6] px-4 py-2 text-[13px] font-medium text-[#7B8190]"
+                          >
+                            <span>สำเนา</span>
                           </div>
                         )}
                       </div>
@@ -812,59 +848,92 @@ export function PreviewDialog({
                       </div>
 
                       {/* ── Items table ── */}
-                      <div className="mt-8 border border-b-0 border-[#DEE3F3] bg-[#E9EDFB] px-4 py-2 text-[12px] font-semibold text-[#334FA3]">
-                        รายการสินค้า / บริการ
+                      <div
+                        data-pdf-text-box="left"
+                        className="mt-8 border border-b-0 border-[#DEE3F3] bg-[#E9EDFB] px-4 py-2 text-[12px] font-semibold text-[#334FA3]"
+                      >
+                        <span>รายการสินค้า / บริการ</span>
                       </div>
                       <table className="mt-0 w-full table-fixed border border-[#DEE3F3] text-[11px]">
                         <thead className="bg-[#F8FAFD] text-[#4A5568]">
                           <tr>
                             {cols.index ? (
-                              <th className="w-8 max-w-8 border border-[#DEE3F3] p-2 text-center">
-                                #
+                              <th
+                                data-pdf-text-box="table-cell"
+                                className="w-8 max-w-8 border border-[#DEE3F3] p-2 text-center"
+                              >
+                                <span>#</span>
                               </th>
                             ) : null}
                             {cols.code ? (
-                              <th className="w-[4.5rem] max-w-[4.5rem] border border-[#DEE3F3] p-2 text-center">
-                                รหัส
+                              <th
+                                data-pdf-text-box="table-cell"
+                                className="w-[4.5rem] max-w-[4.5rem] border border-[#DEE3F3] p-2 text-center"
+                              >
+                                <span>รหัส</span>
                               </th>
                             ) : null}
                             {cols.itemName ? (
-                              <th className="min-w-0 border border-[#DEE3F3] p-2 text-left">
-                                รายการ
+                              <th
+                                data-pdf-text-box="table-cell"
+                                className="min-w-0 border border-[#DEE3F3] p-2 text-left"
+                              >
+                                <span>รายการ</span>
                               </th>
                             ) : null}
                             {cols.description ? (
-                              <th className="min-w-0 border border-[#DEE3F3] p-2 text-left">
-                                รายละเอียด
+                              <th
+                                data-pdf-text-box="table-cell"
+                                className="min-w-0 border border-[#DEE3F3] p-2 text-left"
+                              >
+                                <span>รายละเอียด</span>
                               </th>
                             ) : null}
                             {cols.quantity ? (
-                              <th className="w-[3.25rem] max-w-[3.25rem] border border-[#DEE3F3] p-2 text-center">
-                                จำนวน
+                              <th
+                                data-pdf-text-box="table-cell"
+                                className="w-[3.25rem] max-w-[3.25rem] border border-[#DEE3F3] p-2 text-center"
+                              >
+                                <span>จำนวน</span>
                               </th>
                             ) : null}
                             {cols.unit ? (
-                              <th className="w-12 max-w-[3rem] border border-[#DEE3F3] p-2 text-center">
-                                หน่วย
+                              <th
+                                data-pdf-text-box="table-cell"
+                                className="w-12 max-w-[3rem] border border-[#DEE3F3] p-2 text-center"
+                              >
+                                <span>หน่วย</span>
                               </th>
                             ) : null}
                             {cols.unitPrice ? (
-                              <th className="w-[4.5rem] max-w-[4.5rem] border border-[#DEE3F3] p-2 text-right">
-                                ราคา/หน่วย
+                              <th
+                                data-pdf-text-box="table-cell"
+                                className="w-[4.5rem] max-w-[4.5rem] border border-[#DEE3F3] p-2 text-right"
+                              >
+                                <span>ราคา/หน่วย</span>
                               </th>
                             ) : null}
                             {cols.discount ? (
-                              <th className="w-[4rem] max-w-[4rem] border border-[#DEE3F3] p-2 text-right">
-                                ส่วนลด
+                              <th
+                                data-pdf-text-box="table-cell"
+                                className="w-[4rem] max-w-[4rem] border border-[#DEE3F3] p-2 text-right"
+                              >
+                                <span>ส่วนลด</span>
                               </th>
                             ) : null}
                             {cols.vat ? (
-                              <th className="w-[3.5rem] max-w-[3.5rem] border border-[#DEE3F3] p-2 text-center">
-                                ภาษี
+                              <th
+                                data-pdf-text-box="table-cell"
+                                className="w-[3.5rem] max-w-[3.5rem] border border-[#DEE3F3] p-2 text-center"
+                              >
+                                <span>ภาษี</span>
                               </th>
                             ) : null}
-                            <th className="w-[4.5rem] max-w-[4.5rem] border border-[#DEE3F3] p-2 text-right">
-                              รวม
+                            <th
+                              data-pdf-text-box="table-cell"
+                              className="w-[4.5rem] max-w-[4.5rem] border border-[#DEE3F3] p-2 text-right"
+                            >
+                              <span>รวม</span>
                             </th>
                           </tr>
                         </thead>
@@ -1010,7 +1079,10 @@ export function PreviewDialog({
                               </span>
                             </div>
                           ) : null}
-                          <div className="mt-2 flex justify-between border border-[#DEE3F3] bg-[#E9EDFB] px-2 py-3 font-semibold text-[#334FA3]">
+                          <div
+                            data-pdf-text-box="row"
+                            className="mt-2 flex justify-between border border-[#DEE3F3] bg-[#E9EDFB] px-2 py-3 font-semibold text-[#334FA3]"
+                          >
                             <span>ยอดสุทธิ</span>
                             <span className="text-[14px] leading-none">
                               {fmt(totals.netTotal)}
@@ -1019,8 +1091,11 @@ export function PreviewDialog({
                         </div>
                       </div>
 
-                      <div className="mt-4 rounded-md border-2 border-[#4D67B0] bg-[#EEF2FF] px-4 py-3 text-center text-[14px] font-medium text-[#334FA3]">
-                        ( {amountInWords} )
+                      <div
+                        data-pdf-text-box="block"
+                        className="mt-4 rounded-md border-2 border-[#4D67B0] bg-[#EEF2FF] px-4 py-3 text-center text-[14px] font-medium text-[#334FA3]"
+                      >
+                        <span>( {amountInWords} )</span>
                       </div>
 
                       {/* ── Payment methods + term ── */}
