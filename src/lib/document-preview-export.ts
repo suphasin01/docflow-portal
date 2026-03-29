@@ -35,7 +35,63 @@ function convertOklch(val: string): string {
   );
 }
 
-function fixPreviewExportClone(clonedDoc: Document) {
+/**
+ * html2canvas ไม่เรนเดอร์ CSS filter (grayscale) ให้ตรงพรีวิว — วาดลง canvas จากรูปต้นฉบับที่โหลดแล้ว
+ */
+/** ใช้ใน onclone ของ html2canvas — ให้ PDF/พิมพ์ได้ grayscale แบบเดียวกับพรีวิว */
+export function bakeStampGrayscaleIntoCanvas(
+  clonedDoc: Document,
+  clonedRoot: HTMLElement,
+  liveRoot: HTMLElement,
+) {
+  const clonedImgs = [
+    ...clonedRoot.querySelectorAll<HTMLImageElement>(
+      "img[data-document-stamp]",
+    ),
+  ];
+  const liveImgs = [
+    ...liveRoot.querySelectorAll<HTMLImageElement>("img[data-document-stamp]"),
+  ];
+  const n = Math.min(clonedImgs.length, liveImgs.length);
+  for (let i = 0; i < n; i++) {
+    const cloneImg = clonedImgs[i];
+    const liveImg = liveImgs[i];
+    if (!liveImg.complete || liveImg.naturalWidth === 0) continue;
+
+    const w = liveImg.naturalWidth;
+    const h = liveImg.naturalHeight;
+    const canvas = clonedDoc.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) continue;
+
+    ctx.filter = "grayscale(100%)";
+    ctx.globalAlpha = 0.5;
+    try {
+      ctx.drawImage(liveImg, 0, 0);
+    } catch {
+      continue;
+    }
+    ctx.filter = "none";
+    ctx.globalAlpha = 1;
+
+    canvas.setAttribute("data-document-stamp", "");
+    canvas.className = cloneImg.className.replace(/\bgrayscale\b/g, "").trim();
+    canvas.style.cssText = cloneImg.style.cssText;
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+    canvas.style.objectFit = "contain";
+    canvas.style.pointerEvents = "none";
+    cloneImg.parentNode?.replaceChild(canvas, cloneImg);
+  }
+}
+
+function fixPreviewExportClone(
+  clonedDoc: Document,
+  clonedRoot: HTMLElement,
+  liveRoot: HTMLElement,
+) {
   const rootStyle = window.getComputedStyle(document.documentElement);
   const overrides = ([...rootStyle] as string[])
     .filter((p) => p.startsWith("--"))
@@ -83,6 +139,8 @@ function fixPreviewExportClone(clonedDoc: Document) {
   `;
   clonedDoc.head.appendChild(exportStyle);
 
+  bakeStampGrayscaleIntoCanvas(clonedDoc, clonedRoot, liveRoot);
+
   clonedDoc.querySelectorAll<HTMLElement>("[style]").forEach((el) => {
     const s = el.getAttribute("style") ?? "";
     if (s.includes("oklch")) el.setAttribute("style", convertOklch(s));
@@ -111,7 +169,8 @@ export async function exportPreviewContainerToPdf(
     useCORS: true,
     logging: false,
     backgroundColor: "#ffffff",
-    onclone: (clonedDoc) => fixPreviewExportClone(clonedDoc),
+    onclone: (clonedDoc, clonedRoot) =>
+      fixPreviewExportClone(clonedDoc, clonedRoot, el),
   });
 
   const A4_W = 210;
@@ -158,7 +217,8 @@ export async function printPreviewContainer(el: HTMLElement) {
     useCORS: true,
     logging: false,
     backgroundColor: "#ffffff",
-    onclone: (clonedDoc) => fixPreviewExportClone(clonedDoc),
+    onclone: (clonedDoc, clonedRoot) =>
+      fixPreviewExportClone(clonedDoc, clonedRoot, el),
   });
 
   const imgData = canvas.toDataURL("image/png");

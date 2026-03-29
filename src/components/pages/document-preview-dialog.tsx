@@ -47,6 +47,7 @@ import {
   type Step3FormValues,
 } from "@/lib/schemas/document-step3";
 import { useCompanyStore } from "@/stores/company-store";
+import { bakeStampGrayscaleIntoCanvas } from "@/lib/document-preview-export";
 
 // ── แปลง oklch() → rgb() ก่อนส่งให้ html2canvas (v1.x ยังไม่รองรับ oklch) ──
 function oklch2rgb(L: number, C: number, H: number, A = 1): string {
@@ -84,7 +85,11 @@ function convertOklch(val: string): string {
   );
 }
 
-function fixOklchInClone(clonedDoc: Document) {
+function fixOklchInClone(
+  clonedDoc: Document,
+  clonedRoot: HTMLElement,
+  liveRoot: HTMLElement,
+) {
   // แปลง CSS custom properties ที่มี oklch บน :root ใน cloned document
   const rootStyle = window.getComputedStyle(document.documentElement);
   const overrides = ([...rootStyle] as string[])
@@ -138,6 +143,8 @@ function fixOklchInClone(clonedDoc: Document) {
     const s = el.getAttribute("style") ?? "";
     if (s.includes("oklch")) el.setAttribute("style", convertOklch(s));
   });
+
+  bakeStampGrayscaleIntoCanvas(clonedDoc, clonedRoot, liveRoot);
 }
 
 // ── lazy import เพื่อไม่ให้ bundle size โตตอนโหลดหน้า ──
@@ -152,7 +159,8 @@ async function renderToPdf(el: HTMLElement, filename: string) {
     useCORS: true,
     logging: false,
     backgroundColor: "#ffffff",
-    onclone: (_clonedDoc) => fixOklchInClone(_clonedDoc),
+    onclone: (clonedDoc, clonedRoot) =>
+      fixOklchInClone(clonedDoc, clonedRoot, el),
   });
 
   const imgData = canvas.toDataURL("image/jpeg", 0.95);
@@ -209,7 +217,8 @@ async function printElement(el: HTMLElement) {
     useCORS: true,
     logging: false,
     backgroundColor: "#ffffff",
-    onclone: (_clonedDoc) => fixOklchInClone(_clonedDoc),
+    onclone: (clonedDoc, clonedRoot) =>
+      fixOklchInClone(clonedDoc, clonedRoot, el),
   });
 
   const imgData = canvas.toDataURL("image/png");
@@ -393,7 +402,9 @@ export function PreviewDialog({
     y: DEFAULT_STAMP_POSITION_Y,
   });
   /** องศาหมุนตราประทับ (รอบจุดศูนย์กลาง) — ตรงกับ PDF */
-  const [stampRotation, setStampRotation] = useState(DEFAULT_STAMP_ROTATION_DEG);
+  const [stampRotation, setStampRotation] = useState(
+    DEFAULT_STAMP_ROTATION_DEG,
+  );
   const [dragging, setDragging] = useState(false);
   const [fitScale, setFitScale] = useState(1);
   const [zoomScale, setZoomScale] = useState<number | null>(null);
@@ -1257,6 +1268,7 @@ export function PreviewDialog({
                           >
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
+                              data-document-stamp=""
                               src={stampDisplayUrl}
                               alt="stamp"
                               className="pointer-events-none h-full w-full object-contain opacity-50 grayscale"

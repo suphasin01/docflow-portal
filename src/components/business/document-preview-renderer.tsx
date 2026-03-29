@@ -505,6 +505,7 @@ export function DocumentPreviewRenderer({
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
+                data-document-stamp=""
                 src={stampDisplayUrl}
                 alt="stamp"
                 className="h-full w-full object-contain opacity-50 grayscale"
