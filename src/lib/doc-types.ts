@@ -153,6 +153,7 @@ export const DOCUMENT_TYPES_WITH_PAYMENT_STATUS = new Set<ExtDocType>([
   "payment_voucher",
   "sales_order",
   "purchase_order",
+  "goods_receipt",
   "billing_note",
   "tax_invoice",
 ]);

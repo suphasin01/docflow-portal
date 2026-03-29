@@ -1,8 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, Clock, Info, Link2 } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronDown,
+  ChevronRight,
+  Clock,
+  Info,
+  Link2,
+} from "lucide-react";
 import type { Timestamp } from "firebase/firestore";
 import { AppHeader } from "@/components/layout/app-header";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +41,7 @@ import {
   documentTypeSupportsPaymentStatus,
   type ExtDocType,
 } from "@/lib/doc-types";
+import { getDocumentTypeBadgeLabel } from "@/lib/document-flow";
 import { updateDocumentPaymentStatus } from "@/lib/firebase/document-detail-mutations";
 import { paymentStatusLabels } from "@/lib/navigation";
 import { PAYMENT_METHODS } from "@/lib/schemas/document-step3";
@@ -53,6 +62,7 @@ const PAYMENT_TRACKING_TYPES: ExtDocType[] = [
   "payment_voucher",
   "sales_order",
   "purchase_order",
+  "goods_receipt",
   "billing_note",
   "tax_invoice",
 ];
@@ -62,6 +72,7 @@ const TYPE_BADGE: Record<string, string> = {
   receipt: "border bg-emerald-50 text-emerald-800 border-emerald-200",
   tax_invoice: "border bg-orange-50 text-orange-800 border-orange-200",
   purchase_order: "border bg-cyan-50 text-cyan-800 border-cyan-200",
+  goods_receipt: "border bg-teal-50 text-teal-900 border-teal-200",
   sales_order: "border bg-violet-50 text-violet-800 border-violet-200",
   payment_voucher: "border bg-rose-50 text-rose-800 border-rose-200",
   billing_note: "border bg-indigo-50 text-indigo-800 border-indigo-200",
@@ -172,6 +183,26 @@ function formatThaiShort(ts: Timestamp): string {
   }
 }
 
+/** หลังชำระแล้ว — เสนอสร้างเอกสารถัดไปในโซ่ (ใบแจ้งหนี้ → ใบกำกับภาษี → ใบเสร็จ) */
+function paidFollowUpNextType(docType: string): ExtDocType | null {
+  if (docType === "invoice") return "tax_invoice";
+  if (docType === "tax_invoice") return "receipt";
+  if (docType === "purchase_order") return "goods_receipt";
+  if (docType === "goods_receipt") return "payment_voucher";
+  return null;
+}
+
+function chainHasOtherOfType(
+  allDocs: RowDoc[],
+  sourceDoc: RowDoc,
+  nextType: ExtDocType,
+): boolean {
+  const k = chainKey(sourceDoc);
+  return allDocs.some(
+    (d) => chainKey(d) === k && d.id !== sourceDoc.id && d.type === nextType,
+  );
+}
+
 function historyDisplayName(
   e: PaymentStatusHistoryEntry,
   fallbackUid: string,
@@ -214,6 +245,7 @@ function collectChainHistory(chainDocs: RowDoc[]): PaymentStatusHistoryEntry[] {
 }
 
 export function PaymentsPage() {
+  const router = useRouter();
   const { user, profile } = useAuth();
   const companyId = useCompanyStore((s) => s.activeCompanyId);
   const { data: documents, loading } = useDocuments(companyId);
@@ -231,6 +263,10 @@ export function PaymentsPage() {
   const [paidModal, setPaidModal] = useState<{
     doc: RowDoc;
     method: string;
+  } | null>(null);
+  const [followUpModal, setFollowUpModal] = useState<{
+    doc: RowDoc;
+    nextType: ExtDocType;
   } | null>(null);
 
   const displayName =
@@ -339,10 +375,14 @@ export function PaymentsPage() {
   }, []);
 
   const persistStatus = useCallback(
-    async (doc: RowDoc, next: PaymentStatus, paymentMethod?: string | null) => {
+    async (
+      doc: RowDoc,
+      next: PaymentStatus,
+      paymentMethod?: string | null,
+    ): Promise<boolean> => {
       if (!companyId || !user) {
         toast.error("ยังไม่เข้าสู่ระบบ");
-        return;
+        return false;
       }
       setSavingId(doc.id);
       try {
@@ -355,14 +395,26 @@ export function PaymentsPage() {
           ...(next === "paid" ? { paymentMethod } : {}),
         });
         toast.success("อัปเดตสถานะการชำระเงินแล้ว");
+        return true;
       } catch (e) {
         console.error(e);
         toast.error("ไม่สามารถอัปเดตสถานะได้");
+        return false;
       } finally {
         setSavingId(null);
       }
     },
     [companyId, user],
+  );
+
+  const maybeOfferPaidFollowUp = useCallback(
+    (doc: RowDoc) => {
+      const nextType = paidFollowUpNextType(doc.type);
+      if (!nextType) return;
+      if (chainHasOtherOfType(documents as RowDoc[], doc, nextType)) return;
+      setFollowUpModal({ doc, nextType });
+    },
+    [documents],
   );
 
   const onStatusSelect = useCallback(
@@ -377,18 +429,21 @@ export function PaymentsPage() {
     [persistStatus],
   );
 
-  const confirmPaid = useCallback(() => {
+  const confirmPaid = useCallback(async () => {
     if (!paidModal) return;
-    void persistStatus(paidModal.doc, "paid", paidModal.method);
+    const { doc, method } = paidModal;
+    const ok = await persistStatus(doc, "paid", method);
     setPaidModal(null);
-  }, [paidModal, persistStatus]);
+    if (ok) maybeOfferPaidFollowUp(doc);
+  }, [paidModal, persistStatus, maybeOfferPaidFollowUp]);
 
-  const skipPaid = useCallback(() => {
+  const skipPaid = useCallback(async () => {
     if (!paidModal) return;
     const doc = paidModal.doc;
+    const ok = await persistStatus(doc, "paid", null);
     setPaidModal(null);
-    void persistStatus(doc, "paid", null);
-  }, [paidModal, persistStatus]);
+    if (ok) maybeOfferPaidFollowUp(doc);
+  }, [paidModal, persistStatus, maybeOfferPaidFollowUp]);
 
   return (
     <div className="min-h-screen bg-[#f4f6f8]">
@@ -675,19 +730,84 @@ export function PaymentsPage() {
               type="button"
               variant="outline"
               className="rounded-xl"
-              onClick={skipPaid}
+              onClick={() => void skipPaid()}
+              disabled={
+                !paidModal ||
+                !companyId ||
+                !user ||
+                savingId === paidModal.doc.id
+              }
             >
               ข้าม
             </Button>
             <Button
               type="button"
               className="rounded-xl"
-              onClick={confirmPaid}
-              disabled={!paidModal || !companyId || !user}
+              onClick={() => void confirmPaid()}
+              disabled={
+                !paidModal ||
+                !companyId ||
+                !user ||
+                savingId === paidModal.doc.id
+              }
             >
-              บันทึก
+              {savingId === paidModal?.doc.id ? "กำลังบันทึก…" : "บันทึก"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!followUpModal}
+        onOpenChange={(open) => {
+          if (!open) setFollowUpModal(null);
+        }}
+      >
+        <DialogContent className="rounded-2xl sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>สร้างเอกสารต่อเนื่อง?</DialogTitle>
+          </DialogHeader>
+          {followUpModal ? (
+            <>
+              <p className="text-sm leading-relaxed text-foreground">
+                เอกสาร{" "}
+                <span className="font-semibold text-sky-800">
+                  {DOC_TYPE_CONFIG[followUpModal.doc.type as ExtDocType]
+                    ?.label ?? followUpModal.doc.type}{" "}
+                  {followUpModal.doc.docNumber}
+                </span>{" "}
+                ชำระแล้ว ต้องการสร้าง{" "}
+                <span className="font-semibold text-orange-700">
+                  {getDocumentTypeBadgeLabel(followUpModal.nextType)}
+                </span>{" "}
+                ต่อเลยไหม?
+              </p>
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-xl"
+                  onClick={() => setFollowUpModal(null)}
+                >
+                  ไม่ ขอบคุณ
+                </Button>
+                <Button
+                  type="button"
+                  className="rounded-xl"
+                  onClick={() => {
+                    const { doc, nextType } = followUpModal;
+                    setFollowUpModal(null);
+                    router.push(
+                      `/documents/create?fromDoc=${encodeURIComponent(doc.id)}&next=${encodeURIComponent(nextType)}`,
+                    );
+                  }}
+                >
+                  สร้างเลย
+                  <ArrowRight className="ml-2 size-4" />
+                </Button>
+              </DialogFooter>
+            </>
+          ) : null}
         </DialogContent>
       </Dialog>
     </div>
