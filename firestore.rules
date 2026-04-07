@@ -3,11 +3,15 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // อีเมลที่อนุญาตเข้าถึงระบบ
+    // อีเมลที่อนุญาต — คงชุดเดียวกับ NEXT_PUBLIC_ALLOWED_AUTH_EMAILS ใน .env (deploy rules เมื่อเปลี่ยน)
     function isAllowedEmail() {
       return request.auth != null
-        && request.auth.token.email == "saksitpz1011@gmail.com"
-        && request.auth.token.email_verified == true;
+        && request.auth.token.email_verified == true
+        && (
+          request.auth.token.email == "siriflowerland@gmail.com"
+          || request.auth.token.email == "saksitpz1011@gmail.com"
+          || request.auth.token.email == "invpmr936@gmail.com"
+        );
     }
 
     // user เป็นเจ้าของ company นี้หรือไม่ (multi-company model)

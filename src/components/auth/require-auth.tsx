@@ -4,8 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Skeleton } from "@/components/ui/skeleton";
-
-const ALLOWED_EMAIL = "saksitpz1011@gmail.com";
+import { isAllowedAuthEmail } from "@/config/allowed-auth";
 
 export function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading, firebaseReady, signOut } = useAuth();
@@ -19,7 +18,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (user.email !== ALLOWED_EMAIL) {
+    if (!isAllowedAuthEmail(user.email, user.emailVerified)) {
       void signOut();
       router.replace("/login");
     }
@@ -39,7 +38,11 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (loading || !user || user.email !== ALLOWED_EMAIL) {
+  if (
+    loading ||
+    !user ||
+    !isAllowedAuthEmail(user.email, user.emailVerified)
+  ) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f1f3f6]">
         <div className="w-full max-w-lg space-y-4 p-6">

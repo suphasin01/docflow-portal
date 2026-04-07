@@ -919,7 +919,7 @@ export function PreviewDialog({
                             {cols.index ? (
                               <th
                                 data-pdf-text-box="table-cell"
-                                className="w-8 max-w-8 border border-[#DEE3F3] p-2 text-center"
+                                className="w-8 max-w-8 border border-[#DEE3F3] p-2 text-left align-top"
                               >
                                 <span>#</span>
                               </th>
@@ -927,7 +927,7 @@ export function PreviewDialog({
                             {cols.code ? (
                               <th
                                 data-pdf-text-box="table-cell"
-                                className="w-[4.5rem] max-w-[4.5rem] border border-[#DEE3F3] p-2 text-center"
+                                className="w-[4.5rem] max-w-[4.5rem] border border-[#DEE3F3] p-2 text-left align-top"
                               >
                                 <span>รหัส</span>
                               </th>
@@ -935,7 +935,7 @@ export function PreviewDialog({
                             {cols.itemName ? (
                               <th
                                 data-pdf-text-box="table-cell"
-                                className="min-w-0 border border-[#DEE3F3] p-2 text-left"
+                                className="min-w-0 border border-[#DEE3F3] p-2 text-left align-top"
                               >
                                 <span>รายการ</span>
                               </th>
@@ -1008,23 +1008,25 @@ export function PreviewDialog({
                               return (
                                 <tr key={it.id}>
                                   {cols.index ? (
-                                    <td className="w-8 max-w-8 border border-[#DEE3F3] p-2 text-center whitespace-nowrap">
+                                    <td className="w-8 max-w-8 border border-[#DEE3F3] p-2 text-left align-top whitespace-nowrap">
                                       {idx + 1}
                                     </td>
                                   ) : null}
                                   {cols.code ? (
-                                    <td className="w-[4.5rem] max-w-[4.5rem] border border-[#DEE3F3] p-2 text-center break-words">
+                                    <td className="w-[4.5rem] max-w-[4.5rem] border border-[#DEE3F3] p-2 text-left align-top break-words">
                                       {it.selectedItemCode || "-"}
                                     </td>
                                   ) : null}
                                   {cols.itemName ? (
-                                    <td className="min-w-0 border border-[#DEE3F3] p-2 break-words">
+                                    <td className="min-w-0 border border-[#DEE3F3] p-2 text-left align-top break-words">
                                       {it.title || "-"}
                                     </td>
                                   ) : null}
                                   {cols.description ? (
                                     <td className="min-w-0 border border-[#DEE3F3] p-2 break-words">
-                                      {it.description || "-"}
+                                      <div className="whitespace-pre-wrap break-words">
+                                        {it.description || "-"}
+                                      </div>
                                     </td>
                                   ) : null}
                                   {cols.quantity ? (
@@ -1081,7 +1083,7 @@ export function PreviewDialog({
 
                       {/* ── Summary + Terms (หมายเหตุไว้ด้านล่างสุดหลังลายเซ็น) ── */}
                       <div className="mt-7 flex justify-between gap-8">
-                        <div className="min-w-0 flex-1 text-[14px] leading-6">
+                        <div className="min-w-0 flex-1 text-[12px] leading-6">
                           {step3.terms.text.trim() ? (
                             <>
                               <div className="mb-1 font-semibold">

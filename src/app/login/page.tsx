@@ -6,8 +6,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-const ALLOWED_EMAIL = "saksitpz1011@gmail.com";
+import { isAllowedAuthEmail } from "@/config/allowed-auth";
 
 export default function LoginPage() {
   const { user, loading, firebaseReady, signInGoogle, signOut } = useAuth();
@@ -18,7 +17,7 @@ export default function LoginPage() {
     if (!firebaseReady || loading) return;
     if (!user) return;
 
-    if (user.email !== ALLOWED_EMAIL) {
+    if (!isAllowedAuthEmail(user.email, user.emailVerified)) {
       void signOut();
       toast.error("บัญชีนี้ไม่มีสิทธิ์เข้าใช้งานระบบ");
       return;

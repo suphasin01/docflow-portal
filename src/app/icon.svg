@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="DOC FLOW">
+  <rect width="32" height="32" rx="8" fill="#1e293b"/>
+  <path fill="#f8fafc" d="M10 7h8l5 5v13a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"/>
+  <path fill="#cbd5e1" d="M18 7v5h5l-5-5Z"/>
+  <rect x="12" y="15" width="8" height="1.8" rx="0.5" fill="#64748b"/>
+  <rect x="12" y="18.5" width="5" height="1.8" rx="0.5" fill="#94a3b8"/>
+  <rect x="12" y="22" width="8" height="1.8" rx="0.5" fill="#94a3b8"/>
+</svg>
