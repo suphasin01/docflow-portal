@@ -10,7 +10,8 @@ service cloud.firestore {
         && (
           request.auth.token.email == "siriflowerland@gmail.com"
           || request.auth.token.email == "saksitpz1011@gmail.com"
-          || request.auth.token.email == "invpmr936@gmail.com"
+          || request.auth.token.email == "invpmr936@gmail.com" 
+          || request.auth.token.email == "beyonddevtechsolution@gmail.com"
         );
     }
 

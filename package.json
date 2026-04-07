@@ -9,7 +9,7 @@
     "lint": "eslint",
     "firebase:rules": "firebase deploy --only firestore:rules --project",
     "firebase:indexes": "firebase deploy --only firestore:indexes --project",
-    "firebase:hosting": "firebase deploy --only hosting"
+    "firebase:hosting": "firebase deploy --only hosting --project"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",

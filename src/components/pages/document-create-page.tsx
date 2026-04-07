@@ -50,7 +50,7 @@ const STEPS = [
 
 function StepperHeader({ current }: { current: number }) {
   return (
-    <div className="flex items-center justify-center gap-0 bg-white px-6 py-4 border-b border-border/60">
+    <div className="flex items-center justify-center gap-0 bg-white px-6 py-4 border-b border-[rgb(var(--border-rgb)/0.6)]">
       {STEPS.map((step, idx) => (
         <div key={step.n} className="flex items-center">
           <div className="flex items-center gap-2.5">
@@ -78,7 +78,7 @@ function StepperHeader({ current }: { current: number }) {
             </span>
           </div>
           {idx < STEPS.length - 1 && (
-            <div className="mx-4 h-px w-12 bg-border/60" />
+            <div className="mx-4 h-px w-12 bg-[rgb(var(--border-rgb)/0.6)]" />
           )}
         </div>
       ))}
