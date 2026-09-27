@@ -10,6 +10,34 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* HoloCard uses fixed art dimensions by default. Company text must instead grow
+   naturally (Thai addresses, zoom and narrow screens), without clipping. */
+.company-holo {
+  --holo-card-width: 100%;
+  --holo-card-height: auto;
+  --holo-card-bleed: 0px;
+  --holo-card-radius: 28px;
+  --holo-card-texture-opacity: 0.035;
+  --holo-card-pattern-opacity: 0.25;
+  --holo-card-perspective: 1400px;
+  width: 100%;
+  min-width: 0;
+}
+.company-holo .holo-card__surface {
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+}
+.company-holo .company-holo__content {
+  position: relative;
+  flex-direction: column;
+  gap: 28px;
+  padding: clamp(24px, 4vw, 40px);
+  color: #f8fafc;
+  overflow-wrap: anywhere;
+}
+
 @theme inline {
   /* Compatibility aliases for the remaining legacy/shadcn primitives.
      HeroUI remains the source of truth for all core color tokens. */

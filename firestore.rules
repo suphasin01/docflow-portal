@@ -99,6 +99,37 @@ service cloud.firestore {
     }
 
     // ── Settings (per company) ──
+    // Public snapshots contain ONLY the business-card projection. Neither member
+    // identities nor internal company/documents are exposed to link recipients.
+    function validPublicCard() {
+      let d = request.resource.data;
+      let c = d.card;
+      return d.keys().hasOnly(['schemaVersion', 'card'])
+        && d.schemaVersion == 1
+        && c.keys().hasAll(['name', 'nameEn', 'taxId', 'address', 'phone', 'email'])
+        && c.keys().hasOnly(['name', 'nameEn', 'taxId', 'address', 'phone', 'email'])
+        && c.name is string && c.name.size() > 0 && c.name.size() <= 300
+        && c.nameEn is string && c.nameEn.size() <= 300
+        && c.taxId is string && c.taxId.size() <= 30
+        && c.address is string && c.address.size() <= 2000
+        && c.phone is string && c.phone.size() <= 100
+        && c.email is string && c.email.size() <= 254;
+    }
+    match /publicCompanyCards/{shareId} {
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if isAdmin() && shareId.matches('[A-Za-z0-9]{20}') && validPublicCard();
+      allow delete: if isAdmin();
+    }
+    match /companyCardSettings/{companyId} {
+      allow get, delete: if ownsCompany(companyId);
+      allow create, update: if ownsCompany(companyId)
+        && request.resource.data.keys().hasOnly(['shareId'])
+        && request.resource.data.shareId is string
+        && request.resource.data.shareId.matches('[A-Za-z0-9]{20}');
+      allow list: if false;
+    }
+
     match /settings/{companyId} {
       allow read, write: if ownsCompany(companyId);
     }

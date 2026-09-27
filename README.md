@@ -101,3 +101,24 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Company business card
+
+The company page uses HeroUI Pro `HoloCard`. Mobile/touch and reduced-motion
+preferences keep the card still; PNG export includes only the card, not controls.
+The card uses the bundled high-resolution Beyond Dev brand logo (document-upload
+logos and signer information remain private).
+
+Owners explicitly publish a snapshot containing only name/nameEn, tax ID,
+address, phone and email. `publicCompanyCards/{random20CharacterId}` permits
+single-document public reads, never list queries. Private `companyCardSettings`
+stores the current link; transactions serialize updates and revocation. Revoking
+deletes the public snapshot; publishing again generates a new link. Previously
+downloaded images cannot be recalled. Company edits do not silently update the
+published snapshot; use **อัปเดตข้อมูลที่เผยแพร่**.
+
+Deploy **hosting and firestore:rules together** before using external sharing.
+Generate external links on the production site; localhost links are local only.
+No public snapshots are created automatically by deployment or page views.
+
+Checks: `node scripts/test-company-card.mjs` and the existing
+`scripts/test-workspace-rules.mjs` dry-run suite (includes public-card boundaries).

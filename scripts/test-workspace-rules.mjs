@@ -78,6 +78,24 @@ for (const identity of identities) {
   add(identity, "create decision for legacy member", "create", "accessRequests/legacy-member", null, { uid: "legacy-member", status: "rejected" }, ok);
 }
 const pending = identities.find((i) => i.name === "pending");
+const publicCard = { schemaVersion: 1, card: { name: "Company", nameEn: "", taxId: "123", address: "Address", phone: "0123", email: "office@example.com" } };
+for (const identity of identities) {
+  const path = "publicCompanyCards/AbCdEfGh123456789012";
+  add(identity, "read published card", "get", path, publicCard, null, true);
+  add(identity, "enumerate public cards denied", "list", path, publicCard, null, false);
+  add(identity, "publish card", "create", path, null, publicCard, identity.approved);
+  add(identity, "update card", "update", path, publicCard, publicCard, identity.approved);
+  add(identity, "revoke card", "delete", path, publicCard, null, identity.approved);
+  add(identity, "publish signer denied", "create", path, null, { ...publicCard, card: { ...publicCard.card, signerName: "private" } }, false);
+  add(identity, "publish identity denied", "create", path, null, { ...publicCard, createdBy: "private" }, false);
+  add(identity, "tracking logo denied", "create", path, null, { ...publicCard, card: { ...publicCard.card, logoUrl: "https://tracking.example/logo.png" } }, false);
+  add(identity, "SVG logo denied", "create", path, null, { ...publicCard, card: { ...publicCard.card, logoUrl: "data:image/svg+xml;base64,PHN2Zz4=" } }, false);
+  add(identity, "oversize field denied", "create", path, null, { ...publicCard, card: { ...publicCard.card, address: "x".repeat(2001) } }, false);
+  add(identity, "invalid share id denied", "create", "publicCompanyCards/guessable", null, publicCard, false);
+  add(identity, "private share settings", "get", "companyCardSettings/" + workspace, { shareId: "AbCdEfGh123456789012" }, null, identity.approved);
+  add(identity, "private share settings write", "create", "companyCardSettings/" + workspace, null, { shareId: "AbCdEfGh123456789012" }, identity.approved);
+  add(identity, "other workspace share settings denied", "create", "companyCardSettings/other", null, { shareId: "AbCdEfGh123456789012" }, false);
+}
 const ownRequest = { uid: "pending", email: "pending@example.com", status: "pending" };
 add(pending, "request own access", "create", "accessRequests/pending", null, ownRequest, true);
 add(pending, "cannot submit approved request", "create", "accessRequests/pending", null, { ...ownRequest, status: "approved" }, false);

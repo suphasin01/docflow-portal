@@ -20,7 +20,6 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
   Building2,
-  Edit2,
   Upload,
   XCircle,
 } from "lucide-react";
@@ -31,7 +30,7 @@ import {
 } from "@/lib/firebase/company-mutations";
 import { resizeImageToBase64 } from "@/lib/resize-image";
 import { companyFormSchema } from "@/lib/schemas/company";
-import { Card } from "@heroui/react";
+import { CompanyCardPanel } from "@/components/business/company-card-panel";
 import { cn } from "@/lib/utils";
 import type { Company } from "@/types";
 
@@ -204,9 +203,9 @@ export function CompanyPage() {
             className="max-w-xl"
           />
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+          <div className="space-y-6">
             {companies.map((company) => (
-              <CompanyCard
+              <CompanyCardPanel
                 key={company.id}
                 company={company}
                 onEdit={() => openEdit(company)}
@@ -424,32 +423,6 @@ export function CompanyPage() {
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-/* ───────────── CompanyCard ───────────── */
-
-function CompanyCard({ company, onEdit }: { company: CompanyWithId; onEdit: () => void }) {
-  return (
-    <Card className="max-w-xl">
-      <Card.Header>
-        {company.logoUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={company.logoUrl} alt="" className="mb-2 size-12 rounded-xl object-contain" />
-        )}
-        <Card.Title className="break-words">{company.name}</Card.Title>
-        <Card.Description>พื้นที่ทำงานร่วมกัน · สมาชิกทุกคนเป็นเจ้าของ</Card.Description>
-      </Card.Header>
-      <Card.Content className="space-y-2 text-sm">
-        {company.taxId && <p>เลขประจำตัวผู้เสียภาษี: {company.taxId}</p>}
-        {company.address && <p className="break-words">{company.address}</p>}
-        {company.phone && <p>{company.phone}</p>}
-        {company.email && <p className="break-all">{company.email}</p>}
-      </Card.Content>
-      <Card.Footer>
-        <Button onClick={onEdit} variant="outline"><Edit2 className="size-4" /> แก้ไขข้อมูลบริษัท</Button>
-      </Card.Footer>
-    </Card>
   );
 }
 
