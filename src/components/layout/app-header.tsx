@@ -25,14 +25,14 @@ export function AppHeader({
 }: AppHeaderProps) {
   if (minimal) {
     return (
-      <header className="glass-toolbar sticky top-0 z-30 h-14 border-b" />
+      <header className="glass-toolbar sticky top-0 z-30 h-14" />
     );
   }
   return (
-    <header className="glass-toolbar relative z-20 border-b lg:sticky lg:top-0">
+    <header className="glass-toolbar relative z-20 lg:sticky lg:top-0">
       {showTrialBanner ? (
-        <div className="flex items-center justify-between gap-3 border-b border-separator bg-transparent px-4 py-2 text-xs text-muted-foreground sm:px-6">
-          <span>พื้นที่ทำงานแยกตามบริษัท<span className="hidden sm:inline"> · workspace เดียวต่อผู้ใช้</span></span>
+        <div className="flex items-center justify-between gap-3 bg-transparent px-4 py-2 text-xs text-muted-foreground sm:px-6">
+          <span>Beyond Dev<span className="hidden sm:inline"> · พื้นที่ทำงานร่วมกัน</span></span>
         </div>
       ) : null}
       <div className="flex flex-wrap items-start justify-between gap-3 px-4 py-4 sm:gap-4 sm:px-6">

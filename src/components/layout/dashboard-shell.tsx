@@ -30,7 +30,7 @@ function AppNavbar() {
   const pathname = usePathname();
 
   return (
-    <Navbar className="glass-toolbar border-b" maxWidth="full">
+    <Navbar className="glass-toolbar border-0" maxWidth="full">
       <Navbar.Header className="gap-2 px-4 sm:gap-4 sm:px-6">
         <AppLayout.MenuToggle aria-label="เปิดเมนู" tooltip="เปิดเมนู" />
         <Tooltip delay={0}>

@@ -32,14 +32,9 @@ service cloud.firestore {
         );
     }
 
+    // Every approved member is an equal workspace owner, including user management.
     function isAdmin() {
-      return isBootstrapAdmin()
-        || (
-          isVerifiedGoogleUser()
-          && exists(/databases/$(database)/documents/accessControl/$(request.auth.uid))
-          && get(/databases/$(database)/documents/accessControl/$(request.auth.uid)).data.status == "approved"
-          && get(/databases/$(database)/documents/accessControl/$(request.auth.uid)).data.role == "admin"
-        );
+      return hasApprovedAccess();
     }
 
     // ผู้ใช้ใหม่สร้างคำขอได้ด้วยบัญชีตัวเองเท่านั้น ผู้ดูแลเป็นคนอนุมัติ/ปฏิเสธ
@@ -47,11 +42,11 @@ service cloud.firestore {
       allow get: if isVerifiedGoogleUser()
         && (request.auth.uid == userId || isAdmin());
       allow list: if isAdmin();
-      allow create: if isVerifiedGoogleUser()
+      allow create: if isAdmin() || (isVerifiedGoogleUser()
         && request.auth.uid == userId
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.email == request.auth.token.email
-        && request.resource.data.status == "pending";
+        && request.resource.data.status == "pending");
       allow update: if isAdmin()
         || (
           isVerifiedGoogleUser()
@@ -73,10 +68,16 @@ service cloud.firestore {
       allow list, create, update, delete: if isAdmin();
     }
 
-    // user เป็นเจ้าของ company นี้หรือไม่ (multi-company model)
+    // Public workspace routing ID; keep in sync with src/config/workspace.ts.
     function ownsCompany(companyId) {
-      return hasApprovedAccess()
-        && get(/databases/$(database)/documents/companies/$(companyId)).data.ownerId == request.auth.uid;
+      return hasApprovedAccess() && companyId == "KOrKa4F8fvCihChq8O8t";
+    }
+
+    function preservesWorkspaceAndAuthor() {
+      return ownsCompany(resource.data.companyId)
+        && request.resource.data.companyId == resource.data.companyId
+        && !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(["createdBy", "createdAt"]);
     }
 
     // ── Users ──
@@ -85,22 +86,16 @@ service cloud.firestore {
       allow write: if hasApprovedAccess() && request.auth.uid == userId;
     }
 
-    // ── Companies (multi-company per user) ──
+    // One existing company. No client may create, archive or retarget it.
     match /companies/{companyId} {
-      // อ่านได้ถ้าเป็นเจ้าของ
-      allow read: if hasApprovedAccess()
-        && resource.data.ownerId == request.auth.uid;
-
-      // สร้างได้ถ้า login แล้วและ ownerId ตรงกับ uid
-      allow create: if hasApprovedAccess()
-        && request.resource.data.ownerId == request.auth.uid
-        && request.resource.data.createdBy == request.auth.uid;
-
-      // แก้ไขได้ถ้าเป็นเจ้าของ
-      allow update: if hasApprovedAccess()
-        && resource.data.ownerId == request.auth.uid;
-
-      allow delete: if false;
+      allow read: if ownsCompany(companyId);
+      allow create, delete: if false;
+      allow update: if ownsCompany(companyId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          "name", "nameEn", "officeType", "taxId", "branch", "branchName",
+          "branchCode", "address", "phone", "email", "logoUrl",
+          "signerName", "signerPosition", "updatedAt"
+        ]);
     }
 
     // ── Settings (per company) ──
@@ -116,8 +111,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasAll(['companyId','createdAt','updatedAt','createdBy'])
         && ownsCompany(request.resource.data.companyId)
         && request.resource.data.createdBy == request.auth.uid;
-      allow update: if hasApprovedAccess()
-        && ownsCompany(resource.data.companyId);
+      allow update: if preservesWorkspaceAndAuthor();
       allow delete: if hasApprovedAccess()
         && ownsCompany(resource.data.companyId);
     }
@@ -129,8 +123,7 @@ service cloud.firestore {
       allow create: if hasApprovedAccess()
         && ownsCompany(request.resource.data.companyId)
         && request.resource.data.createdBy == request.auth.uid;
-      allow update: if hasApprovedAccess()
-        && ownsCompany(resource.data.companyId);
+      allow update: if preservesWorkspaceAndAuthor();
       allow delete: if false;
     }
 
@@ -141,8 +134,7 @@ service cloud.firestore {
       allow create: if hasApprovedAccess()
         && ownsCompany(request.resource.data.companyId)
         && request.resource.data.createdBy == request.auth.uid;
-      allow update: if hasApprovedAccess()
-        && ownsCompany(resource.data.companyId);
+      allow update: if preservesWorkspaceAndAuthor();
       allow delete: if false;
     }
 
@@ -153,8 +145,7 @@ service cloud.firestore {
       allow create: if hasApprovedAccess()
         && ownsCompany(request.resource.data.companyId)
         && request.resource.data.createdBy == request.auth.uid;
-      allow update: if hasApprovedAccess()
-        && ownsCompany(resource.data.companyId);
+      allow update: if preservesWorkspaceAndAuthor();
       allow delete: if false;
     }
 
@@ -165,9 +156,17 @@ service cloud.firestore {
       allow create: if hasApprovedAccess()
         && ownsCompany(request.resource.data.companyId)
         && request.resource.data.createdBy == request.auth.uid;
-      allow update: if hasApprovedAccess()
-        && ownsCompany(resource.data.companyId);
+      allow update: if preservesWorkspaceAndAuthor();
       allow delete: if false;
+    }
+
+    // Legacy line items share the same workspace boundary.
+    match /documentItems/{docId} {
+      allow read: if ownsCompany(resource.data.companyId);
+      allow create: if ownsCompany(request.resource.data.companyId)
+        && request.resource.data.createdBy == request.auth.uid;
+      allow update: if preservesWorkspaceAndAuthor();
+      allow delete: if ownsCompany(resource.data.companyId);
     }
 
     // ── Contacts (ลูกค้า/ผู้ขาย unified) ──
@@ -177,8 +176,7 @@ service cloud.firestore {
       allow create: if hasApprovedAccess()
         && ownsCompany(request.resource.data.companyId)
         && request.resource.data.createdBy == request.auth.uid;
-      allow update: if hasApprovedAccess()
-        && ownsCompany(resource.data.companyId);
+      allow update: if preservesWorkspaceAndAuthor();
       allow delete: if false;
     }
   }

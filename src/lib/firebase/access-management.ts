@@ -17,6 +17,7 @@ import {
 import { getFirebaseDb } from "./client";
 
 export type AccessStatus = "checking" | "approved" | "pending" | "rejected";
+// Approved members are equal owners; "admin" is the legacy storage/API name.
 export type AccessRole = "admin" | "user";
 
 export type AccessControlRecord = {
@@ -78,10 +79,9 @@ export async function resolveInitialAccess(user: User): Promise<{
   ]);
 
   if (controlSnap.exists() && controlSnap.data().status === "approved") {
-    const data = controlSnap.data();
     return {
       status: "approved",
-      role: data.role === "admin" ? "admin" : "user",
+      role: "admin",
     };
   }
 
@@ -148,7 +148,7 @@ export function subscribeOwnAccess(
     if (control?.status === "approved") {
       callback({
         status: "approved",
-        role: control.role === "admin" ? "admin" : "user",
+        role: "admin",
       });
       return;
     }
@@ -216,7 +216,7 @@ function mapMember(id: string, data: DocumentData): AccessControlRecord {
     displayName: typeof data.displayName === "string" ? data.displayName : "",
     photoURL: typeof data.photoURL === "string" ? data.photoURL : "",
     status: data.status === "approved" ? "approved" : "rejected",
-    role: data.role === "admin" ? "admin" : "user",
+    role: "admin",
     approvedAt: data.approvedAt,
     approvedBy: data.approvedBy,
     updatedAt: data.updatedAt,
@@ -269,7 +269,7 @@ export async function approveAccessRequest(
       displayName: request.displayName,
       photoURL: request.photoURL,
       status: "approved",
-      role: "user",
+      role: "admin",
       approvedAt: serverTimestamp(),
       approvedBy: admin.uid,
       updatedAt: serverTimestamp(),
@@ -279,6 +279,10 @@ export async function approveAccessRequest(
   batch.set(
     doc(db, "accessRequests", request.uid),
     {
+      uid: request.uid,
+      email: request.email,
+      displayName: request.displayName,
+      photoURL: request.photoURL,
       status: "approved",
       approvedAt: serverTimestamp(),
       approvedBy: admin.uid,
@@ -313,6 +317,10 @@ export async function rejectAccessRequest(
   batch.set(
     doc(db, "accessRequests", request.uid),
     {
+      uid: request.uid,
+      email: request.email,
+      displayName: request.displayName,
+      photoURL: request.photoURL,
       status: "rejected",
       rejectedAt: serverTimestamp(),
       rejectedBy: admin.uid,

@@ -26,7 +26,7 @@ ignores it. `.env.example` documents the supported variable names.
 
 Access control is enforced by `firestore.rules`, not by the browser-visible
 allowlist alone. `NEXT_PUBLIC_ALLOWED_AUTH_EMAILS` is the bootstrap-admin list;
-new Google accounts create an `accessRequests` record and an admin grants access
+new Google accounts create an `accessRequests` record and an approved owner grants access
 from the `/users` page. Approved access is stored in `accessControl`.
 
 When the bootstrap-admin list or access rules change, update
@@ -39,6 +39,49 @@ npx firebase-tools deploy --only firestore:rules --project <firebase-project-id>
 
 For production, set the same variables in the deployment platform rather than
 relying on the development file.
+
+### Shared Beyond Dev workspace
+
+The login brand asset at `public/beyonddev-logo.png` is the original company
+logo from `https://beyonddevtechsolution.com/brand/beyonddev-logo.png`.
+
+All approved Google accounts use the existing company configured in
+`src/config/workspace.ts`. There is no company creation or account-specific
+company selection. The old company data is not moved or deleted.
+
+Every approved account is an equal owner: it can create/edit business data and
+approve, reject, or revoke other members from `/users`. The legacy internal role
+name is `admin`; existing approved records with `role: "user"` receive the same
+permissions without a data migration. Bootstrap accounts retain recovery access.
+Pending, rejected, unverified, and non-Google accounts cannot access business data.
+
+The shared company ID is public routing configuration, not a credential. Keep it
+in sync with `firestore.rules`. Rules deny access to other companies, prevent
+changing a record's company/creator, and deny creating or archiving the shared
+company. If it cannot be loaded, the app shows an error rather than creating an
+empty replacement.
+
+Validate before release:
+
+```bash
+npm run lint
+npm run build
+node scripts/test-workspace-rules.mjs /path/to/firebase-tools signed-in-cli-account@example.com
+```
+
+The rules test uses the Firebase Rules dry-run API with mocked document lookups.
+It does not write business data or publish rules. Authenticate the CLI first;
+never put credentials in this script.
+
+Release the built app and rules together; old clients use per-owner company
+queries and are incompatible with the shared-workspace rules:
+
+```bash
+npx firebase-tools deploy --only hosting,firestore:rules --project doc-flow-8a352
+```
+
+After release, refresh existing browser tabs. To roll back, restore both the
+previous hosting release and its matching ruleset; do not delete company data.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

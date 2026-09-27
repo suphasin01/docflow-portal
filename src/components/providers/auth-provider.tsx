@@ -73,23 +73,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [accessError, setAccessError] = useState<string | null>(null);
   const firebaseReady = isFirebaseConfigured();
   const activeUidRef = useRef<string | null>(null);
+  const accessEpochRef = useRef(0);
 
-  const { setCompanies, setCompaniesLoading, resetCompanyStore } =
-    useCompanyStore();
+  const resetCompanyStore = useCompanyStore((state) => state.resetCompanyStore);
 
   const loadProfile = useCallback(
     async (currentUser: User) => {
       const db = getFirebaseDb();
       if (!db) return;
-      const isStillActive = () => activeUidRef.current === currentUser.uid;
+      const epoch = accessEpochRef.current;
+      const isStillActive = () => activeUidRef.current === currentUser.uid && accessEpochRef.current === epoch;
 
       setProfileLoading(true);
-      setCompaniesLoading(true);
       try {
-        const companies = await bootstrapUserCompanies(currentUser);
+        await bootstrapUserCompanies(currentUser);
         if (!isStillActive()) return;
-        setCompanies(companies);
-        setCompaniesLoading(false);
 
         const ref = doc(db, "users", currentUser.uid);
         const snapshot = await getDoc(ref);
@@ -98,11 +96,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } finally {
         if (isStillActive()) {
           setProfileLoading(false);
-          setCompaniesLoading(false);
         }
       }
     },
-    [setCompanies, setCompaniesLoading],
+    [],
   );
 
   useEffect(() => {
@@ -156,6 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!isCurrent(currentRevision)) return;
       activeUidRef.current = currentUser?.uid ?? null;
+      accessEpochRef.current += 1;
       setUser(currentUser);
       setProfile(null);
       setProfileLoading(false);
@@ -202,6 +200,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
 
             profileLoadedForUid = null;
+            accessEpochRef.current += 1;
+            setProfileLoading(false);
             setProfile(null);
             resetCompanyStore();
             setAccessStatus(next.status);
@@ -211,6 +211,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           (error) => {
             if (!isCurrent(currentRevision)) return;
             console.error("access listener error:", error);
+            accessEpochRef.current += 1;
+            profileLoadedForUid = null;
+            setProfile(null);
+            setProfileLoading(false);
+            resetCompanyStore();
+            setAccessStatus("pending");
+            setAccessRole(null);
             setAccessError(error.message);
             setLoading(false);
           },

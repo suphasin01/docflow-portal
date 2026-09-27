@@ -2,11 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Card, Spinner } from "@heroui/react";
+import { Button, Card, Spinner } from "@heroui/react";
+import { useCompanyStore } from "@/stores/company-store";
 import { useAuth } from "@/components/providers/auth-provider";
 
 export function RequireAuth({ children }: { children: React.ReactNode }) {
   const { sessionPhase } = useAuth();
+  const { activeCompanyId, workspaceError } = useCompanyStore();
   const router = useRouter();
 
   useEffect(() => {
@@ -44,5 +46,22 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
     );
   }
 
+  if (workspaceError) {
+    return (
+      <main className="flex min-h-screen items-center justify-center p-6">
+        <Card className="w-full max-w-md">
+          <Card.Header>
+            <Card.Title>ยังเชื่อมต่อพื้นที่ทำงานไม่ได้</Card.Title>
+            <Card.Description>{workspaceError}</Card.Description>
+          </Card.Header>
+          <Card.Content><p className="text-sm text-muted">ระบบจะไม่สร้างบริษัทใหม่แทนข้อมูลเดิม</p></Card.Content>
+          <Card.Footer><Button onPress={() => window.location.reload()}>ลองอีกครั้ง</Button></Card.Footer>
+        </Card>
+      </main>
+    );
+  }
+  if (!activeCompanyId) {
+    return <main className="flex min-h-screen items-center justify-center gap-3"><Spinner /><span>กำลังโหลดพื้นที่ทำงาน Beyond Dev…</span></main>;
+  }
   return <>{children}</>;
 }

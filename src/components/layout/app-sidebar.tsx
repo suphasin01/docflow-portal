@@ -1,15 +1,13 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { Avatar, Button, Dropdown, Label, Separator, Spinner } from "@heroui/react";
+import { Avatar, Button, Dropdown, Label, Separator } from "@heroui/react";
 import { Sidebar } from "@heroui-pro/react";
 import {
   Building2,
-  Check,
   ChevronDown,
   FileText,
   LogOut,
-  Plus,
   Settings,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -48,88 +46,16 @@ function Brand() {
 
 function WorkspaceMenu() {
   const router = useRouter();
-  const companies = useCompanyStore((state) => state.companies);
-  const activeCompanyId = useCompanyStore((state) => state.activeCompanyId);
-  const setActiveCompanyId = useCompanyStore(
-    (state) => state.setActiveCompanyId,
-  );
-  const companiesLoading = useCompanyStore((state) => state.companiesLoading);
-  const activeCompany = companies.find((company) => company.id === activeCompanyId);
-
+  const company = useCompanyStore((state) => state.companies[0]);
   return (
-    <Dropdown>
-      <Button
-        fullWidth
-        className="h-auto justify-start px-2 py-2"
-        variant="ghost"
-        aria-label="เลือกบริษัท"
-      >
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-surface-secondary">
-          {activeCompany?.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={activeCompany.logoUrl}
-              alt=""
-              className="size-8 rounded-xl object-cover"
-            />
-          ) : (
-            <Building2 className="size-4 text-muted-foreground" />
-          )}
-        </span>
-        <span className="min-w-0 flex-1 text-left" data-sidebar="label">
-          <span className="block truncate text-sm font-medium">
-            {companiesLoading
-              ? "กำลังโหลดบริษัท…"
-              : (activeCompany?.name ?? "บริษัทของฉัน")}
-          </span>
-          <span className="block truncate text-xs text-muted-foreground">พื้นที่ทำงาน</span>
-        </span>
-        <ChevronDown className="size-4 text-muted-foreground" data-sidebar="label" />
-      </Button>
-      <Dropdown.Popover className="min-w-64" placement="bottom start">
-        <Dropdown.Menu
-          aria-label="เลือกพื้นที่ทำงาน"
-          onAction={(key) => {
-            const action = String(key);
-            if (action.startsWith("company:")) {
-              setActiveCompanyId(action.slice("company:".length));
-              return;
-            }
-            if (action === "manage") router.push("/company");
-            if (action === "create") router.push("/company?action=create");
-          }}
-        >
-          {companiesLoading ? (
-            <Dropdown.Item id="loading" isDisabled textValue="กำลังโหลดบริษัท">
-              <Spinner size="sm" />
-              <Label>กำลังโหลดบริษัท</Label>
-            </Dropdown.Item>
-          ) : null}
-          {companies.map((company) => (
-            <Dropdown.Item
-              key={company.id}
-              id={`company:${company.id}`}
-              textValue={company.name}
-            >
-              <Building2 className="size-4 text-muted-foreground" />
-              <Label className="min-w-0 flex-1 truncate">{company.name}</Label>
-              {company.id === activeCompanyId ? (
-                <Check className="size-4 text-primary" />
-              ) : null}
-            </Dropdown.Item>
-          ))}
-          <Separator />
-          <Dropdown.Item id="manage" textValue="จัดการบริษัท">
-            <Settings className="size-4 text-muted-foreground" />
-            <Label>จัดการบริษัท</Label>
-          </Dropdown.Item>
-          <Dropdown.Item id="create" textValue="เพิ่มบริษัท">
-            <Plus className="size-4 text-muted-foreground" />
-            <Label>เพิ่มบริษัท</Label>
-          </Dropdown.Item>
-        </Dropdown.Menu>
-      </Dropdown.Popover>
-    </Dropdown>
+    <Button fullWidth variant="ghost" className="h-auto justify-start px-2 py-2"
+      aria-label="ข้อมูลบริษัท Beyond Dev" onPress={() => router.push("/company")}>
+      <Building2 className="size-5 shrink-0 text-muted" />
+      <span className="min-w-0 text-left" data-sidebar="label">
+        <span className="block truncate text-sm font-medium">{company?.name ?? "Beyond Dev"}</span>
+        <span className="block text-xs text-muted">พื้นที่ทำงานร่วมกัน</span>
+      </span>
+    </Button>
   );
 }
 

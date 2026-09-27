@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/layout/app-header";
 import { EmptyState } from "@/components/business/empty-state";
@@ -21,23 +20,18 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
   Building2,
-  Check,
   Edit2,
-  Plus,
-  Star,
-  Trash2,
   Upload,
   XCircle,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useCompanyStore } from "@/stores/company-store";
 import {
-  createCompany,
   updateCompany,
-  archiveCompany,
 } from "@/lib/firebase/company-mutations";
 import { resizeImageToBase64 } from "@/lib/resize-image";
 import { companyFormSchema } from "@/lib/schemas/company";
+import { Card } from "@heroui/react";
 import { cn } from "@/lib/utils";
 import type { Company } from "@/types";
 
@@ -77,11 +71,8 @@ type CompanyWithId = Company & { id: string };
 
 export function CompanyPage() {
   const { user } = useAuth();
-  const searchParams = useSearchParams();
   const companies = useCompanyStore((s) => s.companies);
   const companiesLoading = useCompanyStore((s) => s.companiesLoading);
-  const activeCompanyId = useCompanyStore((s) => s.activeCompanyId);
-  const setActiveCompanyId = useCompanyStore((s) => s.setActiveCompanyId);
 
   const [open, setOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<CompanyWithId | null>(
@@ -92,24 +83,8 @@ export function CompanyPage() {
     Partial<Record<keyof CompanyFormState, string>>
   >({});
   const [saving, setSaving] = useState(false);
-  const [archiving, setArchiving] = useState<string | null>(null);
   const [logoResizing, setLogoResizing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  // เปิด dialog สร้างใหม่ถ้ามี ?action=create ใน URL
-  useEffect(() => {
-    if (searchParams.get("action") === "create") {
-      openCreate();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
-
-  function openCreate() {
-    setEditingCompany(null);
-    setForm({ ...initialForm, email: user?.email ?? "" });
-    setErrors({});
-    setOpen(true);
-  }
 
   function openEdit(company: CompanyWithId) {
     setEditingCompany(company);
@@ -161,7 +136,7 @@ export function CompanyPage() {
   }
 
   async function onSave() {
-    if (!user) return;
+    if (!user || !editingCompany) return;
 
     const parsed = companyFormSchema.safeParse(form);
     if (!parsed.success) {
@@ -195,17 +170,8 @@ export function CompanyPage() {
         branch: form.officeType === "branch" ? form.branchName.trim() : "",
       };
 
-      if (editingCompany) {
-        await updateCompany({ companyId: editingCompany.id, patch });
-        toast.success("แก้ไขข้อมูลบริษัทแล้ว");
-      } else {
-        const newId = await createCompany({
-          ownerId: user.uid,
-          data: { ...patch, name: patch.name },
-        });
-        setActiveCompanyId(newId);
-        toast.success("เพิ่มบริษัทใหม่แล้ว");
-      }
+      await updateCompany({ companyId: editingCompany.id, patch });
+      toast.success("แก้ไขข้อมูลบริษัทกลางแล้ว");
 
       setOpen(false);
     } catch (e) {
@@ -216,40 +182,9 @@ export function CompanyPage() {
     }
   }
 
-  async function onArchive(company: CompanyWithId) {
-    if (companies.length <= 1) {
-      toast.error("ไม่สามารถลบบริษัทเดียวที่เหลือได้");
-      return;
-    }
-    setArchiving(company.id);
-    try {
-      await archiveCompany(company.id);
-      // ถ้า archive บริษัทที่ active อยู่ → ย้ายไปตัวอื่น
-      if (company.id === activeCompanyId) {
-        const next = companies.find((c) => c.id !== company.id);
-        if (next) setActiveCompanyId(next.id);
-      }
-      toast.success(`เก็บถาวร "${company.name}" แล้ว`);
-    } catch (e) {
-      console.error(e);
-      toast.error("ดำเนินการไม่สำเร็จ");
-    } finally {
-      setArchiving(null);
-    }
-  }
-
   return (
     <div className="min-h-[calc(100dvh-4rem)]">
-      <AppHeader
-        title="บริษัทของฉัน"
-        subtitle="จัดการข้อมูลบริษัทและสลับบริษัทที่ใช้งาน"
-        actions={
-          <Button type="button" className="rounded-xl" onClick={openCreate}>
-            <Plus className="mr-1.5 size-4" />
-            เพิ่มบริษัท
-          </Button>
-        }
-      />
+      <AppHeader title="ข้อมูลบริษัท" subtitle="ข้อมูลกลางของ Beyond Dev ใช้ร่วมกันทุกบัญชี" />
 
       <div className="space-y-5 px-4 py-6 sm:px-6 sm:py-8">
         {companiesLoading ? (
@@ -264,18 +199,8 @@ export function CompanyPage() {
         ) : companies.length === 0 ? (
           <EmptyState
             icon={Building2}
-            title="ยังไม่มีบริษัท"
-            description="เริ่มต้นเพิ่มบริษัทเพื่อใช้งานเอกสารธุรกิจ"
-            action={
-              <Button
-                type="button"
-                className="rounded-xl"
-                onClick={openCreate}
-              >
-                <Plus className="mr-2 size-4" />
-                เพิ่มบริษัท
-              </Button>
-            }
+            title="ไม่สามารถโหลดบริษัทกลาง"
+            description="กรุณาตรวจสอบการเชื่อมต่อและสิทธิ์เข้าใช้งาน"
             className="max-w-xl"
           />
         ) : (
@@ -284,12 +209,7 @@ export function CompanyPage() {
               <CompanyCard
                 key={company.id}
                 company={company}
-                isActive={company.id === activeCompanyId}
-                archiving={archiving === company.id}
-                onSelect={() => setActiveCompanyId(company.id)}
                 onEdit={() => openEdit(company)}
-                onArchive={() => void onArchive(company)}
-                canArchive={companies.length > 1}
               />
             ))}
           </div>
@@ -301,7 +221,7 @@ export function CompanyPage() {
         <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-2xl sm:max-w-4xl">
           <DialogHeader>
             <DialogTitle>
-              {editingCompany ? "แก้ไขข้อมูลบริษัท" : "เพิ่มบริษัท"}
+              แก้ไขข้อมูลบริษัทกลาง
             </DialogTitle>
           </DialogHeader>
 
@@ -509,150 +429,27 @@ export function CompanyPage() {
 
 /* ───────────── CompanyCard ───────────── */
 
-function CompanyCard({
-  company,
-  isActive,
-  archiving,
-  canArchive,
-  onSelect,
-  onEdit,
-  onArchive,
-}: {
-  company: CompanyWithId;
-  isActive: boolean;
-  archiving: boolean;
-  canArchive: boolean;
-  onSelect: () => void;
-  onEdit: () => void;
-  onArchive: () => void;
-}) {
-  const branchLabel =
-    company.officeType === "branch"
-      ? (company.branchName ?? company.branch ?? "สาขา")
-      : company.officeType === "hq"
-        ? "สำนักงานใหญ่"
-        : null;
-
+function CompanyCard({ company, onEdit }: { company: CompanyWithId; onEdit: () => void }) {
   return (
-    <div
-      className={cn(
-        "relative flex flex-col gap-4 rounded-2xl border bg-surface p-5 shadow-sm transition",
-        isActive
-          ? "border-primary ring-2 ring-primary/20"
-          : "border-border hover:border-primary/30",
-      )}
-    >
-      {/* active badge */}
-      {isActive && (
-        <span className="inline-flex items-center gap-1 self-start rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-          <Check className="size-3" />
-          ใช้งานอยู่
-        </span>
-      )}
-
-      {/* Logo + ชื่อ */}
-      <div className="flex items-center gap-3">
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-surface-secondary">
-          {company.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={company.logoUrl}
-              alt={company.name}
-              className="size-12 rounded-xl object-cover"
-            />
-          ) : (
-            <Building2 className="size-5 text-muted-foreground" />
-          )}
-        </div>
-        <div className="min-w-0">
-          {/* ชื่อบริษัท */}
-          <p className="truncate font-semibold leading-tight text-foreground">
-            {company.name}
-          </p>
-          {company.nameEn && (
-            <p className="truncate text-xs text-muted-foreground/80">
-              {company.nameEn}
-            </p>
-          )}
-
-          {/* badge สาขา */}
-          {branchLabel && (
-            <span className="mt-1 inline-block rounded-full bg-surface-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-              {branchLabel}
-            </span>
-          )}
-
-          {/* ข้อมูลติดต่อ */}
-          {(company.taxId || company.phone || company.email || company.address) && (
-            <div className="mt-2 space-y-0.5 border-t border-border/50 pt-2">
-              {company.taxId && (
-                <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <span className="w-16 shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground/60">เลขภาษี</span>
-                  <span className="font-mono">{company.taxId}</span>
-                </p>
-              )}
-              {company.phone && (
-                <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <span className="w-16 shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground/60">โทรศัพท์</span>
-                  <span className="min-w-0 break-all">{company.phone}</span>
-                </p>
-              )}
-              {company.email && (
-                <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <span className="w-16 shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground/60">อีเมล</span>
-                  <span className="truncate">{company.email}</span>
-                </p>
-              )}
-              {company.address && (
-                <p className="flex gap-1.5 text-xs text-muted-foreground">
-                  <span className="w-16 shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground/60">ที่อยู่</span>
-                  <span className="line-clamp-2">{company.address}</span>
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
-        {!isActive && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 flex-1 rounded-lg text-xs"
-            onClick={onSelect}
-          >
-            <Star className="mr-1.5 size-3" />
-            ตั้งเป็นบริษัทที่ใช้งาน
-          </Button>
+    <Card className="max-w-xl">
+      <Card.Header>
+        {company.logoUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={company.logoUrl} alt="" className="mb-2 size-12 rounded-xl object-contain" />
         )}
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-8 rounded-lg px-3"
-          onClick={onEdit}
-          aria-label={`แก้ไข ${company.name}`}
-        >
-          <Edit2 className="size-3.5" />
-        </Button>
-        {canArchive && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 rounded-lg px-3 text-destructive hover:bg-destructive/10 hover:text-destructive"
-            onClick={onArchive}
-            aria-label={`เก็บถาวร ${company.name}`}
-            disabled={archiving}
-          >
-            <Trash2 className="size-3.5" />
-          </Button>
-        )}
-      </div>
-    </div>
+        <Card.Title className="break-words">{company.name}</Card.Title>
+        <Card.Description>พื้นที่ทำงานร่วมกัน · สมาชิกทุกคนเป็นเจ้าของ</Card.Description>
+      </Card.Header>
+      <Card.Content className="space-y-2 text-sm">
+        {company.taxId && <p>เลขประจำตัวผู้เสียภาษี: {company.taxId}</p>}
+        {company.address && <p className="break-words">{company.address}</p>}
+        {company.phone && <p>{company.phone}</p>}
+        {company.email && <p className="break-all">{company.email}</p>}
+      </Card.Content>
+      <Card.Footer>
+        <Button onClick={onEdit} variant="outline"><Edit2 className="size-4" /> แก้ไขข้อมูลบริษัท</Button>
+      </Card.Footer>
+    </Card>
   );
 }
 

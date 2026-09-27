@@ -8,6 +8,7 @@ import {
   query,
   where,
 } from "firebase/firestore";
+import { WORKSPACE_COMPANY_ID } from "@/config/workspace";
 import { getFirebaseDb } from "@/lib/firebase/client";
 import { useCompanyStore } from "@/stores/company-store";
 import type {
@@ -255,50 +256,38 @@ export function useCompany(companyId: string | null) {
   return { company, loading };
 }
 
-/** ฟัง companies ทั้งหมดของ user แบบ real-time และ sync เข้า store */
+/** Subscribe to the one shared workspace only after approval. */
 export function useUserCompanies(userId: string | null) {
   const setCompanies = useCompanyStore((s) => s.setCompanies);
   const setCompaniesLoading = useCompanyStore((s) => s.setCompaniesLoading);
+  const setWorkspaceError = useCompanyStore((s) => s.setWorkspaceError);
 
   useEffect(() => {
-    if (!userId) {
-      setCompanies([]);
-      setCompaniesLoading(false);
-      return;
-    }
+    setCompanies([]);
+    setWorkspaceError(null);
+    setCompaniesLoading(!!userId);
+    if (!userId) return;
     const db = getFirebaseDb();
     if (!db) {
+      setWorkspaceError("Firestore ยังไม่พร้อม");
       setCompaniesLoading(false);
       return;
     }
-
-    const q = query(
-      collection(db, "companies"),
-      where("ownerId", "==", userId),
-      where("archived", "==", false)
-    );
-
-    const unsub = onSnapshot(
-      q,
-      (snap) => {
-        const list = snap.docs.map((d) => ({
-          id: d.id,
-          ...(d.data() as Company),
-        }));
-        // เรียงบริษัท default ขึ้นก่อน แล้วตามชื่อ
-        list.sort((a, b) => {
-          if (a.isDefault && !b.isDefault) return -1;
-          if (!a.isDefault && b.isDefault) return 1;
-          return (a.name ?? "").localeCompare(b.name ?? "", "th");
-        });
-        setCompanies(list);
-        setCompaniesLoading(false);
-      },
-      () => setCompaniesLoading(false)
-    );
-
-    return () => unsub();
-  }, [userId, setCompanies, setCompaniesLoading]);
+    return onSnapshot(doc(db, "companies", WORKSPACE_COMPANY_ID), (snap) => {
+      if (!snap.exists() || snap.data().archived === true) {
+        setCompanies([]);
+        setWorkspaceError("ไม่พบ workspace กลาง Beyond Dev");
+      } else {
+        setCompanies([{ ...snap.data(), id: snap.id } as Company & { id: string }]);
+        setWorkspaceError(null);
+      }
+      setCompaniesLoading(false);
+    }, () => {
+      setCompanies([]);
+      setWorkspaceError("โหลด workspace กลางไม่ได้ กรุณาตรวจสอบสิทธิ์และการเชื่อมต่อ");
+      setCompaniesLoading(false);
+    });
+  }, [userId, setCompanies, setCompaniesLoading, setWorkspaceError]);
 }
 
 export function useDashboardStats(companyId: string | null) {

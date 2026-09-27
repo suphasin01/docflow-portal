@@ -373,6 +373,7 @@ export function DocumentCreateStep1({
   const userEditedDocNum = useRef(
     Boolean(initialValues?.documentNumber?.trim()),
   );
+  const initializedCompanyId = useRef<string | null>(null);
 
   const form = useForm<Step1FormValues>({
     resolver: zodResolver(step1Schema),
@@ -421,8 +422,10 @@ export function DocumentCreateStep1({
   useEffect(() => {
     if (initialValues) return;
     if (!activeCompanyId || !companies.length) return;
+    if (initializedCompanyId.current === activeCompanyId) return;
     const company = companies.find((c) => c.id === activeCompanyId);
     if (!company) return;
+    initializedCompanyId.current = activeCompanyId;
     reset(buildDefaultStep1Values(company.id ?? "", company.name ?? ""), {
       keepDirty: false,
     });
@@ -437,15 +440,19 @@ export function DocumentCreateStep1({
 
   // ── When selectedCompanyId changes (user picks different company) ──
   useEffect(() => {
+    // Preserve the saved document snapshot and in-progress edits when a teammate
+    // updates the shared company profile.
+    if (initialValues || initializedCompanyId.current === selectedCompanyId) return;
     const company = companies.find((c) => c.id === selectedCompanyId) as
       | (Company & { id: string })
       | undefined;
     if (!company) return;
     setValue("companySnapshot", extractCompanySnapshot(company));
-  }, [selectedCompanyId, companies, setValue]);
+  }, [initialValues, selectedCompanyId, companies, setValue]);
 
   // โลโก้ไม่ได้ register — ซิงค์จาก Firestore store ให้ getValues/zod เห็น data URI
   useEffect(() => {
+    if (initialValues) return;
     if (!selectedCompanyId) return;
     const company = companies.find((c) => c.id === selectedCompanyId);
     if (!company) return;
@@ -457,7 +464,7 @@ export function DocumentCreateStep1({
       shouldDirty: false,
       shouldValidate: false,
     });
-  }, [companies, selectedCompanyId, getValues, setValue]);
+  }, [initialValues, companies, selectedCompanyId, getValues, setValue]);
 
   // cascade helpers — called directly in onClick, no useEffect needed
   function applyFlowType(newFlow: FlowType) {
@@ -582,27 +589,7 @@ export function DocumentCreateStep1({
           {/* company selector */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">บริษัทที่ออกเอกสาร</Label>
-            <Controller
-              control={control}
-              name="selectedCompanyId"
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger className="rounded-xl">
-                    <SelectValue>
-                      {companies.find((c) => c.id === field.value)?.name ??
-                        "เลือกบริษัท"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {companies.map((c) => (
-                      <SelectItem key={c.id ?? ""} value={c.id ?? ""}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
+            <p className="text-sm text-foreground">{companies[0]?.name ?? "Beyond Dev"}</p>
             {errors.selectedCompanyId && (
               <p className="text-xs text-destructive">
                 {errors.selectedCompanyId.message}

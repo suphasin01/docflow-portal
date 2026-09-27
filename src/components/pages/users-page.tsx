@@ -106,12 +106,13 @@ export function UsersPage() {
     [requests],
   );
   const approved = useMemo(
-    () => members.filter((member) => member.status === "approved"),
+    () => members.filter((member) => member.status === "approved" && !BOOTSTRAP_ADMIN_EMAILS.some((email) => email === member.email.toLowerCase())),
     [members],
   );
 
   async function approve(request: AccessRequestRecord) {
     if (!user) return;
+    if (!window.confirm(`อนุมัติ ${request.email} เป็นเจ้าของร่วม? บัญชีนี้จะจัดการข้อมูลและอนุมัติผู้ใช้ได้`)) return;
     setBusyUid(request.uid);
     try {
       await approveAccessRequest(request, user);
@@ -161,7 +162,7 @@ export function UsersPage() {
           <Card className="mx-auto max-w-xl rounded-2xl bg-surface">
             <CardContent className="flex flex-col items-center px-8 py-12 text-center">
               <ShieldCheck className="size-10 text-muted" />
-              <h2 className="mt-4 text-lg font-semibold">เฉพาะผู้ดูแลระบบ</h2>
+              <h2 className="mt-4 text-lg font-semibold">เฉพาะบัญชีที่ผ่านอนุมัติ</h2>
               <p className="mt-2 text-sm text-muted-foreground">
                 บัญชีนี้ไม่มีสิทธิ์จัดการสมาชิก
               </p>
@@ -176,13 +177,13 @@ export function UsersPage() {
     <div className="min-h-[calc(100dvh-4rem)]">
       <AppHeader
         title="จัดการผู้ใช้"
-        subtitle="ตรวจสอบคำขอและควบคุมสิทธิ์เข้าใช้งาน Beyond Doc"
+        subtitle="สมาชิกที่อนุมัติแล้วเป็นเจ้าของร่วม จัดการข้อมูลและผู้ใช้ได้เท่ากัน"
         showTrialBanner={false}
       />
 
       <div className="space-y-6 p-6">
         <div className="grid gap-4 md:grid-cols-3">
-          <Card className="rounded-2xl border-0 bg-surface shadow-sm ring-1 ring-slate-200/80">
+          <Card className="rounded-2xl border-0 bg-surface shadow-sm">
             <CardContent className="flex items-center gap-4 px-5 py-5">
               <div className="flex size-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
                 <Clock3 className="size-5" />
@@ -193,7 +194,7 @@ export function UsersPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="rounded-2xl border-0 bg-surface shadow-sm ring-1 ring-slate-200/80">
+          <Card className="rounded-2xl border-0 bg-surface shadow-sm">
             <CardContent className="flex items-center gap-4 px-5 py-5">
               <div className="flex size-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
                 <UsersRound className="size-5" />
@@ -206,22 +207,22 @@ export function UsersPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="rounded-2xl border-0 bg-surface shadow-sm ring-1 ring-slate-200/80">
+          <Card className="rounded-2xl border-0 bg-surface shadow-sm">
             <CardContent className="flex items-center gap-4 px-5 py-5">
               <div className="flex size-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                 <ShieldCheck className="size-5" />
               </div>
               <div>
                 <div className="text-2xl font-semibold text-foreground">
-                  {BOOTSTRAP_ADMIN_EMAILS.length}
+                  {approved.length + BOOTSTRAP_ADMIN_EMAILS.length}
                 </div>
-                <div className="text-xs text-muted-foreground">ผู้ดูแลระบบ</div>
+                <div className="text-xs text-muted-foreground">เจ้าของร่วม</div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <Card className="rounded-2xl border-0 bg-surface py-0 shadow-sm ring-1 ring-slate-200/80">
+        <Card className="rounded-2xl border-0 bg-surface py-0 shadow-sm">
           <div className="flex items-center justify-between border-b border-separator px-6 py-5">
             <div>
               <h2 className="font-semibold text-foreground">คำขอเข้าใช้งาน</h2>
@@ -246,7 +247,7 @@ export function UsersPage() {
                 <div className="mt-1 text-xs text-muted-foreground">คำขอใหม่จะแสดงที่นี่อัตโนมัติ</div>
               </div>
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-separator">
                 {pending.map((request) => (
                   <div key={request.uid} className="flex flex-wrap items-center gap-4 px-6 py-4">
                     <UserAvatar
@@ -289,21 +290,21 @@ export function UsersPage() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border-0 bg-surface py-0 shadow-sm ring-1 ring-slate-200/80">
+        <Card className="rounded-2xl border-0 bg-surface py-0 shadow-sm">
           <div className="border-b border-separator px-6 py-5">
             <h2 className="font-semibold text-foreground">ผู้ใช้ที่มีสิทธิ์</h2>
             <p className="mt-1 text-xs text-muted-foreground">บัญชีที่สามารถเข้าถึง workspace ได้</p>
           </div>
           <CardContent className="px-0">
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-separator">
               {BOOTSTRAP_ADMIN_EMAILS.map((email) => (
                 <div key={email} className="flex items-center gap-4 px-6 py-4">
                   <UserAvatar name="Admin" email={email} photoURL="" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-medium text-foreground">{email}</div>
-                    <div className="text-xs text-muted-foreground">Bootstrap administrator</div>
+                    <div className="text-xs text-muted-foreground">บัญชีกู้คืนการเข้าถึง</div>
                   </div>
-                  <Badge className="bg-blue-50 text-blue-700">ผู้ดูแล</Badge>
+                  <Badge className="bg-blue-50 text-blue-700">เจ้าของ</Badge>
                 </div>
               ))}
               {approved.map((member) => (
@@ -319,12 +320,12 @@ export function UsersPage() {
                     </div>
                     <div className="truncate text-xs text-muted-foreground">{member.email}</div>
                   </div>
-                  <Badge className="bg-emerald-50 text-emerald-700">ใช้งานอยู่</Badge>
+                  <Badge className="bg-emerald-50 text-emerald-700">เจ้าของ</Badge>
                   <Button
                     variant="outline"
                     size="sm"
                     className="rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700"
-                    disabled={busyUid === member.uid}
+                    disabled={busyUid === member.uid || member.uid === user?.uid}
                     onClick={() => void revoke(member)}
                   >
                     <UserRoundX className="size-4" /> ยกเลิกสิทธิ์
@@ -336,11 +337,11 @@ export function UsersPage() {
         </Card>
 
         {rejected.length > 0 ? (
-          <Card className="rounded-2xl border-0 bg-surface py-0 shadow-sm ring-1 ring-slate-200/80">
+          <Card className="rounded-2xl border-0 bg-surface py-0 shadow-sm">
             <div className="border-b border-separator px-6 py-5">
               <h2 className="font-semibold text-foreground">คำขอที่ปฏิเสธ</h2>
             </div>
-            <CardContent className="divide-y divide-slate-100 px-0">
+            <CardContent className="divide-y divide-separator px-0">
               {rejected.map((request) => (
                 <div key={request.uid} className="flex flex-wrap items-center gap-4 px-6 py-4">
                   <UserAvatar

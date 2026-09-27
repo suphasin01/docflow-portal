@@ -9,6 +9,7 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { getFirebaseDb } from "@/lib/firebase/client";
+import { WORKSPACE_COMPANY_ID } from "@/config/workspace";
 import {
   mockCompany,
   mockCustomers,
@@ -22,6 +23,9 @@ export async function seedDemoData(params: {
   companyId: string;
   userId: string;
 }): Promise<void> {
+  if (params.companyId === WORKSPACE_COMPANY_ID) {
+    throw new Error("ไม่สามารถใส่ข้อมูลตัวอย่างใน workspace กลางได้");
+  }
   const db = getFirebaseDb();
   if (!db) throw new Error("Firestore ยังไม่พร้อม");
 

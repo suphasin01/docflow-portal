@@ -273,7 +273,7 @@ export default function LoginPage() {
               </Button>
 
               <p className="mt-5 text-center text-xs leading-5 text-muted-foreground">
-                บัญชีใหม่จะส่งคำขอให้ผู้ดูแลอนุมัติเพียงครั้งเดียว
+                  บัญชีใหม่ต้องได้รับอนุมัติจากเจ้าของร่วมก่อนเข้าใช้งาน
               </p>
             </div>
           ) : null}
@@ -296,10 +296,16 @@ function AuthFrame({ children }: { children: React.ReactNode }) {
 
 function Brand() {
   return (
-    <div className="mb-8 flex items-center gap-3">
-      <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-        <span className="text-sm font-bold">B</span>
-      </div>
+    <div className="mb-8 flex flex-col items-start gap-3">
+      {/* Keep the original brand colors legible in both themes. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/beyonddev-logo.png"
+        alt="Beyond Dev Tech Solution"
+        width={917}
+        height={338}
+        className="h-auto w-44 max-w-full rounded-lg bg-white p-2"
+      />
       <div>
         <div className="text-base font-semibold tracking-tight">Beyond Doc</div>
         <div className="text-xs text-muted-foreground">Business documents, simplified</div>

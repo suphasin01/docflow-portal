@@ -27,7 +27,7 @@ export const mainNav: NavItem[] = [
   { href: "/catalog", label: "สินค้า/บริการ", icon: Package },
   { href: "/contacts", label: "ลูกค้า/ผู้ขาย", icon: Users },
   { href: "/reports", label: "รายงาน", icon: FileBarChart },
-  { href: "/company", label: "บริษัทของฉัน", icon: Building2 },
+  { href: "/company", label: "ข้อมูลบริษัท", icon: Building2 },
   { href: "/users", label: "จัดการผู้ใช้", icon: UserRoundCog, adminOnly: true },
 ];
 
