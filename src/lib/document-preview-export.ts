@@ -1,38 +1,64 @@
 "use client";
 
-function oklch2rgb(L: number, C: number, H: number, A = 1): string {
-  const hr = (H * Math.PI) / 180;
-  const a = C * Math.cos(hr);
-  const b = C * Math.sin(hr);
-  const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
-  const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
-  const s_ = L - 0.0894841775 * a - 1.291485548 * b;
-  const l3 = l_ ** 3;
-  const m3 = m_ ** 3;
-  const s3 = s_ ** 3;
-  const rL = 4.076741662 * l3 - 3.307711591 * m3 + 0.230969929 * s3;
-  const gL = -1.268438005 * l3 + 2.609757401 * m3 - 0.341319396 * s3;
-  const bL = -0.004196086 * l3 - 0.703418615 * m3 + 1.695608672 * s3;
-  const gc = (c: number) =>
-    c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055;
-  const r = Math.round(Math.max(0, Math.min(1, gc(rL))) * 255);
-  const g = Math.round(Math.max(0, Math.min(1, gc(gL))) * 255);
-  const bv = Math.round(Math.max(0, Math.min(1, gc(bL))) * 255);
-  return A < 1 ? `rgba(${r},${g},${bv},${A})` : `rgb(${r},${g},${bv})`;
+const MODERN_COLOR_FUNCTION =
+  /\b(?:oklch|oklab|lch|lab|color)\([^()]*(?:\([^()]*\)[^()]*)*\)/gi;
+
+function hasModernColor(value: string) {
+  MODERN_COLOR_FUNCTION.lastIndex = 0;
+  return MODERN_COLOR_FUNCTION.test(value);
 }
 
-function convertOklch(val: string): string {
-  return val.replace(
-    /oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.%]+))?\s*\)/g,
-    (_, L, C, H, Astr) => {
-      const alpha = Astr
-        ? Astr.includes("%")
-          ? parseFloat(Astr) / 100
-          : parseFloat(Astr)
-        : 1;
-      return oklch2rgb(parseFloat(L), parseFloat(C), parseFloat(H), alpha);
-    },
-  );
+/**
+ * html2canvas 1.x cannot parse CSS Color 4 functions such as lab() even though
+ * the browser can render them. Paint each color through the browser canvas and
+ * read the resulting sRGB pixel so html2canvas only receives rgba().
+ */
+function createModernColorConverter(doc: Document) {
+  const canvas = doc.createElement("canvas");
+  canvas.width = 1;
+  canvas.height = 1;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  const cache = new Map<string, string>();
+
+  return (value: string): string => {
+    if (!context || !hasModernColor(value)) return value;
+
+    MODERN_COLOR_FUNCTION.lastIndex = 0;
+    return value.replace(MODERN_COLOR_FUNCTION, (color) => {
+      const cached = cache.get(color);
+      if (cached) return cached;
+
+      context.clearRect(0, 0, 1, 1);
+      context.fillStyle = "rgba(1, 2, 3, 0.123)";
+      context.fillStyle = color;
+      context.fillRect(0, 0, 1, 1);
+      const [r, g, b, a] = context.getImageData(0, 0, 1, 1).data;
+      const converted = `rgba(${r}, ${g}, ${b}, ${Number((a / 255).toFixed(4))})`;
+      cache.set(color, converted);
+      return converted;
+    });
+  };
+}
+
+function inlineModernComputedColors(
+  clonedDoc: Document,
+  convertModernColors: (value: string) => string,
+) {
+  const view = clonedDoc.defaultView;
+  if (!view) return;
+
+  clonedDoc.querySelectorAll<HTMLElement>("*").forEach((element) => {
+    const computed = view.getComputedStyle(element);
+    for (const property of computed) {
+      const value = computed.getPropertyValue(property);
+      if (!hasModernColor(value)) continue;
+      element.style.setProperty(
+        property,
+        convertModernColors(value),
+        "important",
+      );
+    }
+  });
 }
 
 /**
@@ -87,11 +113,13 @@ export function bakeStampGrayscaleIntoCanvas(
   }
 }
 
-function fixPreviewExportClone(
+export function fixPreviewExportClone(
   clonedDoc: Document,
   clonedRoot: HTMLElement,
   liveRoot: HTMLElement,
 ) {
+  const convertModernColors = createModernColorConverter(clonedDoc);
+
   // หน้า detail เก็บตัวพิมพ์ไว้นอกจอและซ่อนด้วย opacity เพื่อไม่ให้ผู้ใช้เห็น
   // html2canvas สืบทอด opacity/ตำแหน่งจาก parent จึงต้องเปิดให้เห็นเฉพาะ clone
   // ก่อน render ไม่เช่นนั้นจะได้ PDF/ภาพพิมพ์เป็นหน้าว่าง
@@ -110,8 +138,8 @@ function fixPreviewExportClone(
     .filter((p) => p.startsWith("--"))
     .map((name) => {
       const val = rootStyle.getPropertyValue(name).trim();
-      if (!val.includes("oklch")) return null;
-      return `${name}: ${convertOklch(val)};`;
+      if (!hasModernColor(val)) return null;
+      return `${name}: ${convertModernColors(val)};`;
     })
     .filter(Boolean)
     .join("\n");
@@ -152,12 +180,15 @@ function fixPreviewExportClone(
   `;
   clonedDoc.head.appendChild(exportStyle);
 
-  bakeStampGrayscaleIntoCanvas(clonedDoc, clonedRoot, liveRoot);
-
   clonedDoc.querySelectorAll<HTMLElement>("[style]").forEach((el) => {
     const s = el.getAttribute("style") ?? "";
-    if (s.includes("oklch")) el.setAttribute("style", convertOklch(s));
+    if (hasModernColor(s)) {
+      el.setAttribute("style", convertModernColors(s));
+    }
   });
+
+  inlineModernComputedColors(clonedDoc, convertModernColors);
+  bakeStampGrayscaleIntoCanvas(clonedDoc, clonedRoot, liveRoot);
 }
 
 async function waitForFontsReady(doc: Document) {
