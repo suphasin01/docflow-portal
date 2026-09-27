@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { AppHeader } from "@/components/layout/app-header";
-import { useAuth } from "@/components/providers/auth-provider";
 import { DashboardFilterBar } from "@/components/dashboard/dashboard-filter-bar";
 import { DashboardKpiCards } from "@/components/dashboard/dashboard-kpi-cards";
 import { DashboardQuickActions } from "@/components/dashboard/dashboard-quick-actions";
@@ -11,9 +10,7 @@ import { SalesTrendChart } from "@/components/dashboard/sales-trend-chart";
 import { TopCustomersCard } from "@/components/dashboard/top-customers-card";
 import { TopItemsCard } from "@/components/dashboard/top-items-card";
 import { UnpaidDocumentsCard } from "@/components/dashboard/unpaid-documents-card";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { seedDemoData } from "@/lib/data/seed-demo";
 import {
   computeKpis,
   computePendingWorkflow,
@@ -31,11 +28,9 @@ import {
 } from "@/lib/dashboard/dashboard-analytics";
 import { useCompanyStore } from "@/stores/company-store";
 import { useDocuments } from "@/hooks/use-workspace-data";
-import { toast } from "sonner";
 import type { DocumentType } from "@/types";
 
 export function DashboardPage() {
-  const { user } = useAuth();
   const companyId = useCompanyStore((s) => s.activeCompanyId);
   const { data: documents, loading } = useDocuments(companyId);
 
@@ -102,7 +97,7 @@ export function DashboardPage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-surface-secondary">
       <AppHeader title="แดชบอร์ด" subtitle="สรุปภาพรวมเอกสารและการเงิน" />
       <div className="space-y-6 px-6 py-8">
         <DashboardFilterBar

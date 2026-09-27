@@ -163,7 +163,7 @@ function DateRangeQuickFilter({
             variant={preset === key ? "default" : "secondary"}
             className={cn(
               "rounded-xl",
-              preset === key && "bg-slate-900 text-white hover:bg-slate-900",
+              preset === key && "bg-accent text-accent-foreground hover:bg-accent-hover",
             )}
             onClick={() => onPresetChange(key)}
           >
@@ -209,28 +209,28 @@ function DocumentGroupTabs({
           onChange(v);
       }}
     >
-      <TabsList className="h-10 flex-wrap rounded-xl bg-slate-100/90 p-1">
+      <TabsList className="h-10 flex-wrap rounded-xl bg-surface-secondary p-1">
         <TabsTrigger
           value="all"
-          className="rounded-lg data-[state=active]:bg-slate-900 data-[state=active]:text-white"
+          className="rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
         >
           ทั้งหมด
         </TabsTrigger>
         <TabsTrigger
           value="sales"
-          className="rounded-lg data-[state=active]:bg-slate-900 data-[state=active]:text-white"
+          className="rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
         >
           เอกสารขาย
         </TabsTrigger>
         <TabsTrigger
           value="purchase"
-          className="rounded-lg data-[state=active]:bg-slate-900 data-[state=active]:text-white"
+          className="rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
         >
           เอกสารจัดซื้อ
         </TabsTrigger>
         <TabsTrigger
           value="finance"
-          className="rounded-lg data-[state=active]:bg-slate-900 data-[state=active]:text-white"
+          className="rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
         >
           เอกสารการเงิน
         </TabsTrigger>
@@ -259,7 +259,7 @@ function ReportSummaryCards({ stats }: { stats: SummaryStats }) {
       title: "VAT",
       value: `฿${fmt(stats.vatSum)}`,
       icon: Landmark,
-      iconBg: "bg-slate-100 text-slate-700",
+      iconBg: "bg-surface-secondary text-foreground",
     },
     {
       title: "หัก ณ ที่จ่าย",
@@ -280,7 +280,7 @@ function ReportSummaryCards({ stats }: { stats: SummaryStats }) {
         {cards.map((c) => (
           <div
             key={c.title}
-            className="rounded-2xl border border-border/70 bg-white p-5 shadow-sm"
+            className="rounded-2xl border border-border/70 bg-surface p-5 shadow-sm"
           >
             <div className="flex items-start gap-3">
               <div
@@ -328,7 +328,7 @@ function SummaryByTypeTable({
   );
 
   return (
-    <Card className="rounded-2xl border-border/80 bg-white shadow-sm">
+    <Card className="rounded-2xl border-border/80 bg-surface shadow-sm">
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold">
           สรุปตามประเภทเอกสาร
@@ -340,7 +340,7 @@ function SummaryByTypeTable({
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="border-b border-border/80 bg-slate-50/80">
+            <thead className="border-b border-border/80 bg-surface-secondary">
               <tr className="text-xs font-medium text-muted-foreground">
                 <th className="px-4 py-3">ประเภท</th>
                 <th className="px-4 py-3 text-right">จำนวน</th>
@@ -354,7 +354,7 @@ function SummaryByTypeTable({
               {rows.map((r) => {
                 const cls =
                   DOC_TYPE_BADGE[r.type] ??
-                  "border bg-slate-50 text-slate-800 border-slate-200";
+                  "border bg-surface-secondary text-foreground border-border";
                 const label =
                   DOC_TYPE_CONFIG[r.type as ExtDocType]?.label ?? r.type;
                 return (
@@ -394,7 +394,7 @@ function SummaryByTypeTable({
                   </tr>
                 );
               })}
-              <tr className="bg-slate-50/60 font-semibold">
+              <tr className="bg-surface-secondary font-semibold">
                 <td className="px-4 py-3">รวม</td>
                 <td className="px-4 py-3 text-right tabular-nums">
                   {totals.count}
@@ -434,7 +434,7 @@ function TypeDrilldownTagBar({
   if (!drillType) return null;
   const label = DOC_TYPE_CONFIG[drillType as ExtDocType]?.label ?? drillType;
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/70 bg-white/90 px-4 py-3 shadow-sm">
+    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/70 bg-surface/90 px-4 py-3 shadow-sm">
       <Button
         type="button"
         variant="outline"
@@ -444,12 +444,12 @@ function TypeDrilldownTagBar({
       >
         ← กลับ — แสดงทั้งหมด
       </Button>
-      <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium">
+      <span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-secondary/50 px-3 py-1 text-xs font-medium">
         ประเภท: {label}
         <button
           type="button"
           onClick={onClear}
-          className="ml-1 rounded-full p-0.5 hover:bg-muted"
+          className="ml-1 rounded-full p-0.5 hover:bg-surface-secondary"
           aria-label="ลบตัวกรอง"
         >
           ×
@@ -482,7 +482,7 @@ function ProfitLossCard({
     pnl.netProfit >= 0 ? "text-blue-950 dark:text-blue-100" : "text-red-600";
 
   return (
-    <Card className="rounded-2xl border-border/80 bg-white shadow-sm">
+    <Card className="rounded-2xl border-border/80 bg-surface shadow-sm">
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 pb-2">
         <div>
           <CardTitle className="text-base font-semibold">
@@ -573,11 +573,11 @@ function DocumentListCollapse({
     sortColumn === c ? (sortDir === "desc" ? " ↓" : " ↑") : "";
 
   return (
-    <Card className="rounded-2xl border-border/80 bg-white shadow-sm">
+    <Card className="rounded-2xl border-border/80 bg-surface shadow-sm">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-slate-50/80"
+        className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-surface-secondary"
       >
         <div>
           <div className="flex items-center gap-2 font-semibold text-foreground">
@@ -599,7 +599,7 @@ function DocumentListCollapse({
         <CardContent className="border-t border-border/60 p-0">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[880px] text-left text-sm">
-              <thead className="border-b border-border/80 bg-slate-50/80">
+              <thead className="border-b border-border/80 bg-surface-secondary">
                 <tr className="text-xs font-medium text-muted-foreground">
                   <th className="px-4 py-3">
                     <button
@@ -654,7 +654,7 @@ function DocumentListCollapse({
                           className={cn(
                             "rounded-md px-2 py-0.5 text-xs font-medium",
                             DOC_TYPE_BADGE[d.type] ??
-                              "border bg-slate-50 text-slate-800 border-slate-200",
+                              "border bg-surface-secondary text-foreground border-border",
                           )}
                         >
                           {tlabel}
@@ -818,14 +818,14 @@ export function ReportsPage() {
     : "document_list";
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-transparent">
       <AppHeader
         title="รายงานสรุปเอกสาร"
         subtitle="สรุปเอกสาร · งบกำไรขาดทุน"
         actions={
           <Button
             type="button"
-            className="h-10 shrink-0 gap-2 rounded-xl bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-800"
+            className="h-10 shrink-0 gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
             onClick={() => setExportOpen(true)}
           >
             <Download className="size-4 shrink-0" />
@@ -849,7 +849,7 @@ export function ReportsPage() {
           <p className="text-sm text-muted-foreground">กำลังโหลด…</p>
         ) : (
           <>
-            <Card className="rounded-2xl border-border/80 bg-white p-5 shadow-sm">
+            <Card className="rounded-2xl border-border/80 bg-surface p-5 shadow-sm">
               <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0 flex-1 space-y-4">
                   <DateRangeQuickFilter
@@ -866,7 +866,7 @@ export function ReportsPage() {
                 </div>
                 <div className="flex flex-wrap items-center gap-2 lg:shrink-0">
                   <select
-                    className="h-10 rounded-xl border border-border bg-white px-3 text-sm shadow-sm"
+                    className="h-10 rounded-xl border border-border bg-surface px-3 text-sm shadow-sm"
                     value={typeDropdown}
                     onChange={(e) => {
                       const v = e.target.value;
@@ -888,7 +888,7 @@ export function ReportsPage() {
                     size="sm"
                     className={cn(
                       "gap-2 rounded-xl",
-                      plMode && "bg-slate-900 text-white hover:bg-slate-900",
+                      plMode && "bg-accent text-accent-foreground hover:bg-accent-hover",
                     )}
                     onClick={() => setPlMode((v) => !v)}
                   >
@@ -900,7 +900,7 @@ export function ReportsPage() {
             </Card>
 
             {filteredDocs.length === 0 ? (
-              <Card className="rounded-2xl border-dashed border-border bg-white p-12 text-center shadow-sm">
+              <Card className="rounded-2xl border-dashed border-border bg-surface p-12 text-center shadow-sm">
                 <CardTitle className="text-base font-semibold">
                   ยังไม่มีข้อมูลในช่วงเวลานี้
                 </CardTitle>

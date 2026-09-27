@@ -176,7 +176,7 @@ export function DocumentItemTable({ rows, onChange }: DocumentItemTableProps) {
 
   return (
     <div className="space-y-3">
-      <div className="overflow-hidden rounded-2xl border border-border/80 bg-white">
+      <div className="glass-panel overflow-hidden">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (
@@ -194,7 +194,7 @@ export function DocumentItemTable({ rows, onChange }: DocumentItemTableProps) {
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id} className="hover:bg-muted/30">
+              <TableRow key={row.id} className="hover:bg-surface-secondary/30">
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id} className="align-middle">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

@@ -6,7 +6,7 @@ const variants: Record<
   { className: string; label: string }
 > = {
   draft: {
-    className: "bg-slate-100 text-slate-700 border-slate-200",
+    className: "bg-surface-secondary text-foreground border-border",
     label: "ร่าง",
   },
   issued: {
@@ -26,7 +26,7 @@ const variants: Record<
     label: "ชำระบางส่วน",
   },
   unpaid: {
-    className: "bg-slate-50 text-slate-600 border-slate-200",
+    className: "bg-surface-secondary text-muted-foreground border-border",
     label: "ยังไม่ชำระ",
   },
   overdue: {
@@ -34,7 +34,7 @@ const variants: Record<
     label: "เกินกำหนด",
   },
   cancelled: {
-    className: "bg-zinc-100 text-zinc-600 border-zinc-200",
+    className: "border-border bg-default text-muted",
     label: "ยกเลิก",
   },
   active: {
@@ -42,7 +42,7 @@ const variants: Record<
     label: "ใช้งาน",
   },
   inactive: {
-    className: "bg-zinc-100 text-zinc-600 border-zinc-200",
+    className: "border-border bg-default text-muted",
     label: "ไม่ใช้งาน",
   },
 };
@@ -55,7 +55,7 @@ type StatusBadgeProps = {
 
 export function StatusBadge({ status, label, className }: StatusBadgeProps) {
   const v = variants[status] ?? {
-    className: "bg-muted text-foreground border-border",
+    className: "bg-surface-secondary text-foreground border-border",
     label: status,
   };
   return (

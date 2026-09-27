@@ -114,10 +114,10 @@ function SettingsCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border/60 bg-white">
+    <div className="overflow-hidden rounded-2xl border border-border/60 bg-surface">
       <div className="border-b border-border/60 px-6 py-5">
         <div className="flex items-center gap-3">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/60 text-muted-foreground">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-surface-secondary/60 text-muted-foreground">
             <Icon className="size-4" />
           </span>
           <div>
@@ -160,7 +160,7 @@ function DateFormatCard({
         "relative flex w-full items-center justify-between rounded-xl border px-4 py-3.5 text-left transition-all",
         selected
           ? "border-primary/60 bg-primary/5 ring-1 ring-primary/40"
-          : "border-border/60 bg-white hover:border-border hover:bg-muted/30",
+          : "border-border/60 bg-surface hover:border-border hover:bg-surface-secondary/30",
       )}
     >
       <div>
@@ -183,7 +183,7 @@ function DateFormatCard({
             "flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
             selected
               ? "border-primary bg-primary text-white"
-              : "border-border/60 bg-white",
+              : "border-border/60 bg-surface",
           )}
         >
           {selected && <Check className="size-3" strokeWidth={3} />}
@@ -462,7 +462,7 @@ export function SettingsPage() {
                           "flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3.5 transition-colors",
                           field.value === opt.value
                             ? "border-primary/60 bg-primary/5"
-                            : "border-border/60 hover:bg-muted/30",
+                            : "border-border/60 hover:bg-surface-secondary/30",
                         )}
                       >
                         <input
@@ -486,7 +486,7 @@ export function SettingsPage() {
             </div>
 
             {/* Live preview */}
-            <div className="rounded-xl border border-border/60 bg-muted/30 px-5 py-4">
+            <div className="rounded-xl border border-border/60 bg-surface-secondary/30 px-5 py-4">
               <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 ตัวอย่างเลขที่เอกสาร
               </p>

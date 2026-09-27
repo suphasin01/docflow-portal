@@ -64,13 +64,15 @@ function useCompanyCollection<T extends { id: string }>(
 
   useEffect(() => {
     if (!companyId) {
-      setData([]);
-      setLoading(false);
+      queueMicrotask(() => {
+        setData([]);
+        setLoading(false);
+      });
       return;
     }
     const db = getFirebaseDb();
     if (!db) {
-      setLoading(false);
+      queueMicrotask(() => setLoading(false));
       return;
     }
 
@@ -115,13 +117,15 @@ export function useCatalogItems(companyId: string | null) {
 
   useEffect(() => {
     if (!companyId) {
-      setData([]);
-      setLoading(false);
+      queueMicrotask(() => {
+        setData([]);
+        setLoading(false);
+      });
       return;
     }
     const db = getFirebaseDb();
     if (!db) {
-      setLoading(false);
+      queueMicrotask(() => setLoading(false));
       return;
     }
 
@@ -166,13 +170,15 @@ export function useContacts(companyId: string | null) {
 
   useEffect(() => {
     if (!companyId) {
-      setData([]);
-      setLoading(false);
+      queueMicrotask(() => {
+        setData([]);
+        setLoading(false);
+      });
       return;
     }
     const db = getFirebaseDb();
     if (!db) {
-      setLoading(false);
+      queueMicrotask(() => setLoading(false));
       return;
     }
 
@@ -216,13 +222,15 @@ export function useCompany(companyId: string | null) {
 
   useEffect(() => {
     if (!companyId) {
-      setCompany(null);
-      setLoading(false);
+      queueMicrotask(() => {
+        setCompany(null);
+        setLoading(false);
+      });
       return;
     }
     const db = getFirebaseDb();
     if (!db) {
-      setLoading(false);
+      queueMicrotask(() => setLoading(false));
       return;
     }
     const ref = doc(db, "companies", companyId);

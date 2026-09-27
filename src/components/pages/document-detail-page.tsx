@@ -151,7 +151,7 @@ function PreviewStack({
   docVariant: "original" | "copy";
 }) {
   return (
-    <div ref={innerRef} className="space-y-0 bg-white">
+    <div ref={innerRef} className="space-y-0 bg-surface">
       {docs.map((doc) => {
         const preview = doc.previewData;
         return (
@@ -161,7 +161,7 @@ function PreviewStack({
             step2Data={(preview?.step2Data as Step2FormValues | null) ?? null}
             step3Data={(preview?.step3Data as Step3FormValues | null) ?? null}
             docVariant={docVariant}
-            className="overflow-visible rounded-none bg-white p-0"
+            className="overflow-visible rounded-none bg-surface p-0"
             pageClassName="border-0 shadow-none"
           />
         );
@@ -471,7 +471,7 @@ export function DocumentDetailPage({
 
   if (loading || !currentDocument) {
     return (
-      <div className="min-h-screen bg-[#f4f6f8]">
+      <div className="min-h-screen bg-transparent">
         <AppHeader
           title="รายละเอียดเอกสาร"
           subtitle="กำลังโหลดข้อมูลเอกสาร..."
@@ -483,7 +483,7 @@ export function DocumentDetailPage({
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f6f8]">
+    <div className="min-h-screen bg-transparent">
       <AppHeader
         title={`${documentTypeLabels[currentDocument.type] ?? currentDocument.type} ${currentDocument.docNumber}`}
         titleClassName="text-xl font-semibold"
@@ -604,9 +604,9 @@ export function DocumentDetailPage({
           </div>
 
           {documentTypeSupportsPaymentStatus(currentDocument.type) ? (
-            <Card className="rounded-2xl border-slate-200/80 bg-white py-0">
-              <CardHeader className="border-b border-slate-200/80 py-3">
-                <CardTitle className="text-sm font-semibold text-slate-800">
+            <Card className="rounded-2xl border-border/80 bg-surface py-0">
+              <CardHeader className="border-b border-border/80 py-3">
+                <CardTitle className="text-sm font-semibold text-foreground">
                   ประวัติการเปลี่ยนสถานะชำระเงิน
                 </CardTitle>
               </CardHeader>
@@ -620,9 +620,9 @@ export function DocumentDetailPage({
                     {paymentHistorySorted.map((entry, i) => (
                       <li
                         key={`${timestampToMs(entry.at)}-${entry.userId}-${entry.to}-${i}`}
-                        className="border-b border-slate-100 pb-3 text-[13px] leading-snug text-slate-700 last:border-0 last:pb-0"
+                        className="border-b border-separator pb-3 text-[13px] leading-snug text-foreground last:border-0 last:pb-0"
                       >
-                        <div className="font-medium text-slate-900">
+                        <div className="font-medium text-foreground">
                           {formatPaymentHistoryAt(entry.at)}
                         </div>
                         <div className="mt-0.5">
@@ -644,9 +644,9 @@ export function DocumentDetailPage({
             </Card>
           ) : null}
 
-          <Card className="rounded-2xl bg-white py-0">
-            <CardHeader className="border-b border-slate-200/80 py-3.5">
-              <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-800">
+          <Card className="rounded-2xl bg-surface py-0">
+            <CardHeader className="border-b border-border/80 py-3.5">
+              <CardTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
                 <Link2 className="size-4 text-[#274690]" />
                 เอกสารต่อเนื่อง
               </CardTitle>
@@ -660,7 +660,7 @@ export function DocumentDetailPage({
                     <div
                       key={doc.id}
                       onClick={() => toggleSelected(doc, !isSelected)}
-                      className="group flex w-full cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3 text-left text-[13px] transition hover:border-slate-300 hover:bg-slate-50"
+                      className="group flex w-full cursor-pointer items-start gap-3 rounded-xl border border-border bg-surface px-3 py-3 text-left text-[13px] transition hover:border-border hover:bg-surface-secondary"
                     >
                       <div
                         className="shrink-0 pt-0.5"
@@ -676,17 +676,17 @@ export function DocumentDetailPage({
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                          <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-700">
+                          <span className="rounded-full border border-border bg-surface-secondary px-2 py-0.5 text-xs font-medium text-foreground">
                             {documentTypeLabels[doc.type]}
                           </span>
-                          <span className="font-medium text-slate-800">
+                          <span className="font-medium text-foreground">
                             {doc.docNumber}
                           </span>
-                          <span className="text-xs text-slate-500">
+                          <span className="text-xs text-muted-foreground">
                             สร้าง {formatDocumentCreatedAt(doc)}
                           </span>
                           {referenceLinkOnlyIds.has(doc.id) ? (
-                            <span className="rounded-full border border-dashed border-slate-300 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-500">
+                            <span className="rounded-full border border-dashed border-border bg-surface-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
                               อ้างอิงเลขที่
                             </span>
                           ) : null}
@@ -708,7 +708,7 @@ export function DocumentDetailPage({
                           <StatusBadge {...getDocumentStatusDisplay(doc)} />
                         </div>
                       </div>
-                      <div className="shrink-0 pt-0.5 text-right text-xs font-semibold text-slate-700">
+                      <div className="shrink-0 pt-0.5 text-right text-xs font-semibold text-foreground">
                         {(doc.total ?? 0).toLocaleString("th-TH", {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
@@ -718,23 +718,23 @@ export function DocumentDetailPage({
                   );
                 })}
 
-              <div className="rounded-xl border border-[#CCD4E0] bg-[#EFF3F8] p-3.5">
+              <div className="rounded-xl border border-accent/20 bg-accent-soft p-3.5">
                 <div className="flex items-center gap-3">
-                  <div className="flex size-6 items-center justify-center rounded-full bg-[#3559C7] text-white">
+                  <div className="flex size-6 items-center justify-center rounded-full bg-accent text-accent-foreground">
                     <CheckCircle2 className="size-3.5" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full border border-[#AFC0F2] bg-[#EEF2FF] px-2 py-0.5 text-xs font-semibold text-[#3559C7]">
+                      <span className="rounded-full border border-accent/20 bg-surface px-2 py-0.5 text-xs font-semibold text-accent-soft-foreground">
                         {documentTypeLabels[currentDocument.type]}
                       </span>
-                      <span className="text-sm font-semibold text-slate-800">
+                      <span className="text-sm font-semibold text-foreground">
                         {currentDocument.docNumber}
                       </span>
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs text-muted-foreground">
                         สร้าง {formatDocumentCreatedAt(currentDocument)}
                       </span>
-                      <span className="text-xs text-slate-500">◀ ปัจจุบัน</span>
+                      <span className="text-xs text-muted-foreground">◀ ปัจจุบัน</span>
                     </div>
                     <div className="mt-2">
                       <StatusBadge
@@ -756,28 +756,28 @@ export function DocumentDetailPage({
                   key={`${action.hint}-${action.nextType}`}
                   type="button"
                   onClick={() => handleCreateNext(action.nextType)}
-                  className="flex w-full items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-white px-3 py-3 text-left text-[13px] transition hover:border-[#9CAEF0] hover:bg-[#F8FAFF] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex w-full items-center gap-3 rounded-xl border border-dashed border-border bg-surface px-3 py-3 text-left text-[13px] transition hover:border-accent/30 hover:bg-accent-soft disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
                     {action.hint === "skip" ? (
-                      <span className="text-xs font-medium text-slate-500">
+                      <span className="text-xs font-medium text-muted-foreground">
                         {"ข้าม ->"}
                       </span>
                     ) : null}
-                    <span className="rounded-full border border-[#E2D6FB] bg-[#F7F2FF] px-2 py-0.5 text-xs font-medium text-[#7C4DDB]">
+                    <span className="rounded-full border border-border bg-surface-secondary px-2 py-0.5 text-xs font-medium text-foreground">
                       {documentTypeLabels[action.nextType]}
                     </span>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-muted-foreground">
                       {action.hint === "special" ? "เอกสารพิเศษ" : action.label}
                     </span>
                   </div>
-                  <ArrowRight className="size-4 shrink-0 text-slate-400" />
+                  <ArrowRight className="size-4 shrink-0 text-muted" />
                 </button>
               ))}
 
               {selectedDocumentsOrdered.length > 0 ? (
                 <div className="flex items-center justify-end gap-3 pt-2">
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-muted-foreground">
                     เลือกแล้ว {selectedDocumentsOrdered.length} ฉบับ
                     (รวมเอกสารนี้)
                   </span>
@@ -807,9 +807,9 @@ export function DocumentDetailPage({
           </Card>
 
           <div className="grid grid-cols-3 gap-4">
-            <Card className="rounded-2xl bg-white py-0">
+            <Card className="rounded-2xl bg-surface py-0">
               <CardContent className="px-5 py-5">
-                <div className="text-xs text-slate-500">ยอดรวมสุทธิ</div>
+                <div className="text-xs text-muted-foreground">ยอดรวมสุทธิ</div>
                 <div className="mt-2 text-3xl font-semibold tracking-tight text-[#274690]">
                   {(currentDocument.total ?? 0).toLocaleString("th-TH", {
                     minimumFractionDigits: 2,
@@ -818,23 +818,23 @@ export function DocumentDetailPage({
                 </div>
               </CardContent>
             </Card>
-            <Card className="rounded-2xl bg-white py-0">
+            <Card className="rounded-2xl bg-surface py-0">
               <CardContent className="px-5 py-5">
-                <div className="text-xs text-slate-500">
+                <div className="text-xs text-muted-foreground">
                   {DOC_TYPE_CONFIG[currentDocument.type as ExtDocType]
                     ?.partnerRole === "vendor"
                     ? "ผู้ขาย"
                     : "ลูกค้า"}
                 </div>
-                <div className="mt-2 text-lg font-semibold leading-snug text-slate-800">
+                <div className="mt-2 text-lg font-semibold leading-snug text-foreground">
                   {partnerName || "—"}
                 </div>
               </CardContent>
             </Card>
-            <Card className="rounded-2xl bg-white py-0">
+            <Card className="rounded-2xl bg-surface py-0">
               <CardContent className="px-5 py-5">
-                <div className="text-xs text-slate-500">รายการ</div>
-                <div className="mt-2 text-lg font-semibold text-slate-800">
+                <div className="text-xs text-muted-foreground">รายการ</div>
+                <div className="mt-2 text-lg font-semibold text-foreground">
                   {itemCount} รายการ
                 </div>
               </CardContent>
@@ -842,9 +842,9 @@ export function DocumentDetailPage({
           </div>
 
           <div ref={previewSectionRef}>
-            <Card className="rounded-2xl bg-white py-0">
-              <CardHeader className="border-b border-slate-200/80 py-3.5">
-                <CardTitle className="text-base font-semibold text-slate-800">
+            <Card className="rounded-2xl bg-surface py-0">
+              <CardHeader className="border-b border-border/80 py-3.5">
+                <CardTitle className="text-base font-semibold text-foreground">
                   พรีวิวเอกสาร
                 </CardTitle>
               </CardHeader>
@@ -897,7 +897,7 @@ export function DocumentDetailPage({
               onClick={() => handleVariantSelect("original")}
               className="flex w-full items-center gap-4 rounded-xl border border-border/60 bg-background px-4 py-3 text-left transition hover:border-primary/50 hover:bg-primary/5"
             >
-              <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#334FA3]">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-soft-foreground">
                 <FileText className="size-5" />
               </div>
               <div>
@@ -940,7 +940,7 @@ export function DocumentDetailPage({
             <X className="size-4" />
           </button>
           <div className="flex flex-col items-center gap-4 pt-2">
-            <div className="flex size-16 items-center justify-center rounded-2xl bg-slate-100">
+            <div className="flex size-16 items-center justify-center rounded-2xl bg-surface-secondary">
               <FileDown className="size-8 text-[#334FA3]" />
             </div>
             <DialogTitle className="text-lg">ตั้งชื่อไฟล์ PDF</DialogTitle>

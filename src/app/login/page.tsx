@@ -6,6 +6,7 @@ import { Avatar, Button, Card, Chip, Spinner } from "@heroui/react";
 import { CheckCircle2, Clock3, LogOut, RefreshCw, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/providers/auth-provider";
+import { ThemeSwitcher } from "@/components/layout/theme-switcher";
 
 function GoogleLogo() {
   return (
@@ -33,6 +34,26 @@ function GoogleLogo() {
 function initials(name: string | null, email: string | null) {
   const source = name?.trim() || email?.trim() || "U";
   return source.slice(0, 1).toUpperCase();
+}
+
+function firebaseAuthErrorCode(error: unknown) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    typeof error.code === "string"
+  ) {
+    return error.code;
+  }
+  return null;
+}
+
+function isDismissedGooglePopup(error: unknown) {
+  const code = firebaseAuthErrorCode(error);
+  return (
+    code === "auth/popup-closed-by-user" ||
+    code === "auth/cancelled-popup-request"
+  );
 }
 
 export default function LoginPage() {
@@ -63,6 +84,19 @@ export default function LoginPage() {
     try {
       await task();
     } catch (error) {
+      // การปิดหน้าต่างเลือกบัญชีเป็นการยกเลิกตามปกติ ไม่ใช่ข้อผิดพลาด
+      // และไม่ควรส่ง Error object เข้า console.error เพราะ Next Dev Overlay
+      // จะยกขึ้นเป็น error เต็มหน้าจอ
+      if (action === "google" && isDismissedGooglePopup(error)) return;
+
+      if (
+        action === "google" &&
+        firebaseAuthErrorCode(error) === "auth/popup-blocked"
+      ) {
+        toast.error("เบราว์เซอร์บล็อกหน้าต่าง Google กรุณาอนุญาต pop-up แล้วลองใหม่");
+        return;
+      }
+
       console.error(error);
       toast.error(failureMessage);
     } finally {
@@ -73,7 +107,7 @@ export default function LoginPage() {
   if (sessionPhase === "unconfigured") {
     return (
       <AuthFrame>
-        <Card className="w-full max-w-md">
+        <Card className="glass-surface w-full max-w-md">
           <Card.Content className="p-8">
             <h1 className="text-xl font-semibold">ตั้งค่า Firebase</h1>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
@@ -93,7 +127,7 @@ export default function LoginPage() {
 
   return (
     <AuthFrame>
-      <Card className="w-full max-w-md overflow-visible">
+      <Card className="glass-surface w-full max-w-md overflow-visible">
         <Card.Content className="p-8 sm:p-10">
           <Brand />
 
@@ -214,8 +248,14 @@ export default function LoginPage() {
                 จัดการเอกสาร ข้อมูลธุรกิจ และทีมของคุณในที่เดียว
               </p>
 
+              {accessError ? (
+                <p className="mt-5 rounded-2xl bg-danger-soft px-4 py-3 text-sm text-danger-soft-foreground">
+                  {accessError}
+                </p>
+              ) : null}
+
               <Button
-                className="mt-8"
+                className={accessError ? "mt-4" : "mt-8"}
                 fullWidth
                 size="lg"
                 variant="outline"
@@ -245,7 +285,10 @@ export default function LoginPage() {
 
 function AuthFrame({ children }: { children: React.ReactNode }) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-surface-secondary p-6">
+    <main className="relative flex min-h-screen items-center justify-center bg-transparent p-6">
+      <div className="absolute right-4 top-4">
+        <ThemeSwitcher />
+      </div>
       {children}
     </main>
   );

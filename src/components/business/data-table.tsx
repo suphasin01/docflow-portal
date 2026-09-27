@@ -55,9 +55,9 @@ export function DataTable<T extends { id: string }>({
 
   return (
     <div className="space-y-3">
-      <div className="overflow-hidden rounded-2xl border border-border/80 bg-white">
+      <div className="glass-panel overflow-hidden">
         <Table>
-          <TableHeader className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_hsl(var(--border))]">
+          <TableHeader className="sticky top-0 z-10 bg-surface-secondary shadow-[0_1px_0_0_hsl(var(--border))]">
             {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id} className="hover:bg-transparent">
                 {hg.headers.map((h) => (
@@ -76,7 +76,7 @@ export function DataTable<T extends { id: string }>({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className="transition-colors hover:bg-slate-50/90"
+                  className="transition-colors hover:bg-surface-secondary"
                   data-state={row.getIsSelected() ? "selected" : undefined}
                 >
                   {row.getVisibleCells().map((cell) => (

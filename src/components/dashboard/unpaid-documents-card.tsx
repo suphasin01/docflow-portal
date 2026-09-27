@@ -14,7 +14,7 @@ type Props = {
 
 export function UnpaidDocumentsCard({ rows }: Props) {
   return (
-    <Card className="rounded-2xl border-border/80 bg-white shadow-sm">
+    <Card className="glass-surface rounded-2xl border-border/80">
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 pb-2">
         <CardTitle className="text-base font-semibold">เอกสารค้างชำระ</CardTitle>
         <Link
@@ -33,7 +33,7 @@ export function UnpaidDocumentsCard({ rows }: Props) {
         ) : (
           <table className="w-full min-w-[560px] text-left text-sm">
             <thead>
-              <tr className="border-b border-border/80 bg-slate-50/80 text-xs text-muted-foreground">
+              <tr className="border-b border-border/80 bg-surface-secondary text-xs text-muted-foreground">
                 <th className="px-4 py-3 font-medium">เลขที่</th>
                 <th className="px-4 py-3 font-medium">ประเภท</th>
                 <th className="px-4 py-3 font-medium">วันที่</th>

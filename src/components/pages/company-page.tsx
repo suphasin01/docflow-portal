@@ -257,7 +257,7 @@ export function CompanyPage() {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-40 animate-pulse rounded-2xl bg-muted/50"
+                className="h-40 animate-pulse rounded-2xl bg-surface-secondary/50"
               />
             ))}
           </div>
@@ -312,7 +312,7 @@ export function CompanyPage() {
                 <div className="space-y-2">
                   <Label className="pt-0.5 leading-relaxed">โลโก้</Label>
                   <div className="flex items-start gap-3 sm:block sm:space-y-2">
-                    <div className="relative size-28 overflow-hidden rounded-md border bg-muted/20">
+                    <div className="relative size-28 overflow-hidden rounded-md border bg-surface-secondary/20">
                       {logoResizing ? (
                         <div className="flex size-full items-center justify-center text-xs text-muted-foreground animate-pulse">
                           กำลังแปลง…
@@ -536,7 +536,7 @@ function CompanyCard({
   return (
     <div
       className={cn(
-        "relative flex flex-col gap-4 rounded-2xl border bg-white p-5 shadow-sm transition",
+        "relative flex flex-col gap-4 rounded-2xl border bg-surface p-5 shadow-sm transition",
         isActive
           ? "border-primary ring-2 ring-primary/20"
           : "border-border hover:border-primary/30",
@@ -552,7 +552,7 @@ function CompanyCard({
 
       {/* Logo + ชื่อ */}
       <div className="flex items-center gap-3">
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-muted">
+        <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-surface-secondary">
           {company.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -577,7 +577,7 @@ function CompanyCard({
 
           {/* badge สาขา */}
           {branchLabel && (
-            <span className="mt-1 inline-block rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+            <span className="mt-1 inline-block rounded-full bg-surface-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
               {branchLabel}
             </span>
           )}

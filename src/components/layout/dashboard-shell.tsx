@@ -5,6 +5,7 @@ import { Tooltip } from "@heroui/react";
 import { AppLayout, Navbar, Sidebar } from "@heroui-pro/react";
 import type { ReactNode } from "react";
 import { AppSidebar } from "./app-sidebar";
+import { ThemeSwitcher } from "./theme-switcher";
 import { mainNav } from "@/lib/navigation";
 
 const ROUTE_TITLES: Record<string, string> = {
@@ -29,7 +30,7 @@ function AppNavbar() {
   const pathname = usePathname();
 
   return (
-    <Navbar className="border-b border-border bg-background/95 backdrop-blur" maxWidth="full">
+    <Navbar className="glass-toolbar border-b" maxWidth="full">
       <Navbar.Header>
         <AppLayout.MenuToggle tooltip="เปิดเมนู" />
         <Tooltip delay={0}>
@@ -42,6 +43,7 @@ function AppNavbar() {
           {currentTitle(pathname)}
         </span>
         <Navbar.Spacer />
+        <ThemeSwitcher />
       </Navbar.Header>
     </Navbar>
   );
@@ -52,7 +54,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
   return (
     <AppLayout
-      className="bg-surface-secondary"
+      className="bg-transparent"
       navbar={<AppNavbar />}
       sidebar={<AppSidebar />}
       sidebarCollapsible="icon"

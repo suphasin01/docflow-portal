@@ -88,7 +88,7 @@ function TypeBadge({ type }: { type: "customer" | "vendor" }) {
 
 function TableSkeleton() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border/60 bg-white">
+    <div className="overflow-hidden rounded-2xl border border-border/60 bg-surface">
       <Table>
         <TableHeader>
           <TableRow>
@@ -283,7 +283,7 @@ function ContactFormModal({
               </Label>
               <div className="flex items-center gap-4">
                 <div
-                  className="flex h-20 w-20 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border/70 bg-muted/40 transition hover:border-primary/50 hover:bg-muted/60"
+                  className="flex h-20 w-20 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border/70 bg-surface-secondary/40 transition hover:border-primary/50 hover:bg-surface-secondary/60"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   {logoPreview ? (
@@ -359,7 +359,7 @@ function ContactFormModal({
             <div className="space-y-2">
               <Label className="text-sm font-medium">รหัส</Label>
               <Input
-                className="rounded-xl bg-muted/50 font-mono"
+                className="rounded-xl bg-surface-secondary/50 font-mono"
                 value={computedCode}
                 readOnly
                 disabled
@@ -488,7 +488,7 @@ function ContactFormModal({
 
             {/* ─── สาขา (conditional) ─── */}
             {officeType === "branch" && (
-              <div className="rounded-xl border border-border/60 bg-muted/30 p-4 space-y-4">
+              <div className="rounded-xl border border-border/60 bg-surface-secondary/30 p-4 space-y-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   ข้อมูลสาขา
                 </p>
@@ -530,7 +530,7 @@ function ContactFormModal({
         </ScrollArea>
 
         {/* ─── Footer ─── */}
-        <div className="flex shrink-0 items-center justify-end gap-3 border-t border-border/60 bg-white px-6 py-4">
+        <div className="flex shrink-0 items-center justify-end gap-3 border-t border-border/60 bg-surface px-6 py-4">
           <Button
             type="button"
             variant="outline"
@@ -759,10 +759,10 @@ export function ContactsPage() {
             }
           />
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-border/60 bg-white">
+          <div className="overflow-hidden rounded-2xl border border-border/60 bg-surface">
             <Table>
               <TableHeader>
-                <TableRow className="bg-muted/30 hover:bg-muted/30">
+                <TableRow className="bg-surface-secondary/30 hover:bg-surface-secondary/30">
                   <TableHead className="w-24 font-medium">รหัส</TableHead>
                   <TableHead className="w-24 font-medium">ประเภท</TableHead>
                   <TableHead className="font-medium">ชื่อ</TableHead>

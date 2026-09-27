@@ -1,8 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 type AppHeaderProps = {
@@ -27,13 +25,13 @@ export function AppHeader({
 }: AppHeaderProps) {
   if (minimal) {
     return (
-      <header className="sticky top-0 z-30 h-14 border-b border-border/80 bg-[#f6f7f9]/95 backdrop-blur supports-[backdrop-filter]:bg-[#f6f7f9]/80" />
+      <header className="glass-toolbar sticky top-0 z-30 h-14 border-b" />
     );
   }
   return (
-    <header className="sticky top-0 z-30 border-b border-border/80 bg-[#f6f7f9]/95 backdrop-blur supports-[backdrop-filter]:bg-[#f6f7f9]/80">
+    <header className="glass-toolbar sticky top-0 z-30 border-b">
       {showTrialBanner ? (
-        <div className="flex items-center justify-between gap-3 border-b border-[rgb(var(--border-rgb)/0.6)] bg-white px-6 py-2 text-xs text-muted-foreground">
+        <div className="flex items-center justify-between gap-3 border-b border-separator bg-transparent px-6 py-2 text-xs text-muted-foreground">
           <span>ข้อมูลของคุณแยกตามบริษัท (workspace เดียวต่อผู้ใช้)</span>
         </div>
       ) : null}
@@ -66,7 +64,6 @@ export function AppHeader({
           </div>
         ) : null}
       </div>
-      <Separator className="opacity-60" />
     </header>
   );
 }

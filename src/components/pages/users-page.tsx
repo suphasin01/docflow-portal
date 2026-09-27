@@ -64,7 +64,7 @@ function UserAvatar({
   return (
     <Avatar className="size-11">
       <AvatarImage src={photoURL || undefined} alt="" />
-      <AvatarFallback className="bg-slate-100 font-semibold text-slate-600">
+      <AvatarFallback className="bg-surface-secondary font-semibold text-muted-foreground">
         {initials(name, email)}
       </AvatarFallback>
     </Avatar>
@@ -158,9 +158,9 @@ export function UsersPage() {
       <div className="min-h-screen">
         <AppHeader title="จัดการผู้ใช้" showTrialBanner={false} />
         <div className="p-6">
-          <Card className="mx-auto max-w-xl rounded-2xl bg-white">
+          <Card className="mx-auto max-w-xl rounded-2xl bg-surface">
             <CardContent className="flex flex-col items-center px-8 py-12 text-center">
-              <ShieldCheck className="size-10 text-slate-400" />
+              <ShieldCheck className="size-10 text-muted" />
               <h2 className="mt-4 text-lg font-semibold">เฉพาะผู้ดูแลระบบ</h2>
               <p className="mt-2 text-sm text-muted-foreground">
                 บัญชีนี้ไม่มีสิทธิ์จัดการสมาชิก
@@ -182,50 +182,50 @@ export function UsersPage() {
 
       <div className="space-y-6 p-6">
         <div className="grid gap-4 md:grid-cols-3">
-          <Card className="rounded-2xl border-0 bg-white shadow-sm ring-1 ring-slate-200/80">
+          <Card className="rounded-2xl border-0 bg-surface shadow-sm ring-1 ring-slate-200/80">
             <CardContent className="flex items-center gap-4 px-5 py-5">
               <div className="flex size-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
                 <Clock3 className="size-5" />
               </div>
               <div>
-                <div className="text-2xl font-semibold text-slate-950">{pending.length}</div>
-                <div className="text-xs text-slate-500">คำขอรออนุมัติ</div>
+                <div className="text-2xl font-semibold text-foreground">{pending.length}</div>
+                <div className="text-xs text-muted-foreground">คำขอรออนุมัติ</div>
               </div>
             </CardContent>
           </Card>
-          <Card className="rounded-2xl border-0 bg-white shadow-sm ring-1 ring-slate-200/80">
+          <Card className="rounded-2xl border-0 bg-surface shadow-sm ring-1 ring-slate-200/80">
             <CardContent className="flex items-center gap-4 px-5 py-5">
               <div className="flex size-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
                 <UsersRound className="size-5" />
               </div>
               <div>
-                <div className="text-2xl font-semibold text-slate-950">
+                <div className="text-2xl font-semibold text-foreground">
                   {approved.length + BOOTSTRAP_ADMIN_EMAILS.length}
                 </div>
-                <div className="text-xs text-slate-500">ผู้ใช้ที่มีสิทธิ์</div>
+                <div className="text-xs text-muted-foreground">ผู้ใช้ที่มีสิทธิ์</div>
               </div>
             </CardContent>
           </Card>
-          <Card className="rounded-2xl border-0 bg-white shadow-sm ring-1 ring-slate-200/80">
+          <Card className="rounded-2xl border-0 bg-surface shadow-sm ring-1 ring-slate-200/80">
             <CardContent className="flex items-center gap-4 px-5 py-5">
               <div className="flex size-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                 <ShieldCheck className="size-5" />
               </div>
               <div>
-                <div className="text-2xl font-semibold text-slate-950">
+                <div className="text-2xl font-semibold text-foreground">
                   {BOOTSTRAP_ADMIN_EMAILS.length}
                 </div>
-                <div className="text-xs text-slate-500">ผู้ดูแลระบบ</div>
+                <div className="text-xs text-muted-foreground">ผู้ดูแลระบบ</div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <Card className="rounded-2xl border-0 bg-white py-0 shadow-sm ring-1 ring-slate-200/80">
-          <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+        <Card className="rounded-2xl border-0 bg-surface py-0 shadow-sm ring-1 ring-slate-200/80">
+          <div className="flex items-center justify-between border-b border-separator px-6 py-5">
             <div>
-              <h2 className="font-semibold text-slate-950">คำขอเข้าใช้งาน</h2>
-              <p className="mt-1 text-xs text-slate-500">
+              <h2 className="font-semibold text-foreground">คำขอเข้าใช้งาน</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
                 ผู้ใช้จะเข้าสู่ระบบได้ทันทีหลังได้รับอนุมัติ
               </p>
             </div>
@@ -242,8 +242,8 @@ export function UsersPage() {
             ) : pending.length === 0 ? (
               <div className="flex flex-col items-center px-6 py-12 text-center">
                 <UserRoundCheck className="size-10 text-emerald-500" />
-                <div className="mt-3 font-medium text-slate-800">ไม่มีคำขอค้างอยู่</div>
-                <div className="mt-1 text-xs text-slate-500">คำขอใหม่จะแสดงที่นี่อัตโนมัติ</div>
+                <div className="mt-3 font-medium text-foreground">ไม่มีคำขอค้างอยู่</div>
+                <div className="mt-1 text-xs text-muted-foreground">คำขอใหม่จะแสดงที่นี่อัตโนมัติ</div>
               </div>
             ) : (
               <div className="divide-y divide-slate-100">
@@ -255,11 +255,11 @@ export function UsersPage() {
                       photoURL={request.photoURL}
                     />
                     <div className="min-w-0 flex-1">
-                      <div className="truncate font-medium text-slate-900">
+                      <div className="truncate font-medium text-foreground">
                         {request.displayName || "Google user"}
                       </div>
-                      <div className="truncate text-xs text-slate-500">{request.email}</div>
-                      <div className="mt-1 text-[11px] text-slate-400">
+                      <div className="truncate text-xs text-muted-foreground">{request.email}</div>
+                      <div className="mt-1 text-[11px] text-muted">
                         ขอสิทธิ์เมื่อ {dateLabel(request.requestedAt)}
                       </div>
                     </div>
@@ -267,7 +267,7 @@ export function UsersPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="rounded-lg text-slate-600"
+                        className="rounded-lg text-muted-foreground"
                         disabled={busyUid === request.uid}
                         onClick={() => void reject(request)}
                       >
@@ -289,10 +289,10 @@ export function UsersPage() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border-0 bg-white py-0 shadow-sm ring-1 ring-slate-200/80">
-          <div className="border-b border-slate-100 px-6 py-5">
-            <h2 className="font-semibold text-slate-950">ผู้ใช้ที่มีสิทธิ์</h2>
-            <p className="mt-1 text-xs text-slate-500">บัญชีที่สามารถเข้าถึง workspace ได้</p>
+        <Card className="rounded-2xl border-0 bg-surface py-0 shadow-sm ring-1 ring-slate-200/80">
+          <div className="border-b border-separator px-6 py-5">
+            <h2 className="font-semibold text-foreground">ผู้ใช้ที่มีสิทธิ์</h2>
+            <p className="mt-1 text-xs text-muted-foreground">บัญชีที่สามารถเข้าถึง workspace ได้</p>
           </div>
           <CardContent className="px-0">
             <div className="divide-y divide-slate-100">
@@ -300,8 +300,8 @@ export function UsersPage() {
                 <div key={email} className="flex items-center gap-4 px-6 py-4">
                   <UserAvatar name="Admin" email={email} photoURL="" />
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-medium text-slate-900">{email}</div>
-                    <div className="text-xs text-slate-500">Bootstrap administrator</div>
+                    <div className="truncate font-medium text-foreground">{email}</div>
+                    <div className="text-xs text-muted-foreground">Bootstrap administrator</div>
                   </div>
                   <Badge className="bg-blue-50 text-blue-700">ผู้ดูแล</Badge>
                 </div>
@@ -314,10 +314,10 @@ export function UsersPage() {
                     photoURL={member.photoURL}
                   />
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-medium text-slate-900">
+                    <div className="truncate font-medium text-foreground">
                       {member.displayName || "Google user"}
                     </div>
-                    <div className="truncate text-xs text-slate-500">{member.email}</div>
+                    <div className="truncate text-xs text-muted-foreground">{member.email}</div>
                   </div>
                   <Badge className="bg-emerald-50 text-emerald-700">ใช้งานอยู่</Badge>
                   <Button
@@ -336,9 +336,9 @@ export function UsersPage() {
         </Card>
 
         {rejected.length > 0 ? (
-          <Card className="rounded-2xl border-0 bg-white py-0 shadow-sm ring-1 ring-slate-200/80">
-            <div className="border-b border-slate-100 px-6 py-5">
-              <h2 className="font-semibold text-slate-950">คำขอที่ปฏิเสธ</h2>
+          <Card className="rounded-2xl border-0 bg-surface py-0 shadow-sm ring-1 ring-slate-200/80">
+            <div className="border-b border-separator px-6 py-5">
+              <h2 className="font-semibold text-foreground">คำขอที่ปฏิเสธ</h2>
             </div>
             <CardContent className="divide-y divide-slate-100 px-0">
               {rejected.map((request) => (
@@ -349,8 +349,8 @@ export function UsersPage() {
                     photoURL={request.photoURL}
                   />
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-medium text-slate-900">{request.email}</div>
-                    <div className="text-xs text-slate-500">ปฏิเสธเมื่อ {dateLabel(request.rejectedAt)}</div>
+                    <div className="truncate font-medium text-foreground">{request.email}</div>
+                    <div className="text-xs text-muted-foreground">ปฏิเสธเมื่อ {dateLabel(request.rejectedAt)}</div>
                   </div>
                   <Button
                     variant="outline"

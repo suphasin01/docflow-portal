@@ -22,7 +22,7 @@ export function SearchFilterToolbar({
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 rounded-2xl border border-border/80 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between",
+        "glass-panel flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between",
         className
       )}
     >
@@ -30,7 +30,7 @@ export function SearchFilterToolbar({
         value={searchValue}
         onChange={(e) => onSearchChange(e.target.value)}
         placeholder={searchPlaceholder}
-        className="h-10 max-w-md rounded-xl border-border/80 bg-[#f8f9fb]"
+        className="h-10 max-w-md rounded-xl border-border/80 bg-field"
       />
       {filters ? (
         <div className="flex flex-wrap items-center gap-2">{filters}</div>

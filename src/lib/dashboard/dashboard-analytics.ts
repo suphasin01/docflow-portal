@@ -183,7 +183,7 @@ export function computeKpis(docs: DashDoc[]): DashboardKpis {
   let salesTotal = 0;
   let paidTotal = 0;
   let outstandingTotal = 0;
-  let documentCount = docs.length;
+  const documentCount = docs.length;
 
   for (const d of docs) {
     salesTotal += d.total ?? 0;

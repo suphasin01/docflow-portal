@@ -20,7 +20,7 @@ export function SummaryStatCard({
   return (
     <Card
       className={cn(
-        "rounded-2xl border-border/80 bg-white shadow-sm",
+        "glass-surface rounded-2xl border-border/80",
         className
       )}
     >
@@ -29,7 +29,7 @@ export function SummaryStatCard({
           {title}
         </CardTitle>
         {Icon ? (
-          <span className="rounded-lg bg-muted/80 p-2 text-muted-foreground">
+          <span className="rounded-lg bg-surface-secondary/80 p-2 text-muted-foreground">
             <Icon className="size-4" />
           </span>
         ) : null}

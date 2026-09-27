@@ -327,7 +327,7 @@ async function exportRowsPreview(
   const root = createRoot(host);
   try {
     root.render(
-      <div className="space-y-0 bg-white">
+      <div className="space-y-0 bg-surface">
         {exportable.map((row) => {
           const p = row.previewData;
           return (
@@ -336,7 +336,7 @@ async function exportRowsPreview(
               step1Data={p?.step1Data as Step1FormValues}
               step2Data={(p?.step2Data as unknown as Step2FormValues) ?? null}
               step3Data={(p?.step3Data as unknown as Step3FormValues) ?? null}
-              className="overflow-visible rounded-none bg-white p-0"
+              className="overflow-visible rounded-none bg-surface p-0"
               pageClassName="document-history-export-page border-0 shadow-none"
             />
           );
@@ -541,7 +541,7 @@ export function DocumentHistoryPage() {
           const t = row.original.type;
           const cls =
             DOC_TYPE_BADGE[t] ??
-            "border bg-slate-50 text-slate-800 border-slate-200";
+            "border bg-surface-secondary text-foreground border-border";
           return (
             <Badge
               variant="outline"
@@ -627,14 +627,14 @@ export function DocumentHistoryPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f4f6f8]">
+    <div className="min-h-screen bg-transparent">
       <AppHeader
         title="ประวัติเอกสาร"
         subtitle="ดูและจัดการเอกสารที่บันทึกไว้"
       />
 
       <div className="space-y-6 px-6 py-8">
-        <Card className="rounded-2xl border-border/80 bg-white shadow-sm">
+        <Card className="rounded-2xl border-border/80 bg-surface shadow-sm">
           <CardContent className="space-y-4 p-6">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div className="relative max-w-xl flex-1">
@@ -643,7 +643,7 @@ export function DocumentHistoryPage() {
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   placeholder="ค้นหาเลขที่ / ชื่อลูกค้า…"
-                  className="h-11 rounded-xl border-border/80 bg-[#f8f9fb] pr-3 pl-10"
+                  className="h-11 rounded-xl border-border/80 bg-field pr-3 pl-10"
                 />
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -730,13 +730,13 @@ export function DocumentHistoryPage() {
             </div>
 
             {timeRange === "custom" ? (
-              <div className="flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-border/70 bg-[#f8f9fb] px-3 py-2.5">
+              <div className="flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-border/70 bg-field px-3 py-2.5">
                 <span className="text-xs font-medium text-muted-foreground">
                   ช่วงกำหนดเอง
                 </span>
                 <Input
                   type="date"
-                  className="h-9 w-[155px] rounded-lg bg-white"
+                  className="h-9 w-[155px] rounded-lg bg-surface"
                   value={customRangeFrom}
                   onChange={(e) => setCustomRangeFrom(e.target.value)}
                   aria-label="วันที่เริ่ม"
@@ -744,7 +744,7 @@ export function DocumentHistoryPage() {
                 <span className="text-xs text-muted-foreground">ถึง</span>
                 <Input
                   type="date"
-                  className="h-9 w-[155px] rounded-lg bg-white"
+                  className="h-9 w-[155px] rounded-lg bg-surface"
                   value={customRangeTo}
                   onChange={(e) => setCustomRangeTo(e.target.value)}
                   aria-label="วันที่สิ้นสุด"
@@ -758,7 +758,7 @@ export function DocumentHistoryPage() {
                 ใบกำกับภาษีกับใบเสร็จ/ใบกำกับเป็นคนละชุด) —
                 รายการเรียงตามวันที่เอกสาร ไม่ใช่ตามเลขลำดับ
               </p>
-              <div className="flex shrink-0 items-center gap-1 rounded-xl border border-border/80 bg-slate-100/80 p-1">
+              <div className="flex shrink-0 items-center gap-1 rounded-xl border border-border/80 bg-surface-secondary p-1">
                 <Button
                   type="button"
                   variant={viewMode === "list" ? "default" : "ghost"}
@@ -766,7 +766,7 @@ export function DocumentHistoryPage() {
                   className={cn(
                     "h-9 gap-2 rounded-lg",
                     viewMode === "list" &&
-                      "bg-slate-900 text-white hover:bg-slate-900",
+                      "bg-accent text-accent-foreground hover:bg-accent-hover",
                   )}
                   onClick={() => setViewMode("list")}
                 >
@@ -780,14 +780,14 @@ export function DocumentHistoryPage() {
                   className={cn(
                     "h-9 gap-2 rounded-lg",
                     viewMode === "group" &&
-                      "bg-slate-900 text-white hover:bg-slate-900",
+                      "bg-accent text-accent-foreground hover:bg-accent-hover",
                   )}
                   onClick={() => setViewMode("group")}
                 >
                   <Link2 className="size-4" />
                   ชุดเอกสาร
                   {chainGroups.length > 0 ? (
-                    <span className="ml-1 flex size-5 items-center justify-center rounded-full bg-white/20 text-[11px] font-semibold">
+                    <span className="ml-1 flex size-5 items-center justify-center rounded-full bg-surface/20 text-[11px] font-semibold">
                       {chainGroups.length}
                     </span>
                   ) : null}
@@ -803,14 +803,14 @@ export function DocumentHistoryPage() {
             viewMode === "group" ? "md:grid-cols-3" : "md:grid-cols-2",
           )}
         >
-          <div className="rounded-2xl border border-border/70 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-border/70 bg-surface p-6 shadow-sm">
             <p className="text-3xl font-bold tabular-nums">
               {viewMode === "list" ? summaryList.count : summaryGroup.docCount}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">เอกสารทั้งหมด</p>
           </div>
           {viewMode === "group" ? (
-            <div className="rounded-2xl border border-border/70 bg-white p-6 shadow-sm">
+            <div className="rounded-2xl border border-border/70 bg-surface p-6 shadow-sm">
               <p className="text-3xl font-bold tabular-nums">
                 {summaryGroup.chainCount}
               </p>
@@ -819,11 +819,11 @@ export function DocumentHistoryPage() {
           ) : null}
           <div
             className={cn(
-              "rounded-2xl border border-border/70 bg-white p-6 shadow-sm",
+              "rounded-2xl border border-border/70 bg-surface p-6 shadow-sm",
               viewMode === "list" && "md:col-span-1",
             )}
           >
-            <p className="text-3xl font-bold tabular-nums text-emerald-600">
+            <p className="text-3xl font-bold tabular-nums text-success">
               {(viewMode === "list"
                 ? summaryList.totalSum
                 : summaryGroup.totalSum
@@ -834,15 +834,15 @@ export function DocumentHistoryPage() {
         </div>
 
         {viewMode === "list" && linkedChainCount > 0 ? (
-          <div className="flex flex-col gap-3 rounded-2xl border border-sky-200/80 bg-sky-50/90 px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-sky-950">
+          <div className="flex flex-col gap-3 rounded-2xl border border-accent/20 bg-accent-soft px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-accent-soft-foreground">
               คุณมี {linkedChainCount} ชุดเอกสารเชื่อมโยง — ลองเปลี่ยนมุมมองเป็น
               &quot;ชุดเอกสาร&quot; เพื่อดูเอกสารที่สร้างต่อเนื่องกัน
             </p>
             <Button
               type="button"
               size="sm"
-              className="shrink-0 gap-2 rounded-xl bg-slate-900 text-white hover:bg-slate-900"
+              className="shrink-0 gap-2 rounded-xl bg-accent text-accent-foreground hover:bg-accent-hover"
               onClick={() => setViewMode("group")}
             >
               <Link2 className="size-4" />
@@ -865,7 +865,7 @@ export function DocumentHistoryPage() {
         ) : (
           <div className="space-y-3">
             {chainGroups.length === 0 ? (
-              <div className="rounded-2xl border border-border/80 bg-white py-16 text-center text-sm text-muted-foreground shadow-sm">
+              <div className="rounded-2xl border border-border/80 bg-surface py-16 text-center text-sm text-muted-foreground shadow-sm">
                 ไม่พบข้อมูล
               </div>
             ) : (
@@ -875,15 +875,15 @@ export function DocumentHistoryPage() {
                 return (
                   <div
                     key={group.key}
-                    className="overflow-hidden rounded-2xl border border-border/80 bg-white shadow-sm transition-shadow hover:shadow-md"
+                    className="overflow-hidden rounded-2xl border border-border/80 bg-surface shadow-sm transition-shadow hover:shadow-md"
                   >
-                    <div className="flex w-full items-center gap-3 border-b border-border/60 bg-slate-50/80 px-4 py-4">
+                    <div className="flex w-full items-center gap-3 border-b border-border/60 bg-surface-secondary px-4 py-4">
                       <button
                         type="button"
                         aria-expanded={open}
                         aria-controls={`chain-panel-${group.key}`}
                         id={`chain-heading-${group.key}`}
-                        className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                        className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-surface-secondary/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                         onClick={() => toggleChain(group.key)}
                       >
                         {open ? (
@@ -894,7 +894,7 @@ export function DocumentHistoryPage() {
                       </button>
                       <button
                         type="button"
-                        className="min-w-0 flex-1 rounded-lg py-0.5 text-left transition-colors hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                        className="min-w-0 flex-1 rounded-lg py-0.5 text-left transition-colors hover:bg-surface-secondary/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                         onClick={() => toggleChain(group.key)}
                       >
                         <div className="flex flex-wrap items-center gap-x-1 gap-y-1 text-sm font-medium">
@@ -911,7 +911,7 @@ export function DocumentHistoryPage() {
                                 className={cn(
                                   "rounded-md px-2 py-0.5 text-xs font-medium",
                                   DOC_TYPE_BADGE[d.type] ??
-                                    "border bg-slate-50 text-slate-800 border-slate-200",
+                                    "border bg-surface-secondary text-foreground border-border",
                                 )}
                               >
                                 {documentTypeLabels[d.type]} {d.docNumber}
@@ -960,7 +960,7 @@ export function DocumentHistoryPage() {
                       <div className="overflow-hidden">
                         <div className="overflow-x-auto border-t border-border/60">
                           <table className="w-full min-w-[720px] text-left text-sm">
-                            <thead className="sticky top-0 z-10 bg-white text-xs font-medium text-muted-foreground shadow-[0_1px_0_0_hsl(var(--border))]">
+                            <thead className="sticky top-0 z-10 bg-surface text-xs font-medium text-muted-foreground shadow-[0_1px_0_0_hsl(var(--border))]">
                               <tr>
                                 <th className="px-4 py-3">เลขที่</th>
                                 <th className="px-4 py-3">ประเภท</th>
@@ -974,7 +974,7 @@ export function DocumentHistoryPage() {
                               {oldestFirst.map((d) => (
                                 <tr
                                   key={d.id}
-                                  className="border-b border-border/50 transition-colors hover:bg-slate-50/80"
+                                  className="border-b border-border/50 transition-colors hover:bg-surface-secondary"
                                 >
                                   <td className="px-4 py-3">
                                     <div className="flex items-center gap-2">
@@ -997,7 +997,7 @@ export function DocumentHistoryPage() {
                                       className={cn(
                                         "rounded-md px-2 py-0.5 text-xs font-medium",
                                         DOC_TYPE_BADGE[d.type] ??
-                                          "border bg-slate-50 text-slate-800 border-slate-200",
+                                          "border bg-surface-secondary text-foreground border-border",
                                       )}
                                     >
                                       {documentTypeLabels[d.type] ?? d.type}
@@ -1060,16 +1060,16 @@ export function DocumentHistoryPage() {
 
       {viewMode === "list" && selectedCount > 0 ? (
         <div className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
-          <div className="pointer-events-auto flex flex-wrap items-center gap-3 rounded-full border border-slate-700 bg-slate-900 px-5 py-3 text-sm text-white shadow-xl">
+          <div className="pointer-events-auto flex flex-wrap items-center gap-3 rounded-full border border-separator bg-overlay px-5 py-3 text-sm text-overlay-foreground shadow-overlay">
             <span className="font-medium">
               เลือกแล้ว {selectedCount} รายการ
             </span>
-            <div className="mx-1 hidden h-5 w-px bg-white/20 sm:block" />
+            <div className="mx-1 hidden h-5 w-px bg-surface/20 sm:block" />
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              className="gap-2 rounded-full text-white hover:bg-white/10 hover:text-white"
+              className="gap-2 rounded-full text-white hover:bg-surface/10 hover:text-white"
               disabled={bulkBusy}
               onClick={() => void handleBulkPrint()}
             >
@@ -1080,7 +1080,7 @@ export function DocumentHistoryPage() {
               type="button"
               variant="ghost"
               size="sm"
-              className="gap-2 rounded-full text-white hover:bg-white/10 hover:text-white"
+              className="gap-2 rounded-full text-white hover:bg-surface/10 hover:text-white"
               disabled={bulkBusy}
               onClick={() => void handleBulkPdf()}
             >

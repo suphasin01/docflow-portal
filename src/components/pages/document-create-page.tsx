@@ -2,11 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Check } from "lucide-react";
+import { Button } from "@heroui/react";
+import { Stepper } from "@heroui-pro/react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { AppHeader } from "@/components/layout/app-header";
-import { Button } from "@/components/ui/button";
 import { DocumentCreateStep1 } from "./document-create-step1";
 import {
   DocumentCreateStep2,
@@ -43,45 +42,32 @@ function isExtDocType(s: string): s is ExtDocType {
 }
 
 const STEPS = [
-  { n: 1, label: "ส่วนหัว" },
-  { n: 2, label: "รายการ+สรุป" },
-  { n: 3, label: "ส่วนเสริม" },
+  { label: "ส่วนหัว", description: "ข้อมูลเอกสาร" },
+  { label: "รายการและสรุป", description: "สินค้าและยอดรวม" },
+  { label: "ส่วนเสริม", description: "หมายเหตุและลายเซ็น" },
 ];
 
 function StepperHeader({ current }: { current: number }) {
   return (
-    <div className="flex items-center justify-center gap-0 bg-white px-6 py-4 border-b border-[rgb(var(--border-rgb)/0.6)]">
-      {STEPS.map((step, idx) => (
-        <div key={step.n} className="flex items-center">
-          <div className="flex items-center gap-2.5">
-            <span
-              className={cn(
-                "flex size-7 items-center justify-center rounded-full text-sm font-semibold transition-colors",
-                step.n === current
-                  ? "bg-primary text-white"
-                  : step.n < current
-                    ? "bg-primary/20 text-primary"
-                    : "bg-muted text-muted-foreground",
-              )}
-            >
-              {step.n < current ? <Check className="size-3.5" /> : step.n}
-            </span>
-            <span
-              className={cn(
-                "text-sm font-medium",
-                step.n === current
-                  ? "text-foreground"
-                  : "text-muted-foreground",
-              )}
-            >
-              {step.label}
-            </span>
-          </div>
-          {idx < STEPS.length - 1 && (
-            <div className="mx-4 h-px w-12 bg-[rgb(var(--border-rgb)/0.6)]" />
-          )}
-        </div>
-      ))}
+    <div className="glass-toolbar sticky top-14 z-20 border-b px-4 py-4 sm:px-6">
+      <Stepper
+        aria-label="ขั้นตอนการออกเอกสาร"
+        className="mx-auto max-w-3xl"
+        currentStep={current - 1}
+      >
+        {STEPS.map((step) => (
+          <Stepper.Step key={step.label}>
+            <Stepper.Indicator />
+            <Stepper.Content>
+              <Stepper.Title>{step.label}</Stepper.Title>
+              <Stepper.Description className="hidden sm:block">
+                {step.description}
+              </Stepper.Description>
+            </Stepper.Content>
+            <Stepper.Separator />
+          </Stepper.Step>
+        ))}
+      </Stepper>
     </div>
   );
 }
@@ -167,16 +153,19 @@ export function DocumentCreatePage() {
 
   useEffect(() => {
     if (!editId) {
-      setEditDocumentId(null);
-      setEditLoadStatus("idle");
-      if (hadEditInUrlRef.current) {
-        setInitialStep1ForEdit(null);
-        setStep1Data(null);
-        setStep2Data(null);
-        setStep3Data(null);
-        setSourceDocumentForCreate(null);
-      }
+      const shouldResetForm = hadEditInUrlRef.current;
       hadEditInUrlRef.current = false;
+      queueMicrotask(() => {
+        setEditDocumentId(null);
+        setEditLoadStatus("idle");
+        if (shouldResetForm) {
+          setInitialStep1ForEdit(null);
+          setStep1Data(null);
+          setStep2Data(null);
+          setStep3Data(null);
+          setSourceDocumentForCreate(null);
+        }
+      });
       return;
     }
 
@@ -184,9 +173,9 @@ export function DocumentCreatePage() {
     if (!user) return;
 
     let cancelled = false;
-    setEditLoadStatus("loading");
 
     void (async () => {
+      setEditLoadStatus("loading");
       try {
         setSourceDocumentForCreate(null);
         const docRow = await getBusinessDocumentById(editId);
@@ -236,12 +225,10 @@ export function DocumentCreatePage() {
   /** prefill step1–3 จากเอกสารต้นทาง (ปุ่มสร้างต่อเนื่องบนหน้ารายละเอียด) */
   useEffect(() => {
     if (editId) {
-      setChainPrefillStatus("ready");
       return;
     }
 
     if (!fromDocParam || !nextParam) {
-      setChainPrefillStatus("ready");
       return;
     }
     if (!user) return;
@@ -253,9 +240,9 @@ export function DocumentCreatePage() {
     }
 
     let cancelled = false;
-    setChainPrefillStatus("loading");
 
     void (async () => {
+      setChainPrefillStatus("loading");
       try {
         const docRow = await getBusinessDocumentById(fromDocParam);
         if (cancelled) return;
@@ -350,9 +337,8 @@ export function DocumentCreatePage() {
           editId ? (
             <Button
               type="button"
-              variant="outline"
-              className="rounded-xl"
-              onClick={() =>
+              variant="secondary"
+              onPress={() =>
                 router.push(
                   `/documents/detail?id=${encodeURIComponent(editDocumentId ?? editId)}`,
                 )

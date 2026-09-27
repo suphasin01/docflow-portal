@@ -23,7 +23,7 @@ export function DashboardKpiCards({ kpis, periodHint }: Props) {
       value: fmtBaht(kpis.salesTotal),
       sub: periodHint,
       icon: TrendingUp,
-      iconBg: "bg-sky-50 text-sky-700",
+      iconBg: "bg-accent-soft text-accent-soft-foreground",
       valueClass: "text-foreground",
     },
     {
@@ -31,23 +31,23 @@ export function DashboardKpiCards({ kpis, periodHint }: Props) {
       value: fmtBaht(kpis.paidTotal),
       sub: periodHint,
       icon: Banknote,
-      iconBg: "bg-emerald-50 text-emerald-700",
-      valueClass: "text-emerald-700",
+      iconBg: "bg-success-soft text-success-soft-foreground",
+      valueClass: "text-success",
     },
     {
       title: "ค้างชำระ",
       value: fmtBaht(kpis.outstandingTotal),
       sub: periodHint,
       icon: AlertCircle,
-      iconBg: "bg-red-50 text-red-700",
-      valueClass: "text-red-600",
+      iconBg: "bg-danger-soft text-danger-soft-foreground",
+      valueClass: "text-danger",
     },
     {
       title: "เอกสารทั้งหมด",
       value: String(kpis.documentCount),
       sub: "ฉบับ · " + periodHint,
       icon: FileText,
-      iconBg: "bg-violet-50 text-violet-800",
+      iconBg: "bg-surface-secondary text-muted",
       valueClass: "text-foreground",
     },
   ];
@@ -57,7 +57,7 @@ export function DashboardKpiCards({ kpis, periodHint }: Props) {
       {cards.map((c) => (
         <Card
           key={c.title}
-          className="rounded-2xl border-border/80 bg-white shadow-sm transition-shadow hover:shadow-md"
+          className="glass-surface rounded-2xl border-border/80 transition-colors hover:bg-surface-hover"
         >
           <CardContent className="p-5">
             <div className="flex items-start justify-between gap-3">

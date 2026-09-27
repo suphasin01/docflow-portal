@@ -448,11 +448,11 @@ export function PaymentsPage() {
   }, [paidModal, persistStatus, maybeOfferPaidFollowUp]);
 
   return (
-    <div className="min-h-screen bg-[#f4f6f8]">
+    <div className="min-h-screen bg-transparent">
       <AppHeader title="ติดตามชำระเงิน" subtitle="จัดการสถานะการชำระเงิน" />
 
       <div className="space-y-6 px-6 py-8">
-        <Card className="rounded-2xl border-border/80 bg-white shadow-sm">
+        <Card className="rounded-2xl border-border/80 bg-surface shadow-sm">
           <CardContent className="space-y-5 p-6">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
               <div className="space-y-2">
@@ -461,7 +461,7 @@ export function PaymentsPage() {
                   <button
                     type="button"
                     title="กรองตามวันที่ออกเอกสารภายในช่วงที่เลือก"
-                    className="inline-flex rounded-full p-0.5 text-muted-foreground hover:bg-muted"
+                    className="inline-flex rounded-full p-0.5 text-muted-foreground hover:bg-surface-secondary"
                     aria-label="คำอธิบายช่วงวันที่"
                   >
                     <Info className="size-4" />
@@ -470,14 +470,14 @@ export function PaymentsPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <Input
                     type="date"
-                    className="h-10 w-[155px] rounded-xl bg-white"
+                    className="h-10 w-[155px] rounded-xl bg-surface"
                     value={fromDate}
                     onChange={(e) => setFromDate(e.target.value)}
                   />
                   <span className="text-sm text-muted-foreground">ถึง</span>
                   <Input
                     type="date"
-                    className="h-10 w-[155px] rounded-xl bg-white"
+                    className="h-10 w-[155px] rounded-xl bg-surface"
                     value={toDate}
                     onChange={(e) => setToDate(e.target.value)}
                   />
@@ -500,22 +500,22 @@ export function PaymentsPage() {
                   setFlowTab(v);
               }}
             >
-              <TabsList className="h-10 rounded-xl bg-slate-100/80 p-1">
+              <TabsList className="h-10 rounded-xl bg-surface-secondary p-1">
                 <TabsTrigger
                   value="all"
-                  className="rounded-lg data-[state=active]:bg-slate-900 data-[state=active]:text-white"
+                  className="rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
                 >
                   ทั้งหมด
                 </TabsTrigger>
                 <TabsTrigger
                   value="income"
-                  className="rounded-lg data-[state=active]:bg-slate-900 data-[state=active]:text-white"
+                  className="rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
                 >
                   รายรับ
                 </TabsTrigger>
                 <TabsTrigger
                   value="expense"
-                  className="rounded-lg data-[state=active]:bg-slate-900 data-[state=active]:text-white"
+                  className="rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
                 >
                   รายจ่าย
                 </TabsTrigger>
@@ -549,7 +549,7 @@ export function PaymentsPage() {
                 />
               </div>
 
-              <div className="flex flex-col gap-3 rounded-2xl border border-border/70 bg-white/90 p-4 shadow-sm md:flex-row md:flex-wrap md:items-center md:justify-between">
+              <div className="flex flex-col gap-3 rounded-2xl border border-border/70 bg-surface/90 p-4 shadow-sm md:flex-row md:flex-wrap md:items-center md:justify-between">
                 <Input
                   className="h-10 max-w-md rounded-xl"
                   placeholder="ค้นหาเลขที่ / ชื่อลูกค้า..."
@@ -621,7 +621,7 @@ export function PaymentsPage() {
                 </div>
               </div>
 
-              <Card className="overflow-hidden rounded-2xl border-border/80 bg-white shadow-sm">
+              <Card className="overflow-hidden rounded-2xl border-border/80 bg-surface shadow-sm">
                 <CardContent className="p-0">
                   {loading ? (
                     <p className="p-6 text-sm text-muted-foreground">
@@ -630,7 +630,7 @@ export function PaymentsPage() {
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full min-w-[1100px] text-left text-sm">
-                        <thead className="sticky top-0 z-10 border-b border-border/80 bg-white shadow-[0_1px_0_0_hsl(var(--border))]">
+                        <thead className="sticky top-0 z-10 border-b border-border/80 bg-surface shadow-[0_1px_0_0_hsl(var(--border))]">
                           <tr className="text-xs font-medium text-muted-foreground">
                             <th className="whitespace-nowrap px-4 py-3">
                               เลขที่
@@ -843,7 +843,7 @@ function SummaryCard({
         : "bg-emerald-50 text-emerald-600";
 
   return (
-    <div className="rounded-2xl border border-border/70 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-border/70 bg-surface p-5 shadow-sm">
       <div className="flex items-start gap-3">
         <div
           className={cn(
@@ -897,14 +897,14 @@ function ChainTableBlock({
   const eff = effectivePaymentStatus(main);
   const typeCls =
     TYPE_BADGE[main.type] ??
-    "border bg-slate-50 text-slate-800 border-slate-200";
+    "border bg-surface-secondary text-foreground border-border";
 
   return (
     <>
       <tr
         className={cn(
-          "border-b border-border/60 transition-colors hover:bg-slate-50/80",
-          expanded && "bg-slate-50/50",
+          "border-b border-border/60 transition-colors hover:bg-surface-secondary",
+          expanded && "bg-surface-secondary",
         )}
       >
         <td className="px-4 py-3 align-middle">
@@ -913,7 +913,7 @@ function ChainTableBlock({
               <button
                 type="button"
                 onClick={onToggleExpand}
-                className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
+                className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-surface-secondary"
                 aria-expanded={expanded}
               >
                 {expanded ? (
@@ -1002,11 +1002,11 @@ function ChainTableBlock({
             const cEff = effectivePaymentStatus(child);
             const cTypeCls =
               TYPE_BADGE[child.type] ??
-              "border bg-slate-50 text-slate-800 border-slate-200";
+              "border bg-surface-secondary text-foreground border-border";
             return (
               <tr
                 key={child.id}
-                className="border-b border-border/40 bg-slate-50/90 animate-in fade-in-0 duration-200"
+                className="border-b border-border/40 bg-surface-secondary animate-in fade-in-0 duration-200"
               >
                 <td className="px-4 py-2 align-middle">
                   <div className="flex items-start gap-1">
@@ -1087,9 +1087,9 @@ function ChainTableBlock({
               </tr>
             );
           })}
-          <tr className="border-b border-border/60 bg-slate-50/80 animate-in fade-in-0 duration-200">
+          <tr className="border-b border-border/60 bg-surface-secondary animate-in fade-in-0 duration-200">
             <td colSpan={9} className="px-4 py-4 align-top">
-              <div className="ml-10 rounded-xl border border-border/60 bg-white/90 p-4 shadow-sm">
+              <div className="ml-10 rounded-xl border border-border/60 bg-surface/90 p-4 shadow-sm">
                 <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
                   <Clock className="size-4 text-muted-foreground" />
                   ประวัติการชำระเงิน

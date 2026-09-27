@@ -172,12 +172,12 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-white shadow-sm overflow-hidden">
+    <div className="glass-panel overflow-hidden">
       <div className="flex items-center gap-2.5 px-5 py-4 border-b border-border/50">
         {Icon && <Icon className="size-4 text-muted-foreground" />}
         <h2 className="font-semibold text-sm">{title}</h2>
       </div>
-      <div className="px-5 py-4 bg-white">{children}</div>
+      <div className="bg-surface/70 px-5 py-4">{children}</div>
     </div>
   );
 }
@@ -197,7 +197,7 @@ function PresetChips<T extends { id: string; name: string }>({
       {presets.map((p) => (
         <div
           key={p.id}
-          className="flex items-center gap-1 rounded-full border border-border/60 bg-muted/50 px-2.5 py-1 text-xs"
+          className="flex items-center gap-1 rounded-full border border-border/60 bg-surface-secondary/50 px-2.5 py-1 text-xs"
         >
           <button
             type="button"
@@ -252,7 +252,7 @@ function SignatureBlockCard({
   return (
     <div
       className={cn(
-        "rounded-xl border border-border/60 p-3.5 space-y-3 transition-opacity bg-white",
+        "glass-surface space-y-3 rounded-xl border p-3.5 transition-opacity",
         !enabled && "opacity-60",
       )}
     >
@@ -340,13 +340,13 @@ function SignatureBlockCard({
                 </div>
               ) : (
                 <div className="flex items-center gap-1.5">
-                  <div className="h-9 w-28 rounded-md border border-input bg-muted/20 flex items-center justify-center text-[11px] text-muted-foreground">
+                  <div className="h-9 w-28 rounded-md border border-input bg-surface-secondary/20 flex items-center justify-center text-[11px] text-muted-foreground">
                     ยังไม่มีลายเซ็น
                   </div>
                   <button
                     type="button"
                     onClick={() => fileRef.current?.click()}
-                    className="flex items-center gap-1.5 rounded-lg border border-border/70 px-3 py-2 text-xs text-foreground hover:bg-muted/40 transition-colors"
+                    className="flex items-center gap-1.5 rounded-lg border border-border/70 px-3 py-2 text-xs text-foreground hover:bg-surface-secondary/40 transition-colors"
                   >
                     <Upload className="size-3.5" />
                     เลือกรูป
@@ -454,7 +454,7 @@ function PaymentMethodsSection({
   return (
     <div className="space-y-4">
       {/* Top: visible */}
-      <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+      <div className="rounded-lg border border-border/60 bg-surface-secondary/20 p-3">
         <p className="text-xs font-medium text-muted-foreground mb-2">
           วิธีชำระที่แสดงในเอกสาร
         </p>
@@ -493,7 +493,7 @@ function PaymentMethodsSection({
         <>
           <Separator />
           {/* Bottom: checked state */}
-          <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+          <div className="rounded-lg border border-border/60 bg-surface-secondary/20 p-3">
             <p className="text-xs font-medium text-muted-foreground mb-2">
               วิธีที่เลือก (แสดง ✓ ในเอกสาร)
             </p>
@@ -749,7 +749,7 @@ function TotalLine({
 function Step3TotalsCard({ step2Data }: { step2Data: Step2FormValues | null }) {
   if (!step2Data) {
     return (
-      <div className="rounded-2xl border border-border/70 bg-white shadow-sm px-5 py-8 text-center text-xs text-muted-foreground">
+      <div className="glass-panel px-5 py-8 text-center text-xs text-muted-foreground">
         ยังไม่มีข้อมูลรายการ
       </div>
     );
@@ -765,7 +765,7 @@ function Step3TotalsCard({ step2Data }: { step2Data: Step2FormValues | null }) {
   const { vat, wht, documentDiscount, additionalFee } = step2Data;
 
   return (
-    <div className="rounded-2xl border border-border/70 bg-white shadow-sm">
+    <div className="glass-panel">
       <div className="px-5 py-4 border-b border-border/60">
         <h3 className="font-semibold text-sm">สรุปยอด</h3>
       </div>
@@ -854,7 +854,7 @@ function Step3TotalsCard({ step2Data }: { step2Data: Step2FormValues | null }) {
             {fmt(totals.netTotal)}
           </span>
         </div>
-        <div className="rounded-lg bg-muted/60 px-3 py-2">
+        <div className="rounded-lg bg-surface-secondary/60 px-3 py-2">
           <p className="text-xs text-muted-foreground leading-relaxed">
             {bahtToWords(totals.netTotal)}
           </p>
@@ -1096,7 +1096,7 @@ export function DocumentCreateStep3({
   return (
     <form
       onSubmit={handleSubmit(onSave)}
-      className="flex flex-col min-h-0 bg-muted/20"
+      className="flex flex-col min-h-0 bg-surface-secondary/20"
     >
       <div className="flex-1 px-6 py-6">
         <div className="flex gap-6 items-start">
@@ -1125,7 +1125,7 @@ export function DocumentCreateStep3({
             {/* Section 2: Stamp */}
             <SectionCard title="ตราประทับ" icon={Stamp}>
               <div className="space-y-4">
-                <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+                <div className="rounded-lg border border-border/60 bg-surface-secondary/20 p-3">
                   <div className="flex items-center gap-2">
                     <Controller
                       control={control}
@@ -1165,7 +1165,7 @@ export function DocumentCreateStep3({
                             "flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm transition-colors",
                             stampSource === src
                               ? "border-primary bg-primary/5 text-primary"
-                              : "border-border text-muted-foreground hover:bg-muted/50",
+                              : "border-border text-muted-foreground hover:bg-surface-secondary/50",
                           )}
                         >
                           {src === "logo"
@@ -1380,7 +1380,7 @@ export function DocumentCreateStep3({
       </div>
 
       {/* Sticky footer */}
-      <div className="sticky bottom-0 border-t border-border/60 bg-white/95 backdrop-blur-sm px-6 py-4">
+      <div className="glass-toolbar sticky bottom-0 border-t px-6 py-4">
         <div className="flex items-center justify-between gap-3">
           <Button
             type="button"

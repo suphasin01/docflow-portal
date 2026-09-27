@@ -25,7 +25,7 @@ export function PaymentSummaryCard({
   return (
     <Card
       className={cn(
-        "rounded-2xl border-border/80 bg-white shadow-sm",
+        "glass-surface rounded-2xl border-border/80",
         className
       )}
     >

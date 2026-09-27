@@ -758,7 +758,7 @@ export function PreviewDialog({
             className="flex h-full max-h-[92vh] flex-col"
             style={{ backgroundColor: "#d1d5db" }}
           >
-            <DialogHeader className="m-0 border-b border-[rgb(var(--border-rgb)/0.6)] bg-white px-8 py-6">
+            <DialogHeader className="m-0 border-b border-separator bg-white px-8 py-6">
               <DialogTitle className="pr-14 text-[20px] font-bold text-[#111827]">
                 พรีวิว {docLabel}{" "}
                 {step1Data.documentNumber
@@ -1366,7 +1366,7 @@ export function PreviewDialog({
                 </div>
               </div>
             </div>
-            <div className="flex-none border-t border-[rgb(var(--border-rgb)/0.6)] bg-white px-8 py-4">
+            <div className="flex-none border-t border-separator bg-white px-8 py-4">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <Button
@@ -1461,7 +1461,7 @@ export function PreviewDialog({
             <button
               type="button"
               onClick={() => handleVariantSelect("original")}
-              className="flex w-full items-center gap-4 rounded-xl border border-[rgb(var(--border-rgb)/0.6)] bg-background px-4 py-3 text-left transition hover:border-primary/50 hover:bg-primary/5 focus:outline-none"
+              className="flex w-full items-center gap-4 rounded-xl border border-separator bg-background px-4 py-3 text-left transition hover:border-primary/50 hover:bg-primary/5 focus:outline-none"
             >
               <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#334FA3]">
                 <FileText className="size-5" />
@@ -1476,7 +1476,7 @@ export function PreviewDialog({
             <button
               type="button"
               onClick={() => handleVariantSelect("copy")}
-              className="flex w-full items-center gap-4 rounded-xl border border-[rgb(var(--border-rgb)/0.6)] bg-background px-4 py-3 text-left transition hover:border-orange-300 hover:bg-orange-50 focus:outline-none"
+              className="flex w-full items-center gap-4 rounded-xl border border-separator bg-background px-4 py-3 text-left transition hover:border-orange-300 hover:bg-orange-50 focus:outline-none"
             >
               <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-orange-100 text-orange-500">
                 <Copy className="size-5" />

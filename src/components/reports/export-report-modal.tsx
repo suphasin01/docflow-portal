@@ -80,7 +80,7 @@ function QuickRangeSelector({
             variant={preset === key ? "default" : "outline"}
             className={cn(
               "rounded-full px-4",
-              preset === key && "bg-slate-900 text-white hover:bg-slate-900",
+              preset === key && "bg-accent text-accent-foreground hover:bg-accent-hover",
             )}
             onClick={() => onPresetChange(key)}
           >
@@ -164,14 +164,14 @@ function ReportTypeCardSelector({
               className={cn(
                 "flex gap-3 rounded-2xl border-2 p-4 text-left transition-colors",
                 selected
-                  ? "border-slate-900 bg-slate-50/80 shadow-sm"
-                  : "border-border/80 bg-white hover:bg-muted/30",
+                  ? "border-accent bg-accent-soft"
+                  : "border-border bg-surface hover:bg-surface-hover",
               )}
             >
               <div
                 className={cn(
                   "flex size-11 shrink-0 items-center justify-center rounded-xl",
-                  selected ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700",
+                  selected ? "bg-accent text-accent-foreground" : "bg-surface-secondary text-foreground",
                 )}
               >
                 <Icon className="size-5" />
@@ -250,10 +250,12 @@ export function ExportReportModal({
 
   useEffect(() => {
     if (!open) return;
-    setDatePreset(initialDatePreset);
-    setCustomFrom(initialCustomFrom);
-    setCustomTo(initialCustomTo);
-    setReportType(initialReportType);
+    queueMicrotask(() => {
+      setDatePreset(initialDatePreset);
+      setCustomFrom(initialCustomFrom);
+      setCustomTo(initialCustomTo);
+      setReportType(initialReportType);
+    });
   }, [
     open,
     initialDatePreset,
@@ -362,11 +364,11 @@ export function ExportReportModal({
           <ReportTypeCardSelector value={reportType} onChange={setReportType} />
         </div>
 
-        <div className="flex flex-col gap-3 border-t border-border/70 bg-muted/30 px-6 py-5 sm:flex-row sm:justify-stretch">
+        <div className="flex flex-col gap-3 border-t border-border/70 bg-surface-secondary/30 px-6 py-5 sm:flex-row sm:justify-stretch">
           <Button
             type="button"
             size="lg"
-            className="h-12 flex-1 gap-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800"
+            className="h-12 flex-1 gap-2 rounded-xl bg-accent text-accent-foreground hover:bg-accent-hover"
             onClick={runCsvExport}
           >
             <Download className="size-4 shrink-0" />
@@ -376,7 +378,7 @@ export function ExportReportModal({
             type="button"
             size="lg"
             variant="secondary"
-            className="h-12 flex-1 gap-2 rounded-xl border border-border bg-white"
+            className="h-12 flex-1 gap-2 rounded-xl border border-border bg-surface"
             onClick={runPrintExport}
           >
             <Printer className="size-4 shrink-0" />

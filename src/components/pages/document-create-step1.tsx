@@ -80,9 +80,9 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-[rgb(var(--border-rgb)/0.6)] bg-white">
-      <div className="flex items-center gap-3 border-b border-[rgb(var(--border-rgb)/0.6)] px-6 py-4">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-[rgb(var(--muted-rgb)/0.6)] text-muted-foreground">
+    <div className="glass-panel overflow-hidden">
+      <div className="flex items-center gap-3 border-b border-separator px-6 py-4">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-surface-secondary text-muted-foreground">
           <Icon className="size-4" />
         </span>
         <p className="text-sm font-semibold text-foreground">{title}</p>
@@ -113,7 +113,7 @@ function FlowToggle({
   onChange: (v: FlowType) => void;
 }) {
   return (
-    <div className="inline-flex rounded-xl border border-[rgb(var(--border-rgb)/0.6)] bg-[rgb(var(--muted-rgb)/0.3)] p-1">
+    <div className="inline-flex rounded-xl border border-separator bg-surface-secondary p-1">
       {(["income", "expense"] as FlowType[]).map((v) => (
         <button
           key={v}
@@ -122,9 +122,9 @@ function FlowToggle({
           className={cn(
             "rounded-lg px-4 py-1.5 text-sm font-semibold transition-all",
             value === v && v === "income"
-              ? "bg-white text-emerald-600 shadow-sm"
+              ? "bg-surface text-emerald-600 shadow-sm"
               : value === v && v === "expense"
-                ? "bg-white text-red-500 shadow-sm"
+                ? "bg-surface text-red-500 shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
           )}
         >
@@ -147,7 +147,7 @@ function SizeToggle({
   onChange: (v: CompanyNameSize) => void;
 }) {
   return (
-    <div className="inline-flex rounded-xl border border-[rgb(var(--border-rgb)/0.6)] bg-[rgb(var(--muted-rgb)/0.3)] p-1">
+    <div className="inline-flex rounded-xl border border-separator bg-surface-secondary p-1">
       {(["S", "M", "L", "XL"] as CompanyNameSize[]).map((v) => (
         <button
           key={v}
@@ -156,7 +156,7 @@ function SizeToggle({
           className={cn(
             "min-w-[40px] rounded-lg px-3 py-1.5 text-sm font-medium transition-all",
             value === v
-              ? "bg-white text-foreground shadow-sm"
+              ? "bg-surface text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground",
           )}
         >
@@ -224,7 +224,7 @@ function OfficeTypeFields({
       </div>
 
       {officeType === "branch" && (
-        <div className="grid grid-cols-2 gap-4 rounded-xl border border-[rgb(var(--border-rgb)/0.6)] bg-[rgb(var(--muted-rgb)/0.3)] p-4">
+        <div className="grid grid-cols-2 gap-4 rounded-xl border border-separator bg-surface-secondary p-4">
           <div className="space-y-2">
             <Label className="text-sm font-medium">
               ชื่อสาขา <span className="text-destructive">*</span>
@@ -277,7 +277,7 @@ function ExpandSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-[rgb(var(--border-rgb)/0.6)]">
+    <div className="rounded-xl border border-separator">
       <button
         type="button"
         onClick={onToggle}
@@ -291,7 +291,7 @@ function ExpandSection({
         )}
       </button>
       {expanded && (
-        <div className="space-y-4 border-t border-[rgb(var(--border-rgb)/0.6)] px-4 py-4">
+        <div className="space-y-4 border-t border-separator px-4 py-4">
           {children}
           <p className="text-xs text-muted-foreground/70">
             * แก้ไขข้อมูลเฉพาะในเอกสารนี้ ไม่กระทบข้อมูลหลัก
@@ -689,7 +689,7 @@ export function DocumentCreateStep1({
             control={control}
             name="documentGroup"
             render={({ field }) => (
-              <div className="inline-flex rounded-xl border border-[rgb(var(--border-rgb)/0.6)] bg-[rgb(var(--muted-rgb)/0.3)] p-1">
+              <div className="inline-flex rounded-xl border border-separator bg-surface-secondary p-1">
                 {docGroupsForFlow.map((g) => (
                   <button
                     key={g.value}
@@ -698,7 +698,7 @@ export function DocumentCreateStep1({
                     className={cn(
                       "rounded-lg px-4 py-1.5 text-sm font-medium transition-all",
                       field.value === g.value
-                        ? "bg-white text-foreground shadow-sm"
+                        ? "bg-surface text-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground",
                     )}
                   >
@@ -922,7 +922,7 @@ export function DocumentCreateStep1({
             </div>
           </div>
 
-          <div className="space-y-4 rounded-xl border border-[rgb(var(--border-rgb)/0.6)] p-4">
+          <div className="space-y-4 rounded-xl border border-separator p-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2 space-y-2">
                 <Label className="text-sm font-medium">
@@ -982,7 +982,7 @@ export function DocumentCreateStep1({
       {/* ═══════════════════════════════════════════════════════
             FOOTER ACTIONS
         ════════════════════════════════════════════════════════ */}
-      <div className="sticky bottom-0 flex items-center justify-between gap-3 rounded-2xl border border-[rgb(var(--border-rgb)/0.6)] bg-white/95 px-6 py-4 backdrop-blur">
+      <div className="glass-toolbar sticky bottom-0 flex items-center justify-between gap-3 rounded-2xl border px-6 py-4">
         <Button
           type="button"
           variant="ghost"

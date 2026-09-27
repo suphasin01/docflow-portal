@@ -84,7 +84,7 @@ function ItemTypeBadge({ type }: { type: "product" | "service" }) {
 
 function TableSkeleton() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border/60 bg-white">
+    <div className="overflow-hidden rounded-2xl border border-border/60 bg-surface">
       <Table>
         <TableHeader>
           <TableRow>
@@ -249,7 +249,7 @@ function CatalogFormModal({
             <div className="space-y-2">
               <Label className="text-sm font-medium">รหัส</Label>
               <Input
-                className="rounded-xl bg-muted/50 font-mono"
+                className="rounded-xl bg-surface-secondary/50 font-mono"
                 value={editing ? editing.code : nextCode}
                 readOnly
                 disabled
@@ -438,7 +438,7 @@ function CatalogFormModal({
         </ScrollArea>
 
         {/* ─── Footer ─── */}
-        <div className="flex shrink-0 items-center justify-end gap-3 border-t border-border/60 bg-white px-6 py-4">
+        <div className="flex shrink-0 items-center justify-end gap-3 border-t border-border/60 bg-surface px-6 py-4">
           <Button
             type="button"
             variant="outline"
@@ -676,10 +676,10 @@ export function CatalogPage() {
             }
           />
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-border/60 bg-white">
+          <div className="overflow-hidden rounded-2xl border border-border/60 bg-surface">
             <Table>
               <TableHeader>
-                <TableRow className="bg-muted/30 hover:bg-muted/30">
+                <TableRow className="bg-surface-secondary/30 hover:bg-surface-secondary/30">
                   <TableHead className="w-24 font-medium">รหัส</TableHead>
                   <TableHead className="font-medium">
                     ชื่อสินค้า/บริการ

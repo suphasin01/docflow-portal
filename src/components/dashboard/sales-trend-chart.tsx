@@ -25,7 +25,7 @@ export function SalesTrendChart({ data }: Props) {
   }));
 
   return (
-    <Card className="rounded-2xl border-border/80 bg-white shadow-sm">
+    <Card className="glass-surface rounded-2xl border-border/80">
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold">
           แนวโน้มยอดขาย 6 เดือน

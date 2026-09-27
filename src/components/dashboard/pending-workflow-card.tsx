@@ -16,7 +16,7 @@ type Props = {
 
 export function PendingWorkflowCard({ rows }: Props) {
   return (
-    <Card className="rounded-2xl border-border/80 bg-white shadow-sm">
+    <Card className="glass-surface rounded-2xl border-border/80">
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 pb-2">
         <CardTitle className="text-base font-semibold">
           เอกสารรอดำเนินการ
@@ -38,7 +38,7 @@ export function PendingWorkflowCard({ rows }: Props) {
           rows.map((r) => (
             <div
               key={r.id}
-              className="flex flex-col gap-3 rounded-xl border border-border/70 bg-slate-50/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-3 rounded-xl border border-border/70 bg-surface-secondary px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex min-w-0 flex-wrap items-center gap-2">
                 <Link

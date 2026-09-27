@@ -243,7 +243,7 @@ function ItemPickerModal({
             <button
               key={item.id}
               type="button"
-              className="w-full rounded-lg px-3 py-2.5 text-left hover:bg-muted/60 transition-colors flex items-start gap-3"
+              className="w-full rounded-lg px-3 py-2.5 text-left hover:bg-surface-secondary/60 transition-colors flex items-start gap-3"
               onClick={() => {
                 onSelect(item);
                 onClose();
@@ -336,7 +336,7 @@ function SortableItemRow({
     <div
       ref={setNodeRef}
       style={style}
-      className="rounded-xl border border-border/70 bg-white shadow-sm"
+      className="glass-panel rounded-xl"
     >
       {/* Row top bar */}
       <div className="flex items-center gap-2 px-3 pt-3 pb-2">
@@ -368,7 +368,7 @@ function SortableItemRow({
             "flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium border transition-colors shrink-0",
             sourceType === "master"
               ? "border-blue-200 bg-blue-50 text-blue-700"
-              : "border-border bg-muted/50 text-muted-foreground hover:bg-muted",
+              : "border-border bg-surface-secondary/50 text-muted-foreground hover:bg-surface-secondary",
           )}
         >
           {sourceType === "master" ? (
@@ -390,7 +390,7 @@ function SortableItemRow({
             <button
               type="button"
               onClick={onOpenPicker}
-              className="w-full text-left text-sm rounded-md border border-input bg-background px-3 py-1.5 text-muted-foreground hover:bg-muted/50 transition-colors truncate"
+              className="w-full text-left text-sm rounded-md border border-input bg-background px-3 py-1.5 text-muted-foreground hover:bg-surface-secondary/50 transition-colors truncate"
             >
               {(getVal(`${prefix}.title`) as string) ||
                 "คลิกเพื่อเลือกสินค้า/บริการ"}
@@ -899,7 +899,7 @@ function SortableSummaryBlock({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-start gap-3 rounded-lg border border-border/60 bg-white px-4 py-3"
+      className="glass-surface flex items-start gap-3 rounded-lg border px-4 py-3"
     >
       <button
         type="button"
@@ -938,7 +938,7 @@ function TotalsCard({
   afLabel: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-white shadow-sm">
+    <div className="glass-panel">
       <div className="px-5 py-4 border-b border-border/60">
         <h3 className="font-semibold text-sm">สรุปยอด</h3>
       </div>
@@ -1036,7 +1036,7 @@ function TotalsCard({
           </span>
         </div>
 
-        <div className="rounded-lg bg-muted/60 px-3 py-2 mt-1">
+        <div className="rounded-lg bg-surface-secondary/60 px-3 py-2 mt-1">
           <p className="text-xs text-muted-foreground leading-relaxed">
             {totals.netTotalText}
           </p>
@@ -1200,7 +1200,7 @@ export function DocumentCreateStep2({
           {/* ── LEFT ── */}
           <div className="flex-1 min-w-0 space-y-5">
             {/* Item list card */}
-            <div className="rounded-2xl border border-border/70 bg-white shadow-sm overflow-hidden">
+            <div className="glass-panel overflow-hidden">
               {/* Card header */}
               <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-border/50">
                 <h2 className="font-semibold text-sm">รายการสินค้า/บริการ</h2>
@@ -1267,7 +1267,7 @@ export function DocumentCreateStep2({
 
               {/* Item subtotal footer */}
               {fields.length > 0 && (
-                <div className="flex items-center justify-end gap-4 px-5 py-3 border-t border-border/50 bg-muted/30">
+                <div className="flex items-center justify-end gap-4 px-5 py-3 border-t border-border/50 bg-surface-secondary/30">
                   <span className="text-xs text-muted-foreground">
                     {fields.length} รายการ
                   </span>
@@ -1284,7 +1284,7 @@ export function DocumentCreateStep2({
             </div>
 
             {/* Summary blocks card */}
-            <div className="rounded-2xl border border-border/70 bg-white shadow-sm overflow-hidden">
+            <div className="glass-panel overflow-hidden">
               <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-border/50">
                 <h2 className="font-semibold text-sm">สรุปยอดและอื่นๆ</h2>
                 <Button
@@ -1344,7 +1344,7 @@ export function DocumentCreateStep2({
       </div>
 
       {/* Sticky footer */}
-      <div className="sticky bottom-0 border-t border-border/60 bg-white/95 backdrop-blur-sm px-6 py-4">
+      <div className="glass-toolbar sticky bottom-0 border-t px-6 py-4">
         <div className="flex items-center justify-between gap-3">
           <Button
             type="button"

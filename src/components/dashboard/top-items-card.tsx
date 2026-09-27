@@ -11,7 +11,7 @@ type Props = {
 
 export function TopItemsCard({ rows }: Props) {
   return (
-    <Card className="rounded-2xl border-border/80 bg-white shadow-sm">
+    <Card className="glass-surface rounded-2xl border-border/80">
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold">
           สินค้า/บริการยอดนิยม
@@ -27,14 +27,14 @@ export function TopItemsCard({ rows }: Props) {
             {rows.map((r) => (
               <li
                 key={`${r.rank}-${r.title}`}
-                className="flex items-center gap-3 rounded-xl border border-border/60 bg-slate-50/50 px-3 py-2.5 transition-colors hover:bg-slate-50"
+                className="flex items-center gap-3 rounded-xl border border-border/60 bg-surface-secondary px-3 py-2.5 transition-colors hover:bg-surface-tertiary"
               >
                 <span
                   className={cn(
                     "flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold",
                     r.rank <= 3
-                      ? "bg-slate-900 text-white"
-                      : "bg-muted text-muted-foreground",
+                      ? "bg-accent text-accent-foreground"
+                      : "bg-surface-secondary text-muted-foreground",
                   )}
                 >
                   {r.rank}

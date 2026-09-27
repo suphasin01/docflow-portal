@@ -2,16 +2,15 @@
 
 import type { ReactNode } from "react";
 import { Calendar } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, Label } from "@heroui/react";
+import { NativeSelect, Segment } from "@heroui-pro/react";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DASHBOARD_PRESET_LABELS,
   type DashboardDatePreset,
   type DashboardFlowFilter,
 } from "@/lib/dashboard/dashboard-analytics";
 import { DOC_TYPE_CONFIG, type ExtDocType } from "@/lib/doc-types";
-import { cn } from "@/lib/utils";
 import type { DocumentType } from "@/types";
 
 const DATE_PRESETS: DashboardDatePreset[] = [
@@ -51,7 +50,7 @@ export function DashboardFilterBar({
   seedButton,
 }: Props) {
   return (
-    <div className="rounded-2xl border border-border/80 bg-white p-5 shadow-sm">
+    <div className="glass-panel p-5">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1 space-y-4">
           <div className="flex flex-wrap items-center gap-2">
@@ -61,13 +60,8 @@ export function DashboardFilterBar({
                 key={key}
                 type="button"
                 size="sm"
-                variant={datePreset === key ? "default" : "secondary"}
-                className={cn(
-                  "rounded-full px-3.5",
-                  datePreset === key &&
-                    "bg-slate-900 text-white hover:bg-slate-900",
-                )}
-                onClick={() => onDatePresetChange(key)}
+                variant={datePreset === key ? "primary" : "secondary"}
+                onPress={() => onDatePresetChange(key)}
               >
                 {DASHBOARD_PRESET_LABELS[key]}
               </Button>
@@ -91,51 +85,42 @@ export function DashboardFilterBar({
             </div>
           ) : null}
 
-          <Tabs
-            value={flow}
-            onValueChange={(v) => {
-              if (v === "income" || v === "expense") {
-                onFlowChange(v);
+          <Segment
+            selectedKey={flow}
+            size="sm"
+            onSelectionChange={(key) => {
+              const nextFlow = String(key);
+              if (nextFlow === "income" || nextFlow === "expense") {
+                onFlowChange(nextFlow);
                 onDocTypeChange("all");
               }
             }}
           >
-            <TabsList className="h-9 rounded-xl bg-slate-100/90 p-1">
-              <TabsTrigger
-                value="income"
-                className="rounded-lg px-4 text-sm data-[state=active]:bg-slate-900 data-[state=active]:text-white"
-              >
-                รายรับ
-              </TabsTrigger>
-              <TabsTrigger
-                value="expense"
-                className="rounded-lg px-4 text-sm data-[state=active]:bg-slate-900 data-[state=active]:text-white"
-              >
-                รายจ่าย
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+            <Segment.Item id="income">รายรับ</Segment.Item>
+            <Segment.Item id="expense">รายจ่าย</Segment.Item>
+          </Segment>
         </div>
 
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-end lg:w-auto lg:shrink-0">
-          <label className="flex min-w-[220px] flex-col gap-1.5 text-xs font-medium text-muted-foreground">
-            ประเภทเอกสาร
-            <select
-              className="h-10 rounded-xl border border-border bg-white px-3 text-sm text-foreground shadow-sm"
+          <NativeSelect className="min-w-[220px]" fullWidth>
+            <Label>ประเภทเอกสาร</Label>
+            <NativeSelect.Trigger
+              name="dashboard-document-type"
               value={docType}
               onChange={(e) => {
                 const v = e.target.value;
                 onDocTypeChange(v === "all" ? "all" : (v as DocumentType));
               }}
             >
-              <option value="all">ทั้งหมด</option>
+              <NativeSelect.Option value="all">ทั้งหมด</NativeSelect.Option>
               {existingTypes.map((t) => (
-                <option key={t} value={t}>
+                <NativeSelect.Option key={t} value={t}>
                   {DOC_TYPE_CONFIG[t as ExtDocType]?.label ?? t}
-                </option>
+                </NativeSelect.Option>
               ))}
-            </select>
-          </label>
+              <NativeSelect.Indicator />
+            </NativeSelect.Trigger>
+          </NativeSelect>
           {seedButton ? <div className="sm:pb-0.5">{seedButton}</div> : null}
         </div>
       </div>

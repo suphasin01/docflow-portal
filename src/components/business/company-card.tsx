@@ -28,14 +28,14 @@ export function CompanyCard({
   return (
     <Card
       className={cn(
-        "max-w-xl rounded-2xl border-border/80 bg-white shadow-sm",
+        "glass-surface max-w-xl rounded-2xl border-border/80",
         className
       )}
     >
       <CardContent className="flex items-start gap-4 p-6">
         <Avatar className="size-14 rounded-2xl border border-border/60">
           {logoUrl ? <AvatarImage src={logoUrl} alt={name} /> : null}
-          <AvatarFallback className="rounded-2xl bg-muted text-muted-foreground">
+          <AvatarFallback className="rounded-2xl bg-surface-secondary text-muted-foreground">
             <Building2 className="size-7" />
           </AvatarFallback>
         </Avatar>

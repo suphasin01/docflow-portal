@@ -35,7 +35,7 @@ function isCurrentPath(pathname: string, href: string) {
 function Brand() {
   return (
     <div className="flex w-full items-center gap-3 px-1 py-2">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground">
         <FileText className="size-4" />
       </div>
       <div className="min-w-0" data-sidebar="label">
@@ -246,7 +246,7 @@ function SidebarContents() {
 export function AppSidebar() {
   return (
     <>
-      <Sidebar>
+      <Sidebar className="glass-surface">
         <SidebarContents />
         <Sidebar.Rail />
       </Sidebar>
