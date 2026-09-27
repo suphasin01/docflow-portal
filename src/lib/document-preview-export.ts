@@ -92,6 +92,19 @@ function fixPreviewExportClone(
   clonedRoot: HTMLElement,
   liveRoot: HTMLElement,
 ) {
+  // หน้า detail เก็บตัวพิมพ์ไว้นอกจอและซ่อนด้วย opacity เพื่อไม่ให้ผู้ใช้เห็น
+  // html2canvas สืบทอด opacity/ตำแหน่งจาก parent จึงต้องเปิดให้เห็นเฉพาะ clone
+  // ก่อน render ไม่เช่นนั้นจะได้ PDF/ภาพพิมพ์เป็นหน้าว่าง
+  let current: HTMLElement | null = clonedRoot;
+  while (current && current !== clonedDoc.body) {
+    current.style.opacity = "1";
+    current.style.visibility = "visible";
+    current.style.left = "0";
+    current.style.top = "0";
+    current.style.transform = "none";
+    current = current.parentElement;
+  }
+
   const rootStyle = window.getComputedStyle(document.documentElement);
   const overrides = ([...rootStyle] as string[])
     .filter((p) => p.startsWith("--"))
@@ -153,6 +166,43 @@ async function waitForFontsReady(doc: Document) {
   }
 }
 
+async function waitForImagesReady(root: HTMLElement) {
+  const images = [...root.querySelectorAll<HTMLImageElement>("img")];
+  await Promise.all(
+    images.map(async (image) => {
+      if (!image.complete) {
+        await new Promise<void>((resolve) => {
+          image.addEventListener("load", () => resolve(), { once: true });
+          image.addEventListener("error", () => resolve(), { once: true });
+        });
+      }
+      if (typeof image.decode === "function" && image.naturalWidth > 0) {
+        await image.decode().catch(() => undefined);
+      }
+    }),
+  );
+}
+
+function safePdfFilename(filename: string) {
+  const cleaned = filename
+    .replace(/\.pdf$/i, "")
+    .replace(/[\\/:*?"<>|\u0000-\u001f]/g, "-")
+    .trim();
+  return `${cleaned || "document"}.pdf`;
+}
+
+function downloadPdfBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = safePdfFilename(filename);
+  anchor.style.display = "none";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
 export async function exportPreviewContainerToPdf(
   el: HTMLElement,
   filename: string,
@@ -163,6 +213,7 @@ export async function exportPreviewContainerToPdf(
   ]);
 
   await waitForFontsReady(document);
+  await waitForImagesReady(el);
 
   const canvas = await html2canvas(el, {
     scale: 2,
@@ -205,46 +256,77 @@ export async function exportPreviewContainerToPdf(
     remainingHeight -= pageHeightPx;
   }
 
-  pdf.save(`${filename}.pdf`);
+  downloadPdfBlob(pdf.output("blob"), filename);
 }
 
-export async function printPreviewContainer(el: HTMLElement) {
-  const { default: html2canvas } = await import("html2canvas");
-  await waitForFontsReady(document);
+export async function printPreviewContainer(
+  el: HTMLElement,
+  preparedWindow?: Window | null,
+) {
+  // ต้องเปิด popup ภายใน user gesture ก่อน await ทุกชนิด ไม่เช่นนั้น browser
+  // (โดยเฉพาะ in-app browser/Safari) จะบล็อกหน้าต่างพิมพ์
+  const printWindow = preparedWindow ?? window.open("", "_blank");
+  if (!printWindow) {
+    throw new Error("เบราว์เซอร์บล็อกหน้าต่างพิมพ์ กรุณาอนุญาต pop-up");
+  }
 
-  const canvas = await html2canvas(el, {
-    scale: 2,
-    useCORS: true,
-    logging: false,
-    backgroundColor: "#ffffff",
-    onclone: (clonedDoc, clonedRoot) =>
-      fixPreviewExportClone(clonedDoc, clonedRoot, el),
-  });
-
-  const imgData = canvas.toDataURL("image/png");
-  const win = window.open("", "_blank");
-  if (!win) return;
-
-  win.document.write(`
+  printWindow.document.write(`
     <!DOCTYPE html>
-    <html>
-      <head>
-        <style>
-          @page { margin: 0; size: A4 portrait; }
-          body { margin: 0; padding: 0; background: white; }
-          img { width: 210mm; display: block; }
-        </style>
-      </head>
-      <body>
-        <img src="${imgData}" />
-        <script>
-          window.onload = function() {
-            window.print();
-            window.onafterprint = function() { window.close(); };
-          };
-        <\/script>
+    <html lang="th">
+      <head><title>กำลังเตรียมเอกสาร</title></head>
+      <body style="margin:0;display:grid;min-height:100vh;place-items:center;font-family:sans-serif;color:#475569">
+        กำลังเตรียมเอกสารสำหรับพิมพ์…
       </body>
     </html>
   `);
-  win.document.close();
+  printWindow.document.close();
+
+  try {
+    const { default: html2canvas } = await import("html2canvas");
+    await waitForFontsReady(document);
+    await waitForImagesReady(el);
+
+    const canvas = await html2canvas(el, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: "#ffffff",
+      onclone: (clonedDoc, clonedRoot) =>
+        fixPreviewExportClone(clonedDoc, clonedRoot, el),
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+
+    printWindow.document.open();
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html lang="th">
+        <head>
+          <title>พิมพ์เอกสาร</title>
+          <style>
+            @page { margin: 0; size: A4 portrait; }
+            html, body { margin: 0; padding: 0; background: white; }
+            img { width: 210mm; height: auto; display: block; }
+          </style>
+        </head>
+        <body>
+          <img id="print-image" src="${imgData}" alt="เอกสาร" />
+          <script>
+            const image = document.getElementById("print-image");
+            const startPrint = () => {
+              window.focus();
+              window.print();
+            };
+            if (image.complete) startPrint();
+            else image.onload = startPrint;
+            window.onafterprint = () => window.close();
+          <\/script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  } catch (error) {
+    printWindow.close();
+    throw error;
+  }
 }

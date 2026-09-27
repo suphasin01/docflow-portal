@@ -3,43 +3,101 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // อีเมลที่อนุญาต — คงชุดเดียวกับ NEXT_PUBLIC_ALLOWED_AUTH_EMAILS ใน .env (deploy rules เมื่อเปลี่ยน)
-    function isAllowedEmail() {
+    // บัญชีชุดแรกเป็น bootstrap admin เพื่อให้มีผู้อนุมัติคำขอใหม่เสมอ
+    function isBootstrapAdmin() {
       return request.auth != null
         && request.auth.token.email_verified == true
         && (
           request.auth.token.email == "siriflowerland@gmail.com"
           || request.auth.token.email == "saksitpz1011@gmail.com"
-          || request.auth.token.email == "invpmr936@gmail.com" 
+          || request.auth.token.email == "invpmr936@gmail.com"
           || request.auth.token.email == "beyonddevtechsolution@gmail.com"
         );
     }
 
+    function isVerifiedGoogleUser() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.firebase.sign_in_provider == "google.com";
+    }
+
+    function hasApprovedAccess() {
+      return isVerifiedGoogleUser()
+        && (
+          isBootstrapAdmin()
+          || (
+            exists(/databases/$(database)/documents/accessControl/$(request.auth.uid))
+            && get(/databases/$(database)/documents/accessControl/$(request.auth.uid)).data.status == "approved"
+          )
+        );
+    }
+
+    function isAdmin() {
+      return isBootstrapAdmin()
+        || (
+          isVerifiedGoogleUser()
+          && exists(/databases/$(database)/documents/accessControl/$(request.auth.uid))
+          && get(/databases/$(database)/documents/accessControl/$(request.auth.uid)).data.status == "approved"
+          && get(/databases/$(database)/documents/accessControl/$(request.auth.uid)).data.role == "admin"
+        );
+    }
+
+    // ผู้ใช้ใหม่สร้างคำขอได้ด้วยบัญชีตัวเองเท่านั้น ผู้ดูแลเป็นคนอนุมัติ/ปฏิเสธ
+    match /accessRequests/{userId} {
+      allow get: if isVerifiedGoogleUser()
+        && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isVerifiedGoogleUser()
+        && request.auth.uid == userId
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.status == "pending";
+      allow update: if isAdmin()
+        || (
+          isVerifiedGoogleUser()
+          && request.auth.uid == userId
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.email == request.auth.token.email
+          && request.resource.data.status == "pending"
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            "displayName", "photoURL", "status", "requestedAt", "updatedAt"
+          ])
+        );
+      allow delete: if isAdmin();
+    }
+
+    // เอกสารสิทธิ์เขียนได้เฉพาะผู้ดูแล เจ้าของบัญชีอ่านสถานะตัวเองได้
+    match /accessControl/{userId} {
+      allow get: if isVerifiedGoogleUser()
+        && (request.auth.uid == userId || isAdmin());
+      allow list, create, update, delete: if isAdmin();
+    }
+
     // user เป็นเจ้าของ company นี้หรือไม่ (multi-company model)
     function ownsCompany(companyId) {
-      return isAllowedEmail()
+      return hasApprovedAccess()
         && get(/databases/$(database)/documents/companies/$(companyId)).data.ownerId == request.auth.uid;
     }
 
     // ── Users ──
     match /users/{userId} {
-      allow read: if isAllowedEmail() && request.auth.uid == userId;
-      allow write: if isAllowedEmail() && request.auth.uid == userId;
+      allow read: if hasApprovedAccess() && request.auth.uid == userId;
+      allow write: if hasApprovedAccess() && request.auth.uid == userId;
     }
 
     // ── Companies (multi-company per user) ──
     match /companies/{companyId} {
       // อ่านได้ถ้าเป็นเจ้าของ
-      allow read: if isAllowedEmail()
+      allow read: if hasApprovedAccess()
         && resource.data.ownerId == request.auth.uid;
 
       // สร้างได้ถ้า login แล้วและ ownerId ตรงกับ uid
-      allow create: if isAllowedEmail()
+      allow create: if hasApprovedAccess()
         && request.resource.data.ownerId == request.auth.uid
         && request.resource.data.createdBy == request.auth.uid;
 
       // แก้ไขได้ถ้าเป็นเจ้าของ
-      allow update: if isAllowedEmail()
+      allow update: if hasApprovedAccess()
         && resource.data.ownerId == request.auth.uid;
 
       allow delete: if false;
@@ -52,74 +110,74 @@ service cloud.firestore {
 
     // ── Documents ──
     match /documents/{docId} {
-      allow read: if isAllowedEmail()
+      allow read: if hasApprovedAccess()
         && ownsCompany(resource.data.companyId);
-      allow create: if isAllowedEmail()
+      allow create: if hasApprovedAccess()
         && request.resource.data.keys().hasAll(['companyId','createdAt','updatedAt','createdBy'])
         && ownsCompany(request.resource.data.companyId)
         && request.resource.data.createdBy == request.auth.uid;
-      allow update: if isAllowedEmail()
+      allow update: if hasApprovedAccess()
         && ownsCompany(resource.data.companyId);
-      allow delete: if isAllowedEmail()
+      allow delete: if hasApprovedAccess()
         && ownsCompany(resource.data.companyId);
     }
 
     // ── Products ──
     match /products/{docId} {
-      allow read: if isAllowedEmail()
+      allow read: if hasApprovedAccess()
         && ownsCompany(resource.data.companyId);
-      allow create: if isAllowedEmail()
+      allow create: if hasApprovedAccess()
         && ownsCompany(request.resource.data.companyId)
         && request.resource.data.createdBy == request.auth.uid;
-      allow update: if isAllowedEmail()
+      allow update: if hasApprovedAccess()
         && ownsCompany(resource.data.companyId);
       allow delete: if false;
     }
 
     // ── Customers ──
     match /customers/{docId} {
-      allow read: if isAllowedEmail()
+      allow read: if hasApprovedAccess()
         && ownsCompany(resource.data.companyId);
-      allow create: if isAllowedEmail()
+      allow create: if hasApprovedAccess()
         && ownsCompany(request.resource.data.companyId)
         && request.resource.data.createdBy == request.auth.uid;
-      allow update: if isAllowedEmail()
+      allow update: if hasApprovedAccess()
         && ownsCompany(resource.data.companyId);
       allow delete: if false;
     }
 
     // ── Vendors ──
     match /vendors/{docId} {
-      allow read: if isAllowedEmail()
+      allow read: if hasApprovedAccess()
         && ownsCompany(resource.data.companyId);
-      allow create: if isAllowedEmail()
+      allow create: if hasApprovedAccess()
         && ownsCompany(request.resource.data.companyId)
         && request.resource.data.createdBy == request.auth.uid;
-      allow update: if isAllowedEmail()
+      allow update: if hasApprovedAccess()
         && ownsCompany(resource.data.companyId);
       allow delete: if false;
     }
 
     // ── Payments ──
     match /payments/{docId} {
-      allow read: if isAllowedEmail()
+      allow read: if hasApprovedAccess()
         && ownsCompany(resource.data.companyId);
-      allow create: if isAllowedEmail()
+      allow create: if hasApprovedAccess()
         && ownsCompany(request.resource.data.companyId)
         && request.resource.data.createdBy == request.auth.uid;
-      allow update: if isAllowedEmail()
+      allow update: if hasApprovedAccess()
         && ownsCompany(resource.data.companyId);
       allow delete: if false;
     }
 
     // ── Contacts (ลูกค้า/ผู้ขาย unified) ──
     match /contacts/{docId} {
-      allow read: if isAllowedEmail()
+      allow read: if hasApprovedAccess()
         && ownsCompany(resource.data.companyId);
-      allow create: if isAllowedEmail()
+      allow create: if hasApprovedAccess()
         && ownsCompany(request.resource.data.companyId)
         && request.resource.data.createdBy == request.auth.uid;
-      allow update: if isAllowedEmail()
+      allow update: if hasApprovedAccess()
         && ownsCompany(resource.data.companyId);
       allow delete: if false;
     }

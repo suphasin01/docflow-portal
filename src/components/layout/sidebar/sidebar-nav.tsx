@@ -3,6 +3,7 @@ import { mainNav } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { SidebarBaseProps } from "./sidebar-types";
+import { useAuth } from "@/components/providers/auth-provider";
 
 type SidebarNavProps = SidebarBaseProps & {
   pathname: string;
@@ -10,11 +11,12 @@ type SidebarNavProps = SidebarBaseProps & {
 
 const NAV_GROUPS: string[][] = [
   ["/", "/documents/create", "/documents/history", "/payments"],
-  ["/catalog", "/contacts", "/company"],
+  ["/catalog", "/contacts", "/company", "/users"],
   ["/reports"],
 ];
 
 export function SidebarNav({ collapsed, pathname }: SidebarNavProps) {
+  const { accessRole } = useAuth();
   const navByHref = new Map(mainNav.map((item) => [item.href, item]));
 
   return (
@@ -25,6 +27,7 @@ export function SidebarNav({ collapsed, pathname }: SidebarNavProps) {
             {group.map((href) => {
               const item = navByHref.get(href);
               if (!item) return null;
+              if (item.adminOnly && accessRole !== "admin") return null;
               const active =
                 item.href === "/"
                   ? pathname === "/"

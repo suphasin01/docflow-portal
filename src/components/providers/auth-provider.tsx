@@ -17,10 +17,17 @@ import {
   signOut as firebaseSignOut,
   type User,
 } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { isBootstrapAdminEmail } from "@/config/allowed-auth";
+import {
+  resolveInitialAccess,
+  subscribeOwnAccess,
+  type AccessRole,
+  type AccessStatus,
+} from "@/lib/firebase/access-management";
 import { getFirebaseAuth, getFirebaseDb } from "@/lib/firebase/client";
 import { isFirebaseConfigured } from "@/lib/firebase/config";
 import { bootstrapUserCompanies } from "@/lib/firebase/bootstrap-profile";
-import { doc, getDoc } from "firebase/firestore";
 import { useCompanyStore } from "@/stores/company-store";
 import type { UserProfile } from "@/types";
 
@@ -29,6 +36,9 @@ type AuthState = {
   loading: boolean;
   profile: UserProfile | null;
   firebaseReady: boolean;
+  accessStatus: AccessStatus;
+  accessRole: AccessRole | null;
+  accessError: string | null;
   signInGoogle: () => Promise<void>;
   signInEmail: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -41,68 +51,165 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [accessStatus, setAccessStatus] =
+    useState<AccessStatus>("checking");
+  const [accessRole, setAccessRole] = useState<AccessRole | null>(null);
+  const [accessError, setAccessError] = useState<string | null>(null);
   const firebaseReady = isFirebaseConfigured();
 
   const { setCompanies, setCompaniesLoading, resetCompanyStore } =
     useCompanyStore();
 
   const loadProfile = useCallback(
-    async (u: User) => {
+    async (currentUser: User) => {
       const db = getFirebaseDb();
       if (!db) return;
 
-      // 1. bootstrap companies (สร้างบริษัทเริ่มต้นถ้ายังไม่มี)
       setCompaniesLoading(true);
       try {
-        const companies = await bootstrapUserCompanies(u);
+        const companies = await bootstrapUserCompanies(currentUser);
         setCompanies(companies);
-      } catch (e) {
-        console.error("bootstrap companies error:", e);
+      } catch (error) {
+        console.error("bootstrap companies error:", error);
         setCompaniesLoading(false);
+        throw error;
       }
 
-      // 2. โหลด user profile
-      const ref = doc(db, "users", u.uid);
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
-        setProfile(snap.data() as UserProfile);
-      }
+      const ref = doc(db, "users", currentUser.uid);
+      const snapshot = await getDoc(ref);
+      setProfile(snapshot.exists() ? (snapshot.data() as UserProfile) : null);
     },
-    [setCompanies, setCompaniesLoading]
+    [setCompanies, setCompaniesLoading],
   );
 
   useEffect(() => {
     if (!firebaseReady) {
-      setLoading(false);
+      queueMicrotask(() => setLoading(false));
       return;
     }
+
     const auth = getFirebaseAuth();
     if (!auth) {
-      setLoading(false);
+      queueMicrotask(() => setLoading(false));
       return;
     }
-    const unsub = onAuthStateChanged(auth, async (u) => {
-      setUser(u);
-      if (u) {
+
+    let disposed = false;
+    let stopAccessListener: (() => void) | undefined;
+    let profileLoadedForUid: string | null = null;
+
+    async function applyApprovedAccess(
+      currentUser: User,
+      role: AccessRole,
+    ) {
+      if (disposed) return;
+      setAccessStatus("approved");
+      setAccessRole(role);
+      setAccessError(null);
+
+      if (profileLoadedForUid !== currentUser.uid) {
+        profileLoadedForUid = currentUser.uid;
         try {
-          await loadProfile(u);
-        } catch (e) {
-          console.error(e);
-          setProfile(null);
+          await loadProfile(currentUser);
+        } catch (error) {
+          if (disposed) return;
+          setAccessError(
+            error instanceof Error ? error.message : "โหลดข้อมูลผู้ใช้ไม่สำเร็จ",
+          );
         }
-      } else {
-        setProfile(null);
-        resetCompanyStore();
       }
-      setLoading(false);
+      if (!disposed) setLoading(false);
+    }
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
+      stopAccessListener?.();
+      stopAccessListener = undefined;
+      profileLoadedForUid = null;
+
+      if (disposed) return;
+      setUser(currentUser);
+      setProfile(null);
+      setAccessError(null);
+      setAccessRole(null);
+      setAccessStatus("checking");
+      setLoading(true);
+      resetCompanyStore();
+
+      if (!currentUser) {
+        setLoading(false);
+        return;
+      }
+
+      if (
+        isBootstrapAdminEmail(
+          currentUser.email,
+          currentUser.emailVerified,
+        )
+      ) {
+        await applyApprovedAccess(currentUser, "admin");
+        return;
+      }
+
+      try {
+        const initial = await resolveInitialAccess(currentUser);
+        if (disposed) return;
+
+        if (initial.status === "approved" && initial.role) {
+          await applyApprovedAccess(currentUser, initial.role);
+        } else {
+          setAccessStatus(initial.status);
+          setAccessRole(null);
+          setLoading(false);
+        }
+
+        stopAccessListener = subscribeOwnAccess(
+          currentUser.uid,
+          (next) => {
+            if (disposed) return;
+            if (next.status === "approved" && next.role) {
+              void applyApprovedAccess(currentUser, next.role);
+              return;
+            }
+
+            profileLoadedForUid = null;
+            setProfile(null);
+            resetCompanyStore();
+            setAccessStatus(next.status);
+            setAccessRole(null);
+            setLoading(false);
+          },
+          (error) => {
+            if (disposed) return;
+            console.error("access listener error:", error);
+            setAccessError(error.message);
+            setLoading(false);
+          },
+        );
+      } catch (error) {
+        if (disposed) return;
+        console.error("resolve access error:", error);
+        setAccessStatus("pending");
+        setAccessError(
+          error instanceof Error
+            ? error.message
+            : "ไม่สามารถส่งคำขอเข้าใช้งานได้",
+        );
+        setLoading(false);
+      }
     });
-    return () => unsub();
+
+    return () => {
+      disposed = true;
+      stopAccessListener?.();
+      unsubscribeAuth();
+    };
   }, [firebaseReady, loadProfile, resetCompanyStore]);
 
   const signInGoogle = useCallback(async () => {
     const auth = getFirebaseAuth();
     if (!auth) throw new Error("Firebase Auth ยังไม่พร้อม");
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: "select_account" });
     await signInWithPopup(auth, provider);
   }, []);
 
@@ -119,8 +226,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshProfile = useCallback(async () => {
-    if (user) await loadProfile(user);
-  }, [loadProfile, user]);
+    if (user && accessStatus === "approved") await loadProfile(user);
+  }, [accessStatus, loadProfile, user]);
 
   const value = useMemo(
     () => ({
@@ -128,6 +235,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       profile,
       firebaseReady,
+      accessStatus,
+      accessRole,
+      accessError,
       signInGoogle,
       signInEmail,
       signOut,
@@ -138,11 +248,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       profile,
       firebaseReady,
+      accessStatus,
+      accessRole,
+      accessError,
       signInGoogle,
       signInEmail,
       signOut,
       refreshProfile,
-    ]
+    ],
   );
 
   return (
@@ -151,7 +264,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth ต้องอยู่ภายใน AuthProvider");
-  return ctx;
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth ต้องอยู่ภายใน AuthProvider");
+  return context;
 }

@@ -2,19 +2,43 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+Requirements: Node.js 20.9+ and npm.
+
 First, run the development server:
 
 ```bash
+npm ci
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+### Environment configuration
+
+The Firebase web configuration used for local development is committed in
+`.env.development`, so a developer can clone the repository, run `npm ci`, and
+start the app without exchanging an env file. Every variable in that file is
+prefixed with `NEXT_PUBLIC_`, which means Next.js includes it in the browser
+bundle; it must never contain a server credential or other secret.
+
+Use `.env.local` for personal overrides. Next.js loads it automatically and Git
+ignores it. `.env.example` documents the supported variable names.
+
+Access control is enforced by `firestore.rules`, not by the browser-visible
+allowlist alone. `NEXT_PUBLIC_ALLOWED_AUTH_EMAILS` is the bootstrap-admin list;
+new Google accounts create an `accessRequests` record and an admin grants access
+from the `/users` page. Approved access is stored in `accessControl`.
+
+When the bootstrap-admin list or access rules change, update
+`isBootstrapAdmin()` in `firestore.rules` and deploy the rules as part of the
+same change:
+
+```bash
+npx firebase-tools deploy --only firestore:rules --project <firebase-project-id>
+```
+
+For production, set the same variables in the deployment platform rather than
+relying on the development file.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

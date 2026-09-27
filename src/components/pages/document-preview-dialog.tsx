@@ -15,6 +15,7 @@ import {
   ZoomOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -90,6 +91,16 @@ function fixOklchInClone(
   clonedRoot: HTMLElement,
   liveRoot: HTMLElement,
 ) {
+  let current: HTMLElement | null = clonedRoot;
+  while (current && current !== clonedDoc.body) {
+    current.style.opacity = "1";
+    current.style.visibility = "visible";
+    current.style.left = "0";
+    current.style.top = "0";
+    current.style.transform = "none";
+    current = current.parentElement;
+  }
+
   // แปลง CSS custom properties ที่มี oklch บน :root ใน cloned document
   const rootStyle = window.getComputedStyle(document.documentElement);
   const overrides = ([...rootStyle] as string[])
@@ -147,8 +158,44 @@ function fixOklchInClone(
   bakeStampGrayscaleIntoCanvas(clonedDoc, clonedRoot, liveRoot);
 }
 
+async function waitForPreviewAssets(el: HTMLElement) {
+  if ("fonts" in document) {
+    await (document as Document & { fonts: FontFaceSet }).fonts.ready;
+  }
+  await Promise.all(
+    [...el.querySelectorAll<HTMLImageElement>("img")].map(async (image) => {
+      if (!image.complete) {
+        await new Promise<void>((resolve) => {
+          image.addEventListener("load", () => resolve(), { once: true });
+          image.addEventListener("error", () => resolve(), { once: true });
+        });
+      }
+      if (typeof image.decode === "function" && image.naturalWidth > 0) {
+        await image.decode().catch(() => undefined);
+      }
+    }),
+  );
+}
+
+function downloadPdfBlob(blob: Blob, filename: string) {
+  const cleaned = filename
+    .replace(/\.pdf$/i, "")
+    .replace(/[\\/:*?"<>|\u0000-\u001f]/g, "-")
+    .trim();
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `${cleaned || "document"}.pdf`;
+  anchor.style.display = "none";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
 // ── lazy import เพื่อไม่ให้ bundle size โตตอนโหลดหน้า ──
 async function renderToPdf(el: HTMLElement, filename: string) {
+  await waitForPreviewAssets(el);
   const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
     import("html2canvas"),
     import("jspdf"),
@@ -206,10 +253,20 @@ async function renderToPdf(el: HTMLElement, filename: string) {
     }
   }
 
-  pdf.save(`${filename}.pdf`);
+  downloadPdfBlob(pdf.output("blob"), filename);
 }
 
-async function printElement(el: HTMLElement) {
+async function printElement(el: HTMLElement, preparedWindow?: Window | null) {
+  const win = preparedWindow ?? window.open("", "_blank");
+  if (!win) {
+    throw new Error("เบราว์เซอร์บล็อกหน้าต่างพิมพ์ กรุณาอนุญาต pop-up");
+  }
+  win.document.write(
+    '<p style="font-family:sans-serif;color:#475569;text-align:center;margin-top:20vh">กำลังเตรียมเอกสารสำหรับพิมพ์…</p>',
+  );
+  win.document.close();
+
+  await waitForPreviewAssets(el);
   const { default: html2canvas } = await import("html2canvas");
 
   const canvas = await html2canvas(el, {
@@ -222,9 +279,8 @@ async function printElement(el: HTMLElement) {
   });
 
   const imgData = canvas.toDataURL("image/png");
-  const win = window.open("", "_blank");
-  if (!win) return;
 
+  win.document.open();
   win.document.write(`
     <!DOCTYPE html>
     <html>
@@ -239,6 +295,7 @@ async function printElement(el: HTMLElement) {
         <img src="${imgData}" />
         <script>
           window.onload = function() {
+            window.focus();
             window.print();
             window.onafterprint = function() { window.close(); };
           };
@@ -458,6 +515,9 @@ export function PreviewDialog({
     setPdfLoading(true);
     try {
       await renderToPdf(pageRef.current, pdfFilename.trim() || "document");
+    } catch (error) {
+      console.error(error);
+      toast.error("ดาวน์โหลด PDF ไม่สำเร็จ");
     } finally {
       setPdfLoading(false);
     }
@@ -575,10 +635,20 @@ export function PreviewDialog({
     const action = variantPickerAction;
     setVariantPickerAction(null);
     if (action === "print") {
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) {
+        toast.error("เบราว์เซอร์บล็อกหน้าต่างพิมพ์ กรุณาอนุญาต pop-up");
+        return;
+      }
       // รอ React render badge ใหม่ก่อน capture
       setTimeout(() => {
         if (!pageRef.current) return;
-        printElement(pageRef.current);
+        void printElement(pageRef.current, printWindow).catch((error) => {
+          console.error(error);
+          toast.error(
+            error instanceof Error ? error.message : "เปิดหน้าพิมพ์ไม่สำเร็จ",
+          );
+        });
       }, 150);
     } else if (action === "download") {
       setPdfFilename(step1Data?.documentNumber || docLabel);

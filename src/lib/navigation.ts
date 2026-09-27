@@ -3,9 +3,9 @@ import {
   ClipboardList,
   FileBarChart,
   FileEdit,
-  FileText,
   LayoutDashboard,
   Package,
+  UserRoundCog,
   Users,
   Wallet,
   type LucideIcon,
@@ -16,6 +16,7 @@ export type NavItem = {
   href: string;
   label: string;
   icon: LucideIcon;
+  adminOnly?: boolean;
 };
 
 export const mainNav: NavItem[] = [
@@ -27,6 +28,7 @@ export const mainNav: NavItem[] = [
   { href: "/contacts", label: "ลูกค้า/ผู้ขาย", icon: Users },
   { href: "/reports", label: "รายงาน", icon: FileBarChart },
   { href: "/company", label: "บริษัทของฉัน", icon: Building2 },
+  { href: "/users", label: "จัดการผู้ใช้", icon: UserRoundCog, adminOnly: true },
 ];
 
 export const documentTypeLabels: Record<string, string> = {

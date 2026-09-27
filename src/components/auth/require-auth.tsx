@@ -4,10 +4,9 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Skeleton } from "@/components/ui/skeleton";
-import { isAllowedAuthEmail } from "@/config/allowed-auth";
 
 export function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { user, loading, firebaseReady, signOut } = useAuth();
+  const { user, loading, firebaseReady, accessStatus } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -18,11 +17,10 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (!isAllowedAuthEmail(user.email, user.emailVerified)) {
-      void signOut();
+    if (accessStatus !== "approved") {
       router.replace("/login");
     }
-  }, [firebaseReady, loading, router, signOut, user]);
+  }, [accessStatus, firebaseReady, loading, router, user]);
 
   if (!firebaseReady) {
     return (
@@ -38,11 +36,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (
-    loading ||
-    !user ||
-    !isAllowedAuthEmail(user.email, user.emailVerified)
-  ) {
+  if (loading || !user || accessStatus !== "approved") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f1f3f6]">
         <div className="w-full max-w-lg space-y-4 p-6">

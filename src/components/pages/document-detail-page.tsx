@@ -376,6 +376,7 @@ export function DocumentDetailPage({
 
   async function runExport(
     mode: "current-pdf" | "current-print" | "multi-pdf" | "multi-print",
+    preparedPrintWindow?: Window | null,
   ) {
     const target = mode.startsWith("current")
       ? currentPrintRef.current
@@ -393,7 +394,7 @@ export function DocumentDetailPage({
               : `documents-${selectedDocumentsOrdered.map((doc) => doc.docNumber).join("-")}`),
         );
       } else {
-        await printPreviewContainer(target);
+        await printPreviewContainer(target, preparedPrintWindow);
       }
     } catch (error) {
       console.error(error);
@@ -429,8 +430,13 @@ export function DocumentDetailPage({
       return;
     }
 
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast.error("เบราว์เซอร์บล็อกหน้าต่างพิมพ์ กรุณาอนุญาต pop-up");
+      return;
+    }
     setTimeout(() => {
-      void runExport(action);
+      void runExport(action, printWindow);
     }, 120);
   }
 
@@ -852,7 +858,7 @@ export function DocumentDetailPage({
             </Card>
           </div>
 
-          <div className="pointer-events-none fixed left-[-10000px] top-0 opacity-0">
+          <div className="pointer-events-none fixed left-[-10000px] top-0">
             <PreviewStack
               docs={[currentDocument]}
               innerRef={currentPrintRef}
