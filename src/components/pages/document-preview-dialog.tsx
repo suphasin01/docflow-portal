@@ -48,115 +48,7 @@ import {
   type Step3FormValues,
 } from "@/lib/schemas/document-step3";
 import { useCompanyStore } from "@/stores/company-store";
-import { bakeStampGrayscaleIntoCanvas } from "@/lib/document-preview-export";
-
-// ── แปลง oklch() → rgb() ก่อนส่งให้ html2canvas (v1.x ยังไม่รองรับ oklch) ──
-function oklch2rgb(L: number, C: number, H: number, A = 1): string {
-  const hr = (H * Math.PI) / 180;
-  const a = C * Math.cos(hr);
-  const b = C * Math.sin(hr);
-  const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
-  const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
-  const s_ = L - 0.0894841775 * a - 1.291485548 * b;
-  const l3 = l_ ** 3,
-    m3 = m_ ** 3,
-    s3 = s_ ** 3;
-  const rL = 4.076741662 * l3 - 3.307711591 * m3 + 0.230969929 * s3;
-  const gL = -1.268438005 * l3 + 2.609757401 * m3 - 0.341319396 * s3;
-  const bL = -0.004196086 * l3 - 0.703418615 * m3 + 1.695608672 * s3;
-  const gc = (c: number) =>
-    c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055;
-  const r = Math.round(Math.max(0, Math.min(1, gc(rL))) * 255);
-  const g = Math.round(Math.max(0, Math.min(1, gc(gL))) * 255);
-  const bv = Math.round(Math.max(0, Math.min(1, gc(bL))) * 255);
-  return A < 1 ? `rgba(${r},${g},${bv},${A})` : `rgb(${r},${g},${bv})`;
-}
-
-function convertOklch(val: string): string {
-  return val.replace(
-    /oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.%]+))?\s*\)/g,
-    (_, L, C, H, Astr) => {
-      const alpha = Astr
-        ? Astr.includes("%")
-          ? parseFloat(Astr) / 100
-          : parseFloat(Astr)
-        : 1;
-      return oklch2rgb(parseFloat(L), parseFloat(C), parseFloat(H), alpha);
-    },
-  );
-}
-
-function fixOklchInClone(
-  clonedDoc: Document,
-  clonedRoot: HTMLElement,
-  liveRoot: HTMLElement,
-) {
-  let current: HTMLElement | null = clonedRoot;
-  while (current && current !== clonedDoc.body) {
-    current.style.opacity = "1";
-    current.style.visibility = "visible";
-    current.style.left = "0";
-    current.style.top = "0";
-    current.style.transform = "none";
-    current = current.parentElement;
-  }
-
-  // แปลง CSS custom properties ที่มี oklch บน :root ใน cloned document
-  const rootStyle = window.getComputedStyle(document.documentElement);
-  const overrides = ([...rootStyle] as string[])
-    .filter((p) => p.startsWith("--"))
-    .map((name) => {
-      const val = rootStyle.getPropertyValue(name).trim();
-      if (!val.includes("oklch")) return null;
-      return `${name}: ${convertOklch(val)};`;
-    })
-    .filter(Boolean)
-    .join("\n");
-
-  if (overrides) {
-    const style = clonedDoc.createElement("style");
-    style.textContent = `:root { ${overrides} }`;
-    clonedDoc.head.appendChild(style);
-  }
-
-  const exportStyle = clonedDoc.createElement("style");
-  exportStyle.textContent = `
-    [data-pdf-text-box] {
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-    }
-
-    [data-pdf-text-box="row"] {
-      justify-content: space-between !important;
-    }
-
-    [data-pdf-text-box] > span {
-      position: relative !important;
-      top: -7px !important;
-      line-height: 1 !important;
-      display: block !important;
-    }
-
-    [data-pdf-text-box="table-cell"] {
-      display: table-cell !important;
-      vertical-align: middle !important;
-    }
-
-    [data-pdf-text-box="left"] {
-      display: block !important;
-    }
-  `;
-  clonedDoc.head.appendChild(exportStyle);
-
-  // แปลง inline style attribute ที่อาจมี oklch ด้วย
-  clonedDoc.querySelectorAll<HTMLElement>("[style]").forEach((el) => {
-    const s = el.getAttribute("style") ?? "";
-    if (s.includes("oklch")) el.setAttribute("style", convertOklch(s));
-  });
-
-  bakeStampGrayscaleIntoCanvas(clonedDoc, clonedRoot, liveRoot);
-}
+import { fixPreviewExportClone } from "@/lib/document-preview-export";
 
 async function waitForPreviewAssets(el: HTMLElement) {
   if ("fonts" in document) {
@@ -207,7 +99,7 @@ async function renderToPdf(el: HTMLElement, filename: string) {
     logging: false,
     backgroundColor: "#ffffff",
     onclone: (clonedDoc, clonedRoot) =>
-      fixOklchInClone(clonedDoc, clonedRoot, el),
+      fixPreviewExportClone(clonedDoc, clonedRoot, el),
   });
 
   const imgData = canvas.toDataURL("image/jpeg", 0.95);
@@ -275,7 +167,7 @@ async function printElement(el: HTMLElement, preparedWindow?: Window | null) {
     logging: false,
     backgroundColor: "#ffffff",
     onclone: (clonedDoc, clonedRoot) =>
-      fixOklchInClone(clonedDoc, clonedRoot, el),
+      fixPreviewExportClone(clonedDoc, clonedRoot, el),
   });
 
   const imgData = canvas.toDataURL("image/png");
