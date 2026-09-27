@@ -1,4 +1,4 @@
-# DOC-FLOW — Data schema (Firestore)
+# Beyond Doc — Data schema (Firestore)
 
 เอกสารอ้างอิงโครงสร้างข้อมูลหลักของแอป ตาม `src/types/index.ts`, การเขียน Firestore ใน `src/lib/firebase/`, และ `firestore.rules`
 

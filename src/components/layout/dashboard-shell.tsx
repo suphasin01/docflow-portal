@@ -1,31 +1,65 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { Tooltip } from "@heroui/react";
+import { AppLayout, Navbar, Sidebar } from "@heroui-pro/react";
+import type { ReactNode } from "react";
 import { AppSidebar } from "./app-sidebar";
-import { cn } from "@/lib/utils";
+import { mainNav } from "@/lib/navigation";
 
-export function DashboardShell({ children }: { children: ReactNode }) {
-  const [collapsed, setCollapsed] = useState(false);
+const ROUTE_TITLES: Record<string, string> = {
+  "/documents/detail": "รายละเอียดเอกสาร",
+  "/settings": "ตั้งค่า",
+};
 
-  useEffect(() => {
-    const raw = window.localStorage.getItem("sidebar-collapsed");
-    setCollapsed(raw === "1");
-  }, []);
+function currentTitle(pathname: string) {
+  if (ROUTE_TITLES[pathname]) return ROUTE_TITLES[pathname];
+  return (
+    [...mainNav]
+      .sort((a, b) => b.href.length - a.href.length)
+      .find((item) =>
+        item.href === "/"
+          ? pathname === "/"
+          : pathname.startsWith(item.href),
+      )?.label ?? "Beyond Doc"
+  );
+}
 
-  function toggleCollapsed() {
-    setCollapsed((prev) => {
-      const next = !prev;
-      window.localStorage.setItem("sidebar-collapsed", next ? "1" : "0");
-      return next;
-    });
-  }
+function AppNavbar() {
+  const pathname = usePathname();
 
   return (
-    <div className="min-h-screen bg-[#f1f3f6]">
-      <AppSidebar collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
-      <div className={cn("min-h-screen transition-[padding] duration-200", collapsed ? "pl-[84px]" : "pl-[260px]")}>
-        {children}
-      </div>
-    </div>
+    <Navbar className="border-b border-border bg-background/95 backdrop-blur" maxWidth="full">
+      <Navbar.Header>
+        <AppLayout.MenuToggle tooltip="เปิดเมนู" />
+        <Tooltip delay={0}>
+          <Sidebar.Trigger aria-label="ย่อหรือขยายเมนู" />
+          <Tooltip.Content placement="bottom">
+            ย่อหรือขยายเมนู
+          </Tooltip.Content>
+        </Tooltip>
+        <span className="truncate text-sm font-semibold">
+          {currentTitle(pathname)}
+        </span>
+        <Navbar.Spacer />
+      </Navbar.Header>
+    </Navbar>
+  );
+}
+
+export function DashboardShell({ children }: { children: ReactNode }) {
+  const router = useRouter();
+
+  return (
+    <AppLayout
+      className="bg-surface-secondary"
+      navbar={<AppNavbar />}
+      sidebar={<AppSidebar />}
+      sidebarCollapsible="icon"
+      scrollMode="content"
+      navigate={(href) => router.push(href)}
+    >
+      {children}
+    </AppLayout>
   );
 }

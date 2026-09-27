@@ -2,47 +2,44 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { Card, Spinner } from "@heroui/react";
 import { useAuth } from "@/components/providers/auth-provider";
-import { Skeleton } from "@/components/ui/skeleton";
 
 export function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { user, loading, firebaseReady, accessStatus } = useAuth();
+  const { sessionPhase } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!firebaseReady || loading) return;
-
-    if (!user) {
-      router.replace("/login");
-      return;
-    }
-
-    if (accessStatus !== "approved") {
+    if (
+      sessionPhase === "signed_out" ||
+      sessionPhase === "pending" ||
+      sessionPhase === "rejected"
+    ) {
       router.replace("/login");
     }
-  }, [accessStatus, firebaseReady, loading, router, user]);
+  }, [router, sessionPhase]);
 
-  if (!firebaseReady) {
+  if (sessionPhase === "unconfigured") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f1f3f6] p-6">
-        <div className="w-full max-w-md space-y-4 rounded-2xl border border-border/80 bg-white p-8 shadow-sm">
-          <Skeleton className="h-8 w-48" />
-          <p className="text-sm text-muted-foreground">
-            ยังไม่ได้ตั้งค่า Firebase กรุณาเพิ่มค่าในไฟล์{" "}
-            <code className="rounded bg-muted px-1">.env.local</code>
-          </p>
-        </div>
+      <div className="flex min-h-screen items-center justify-center bg-surface-secondary p-6">
+        <Card className="w-full max-w-md">
+          <Card.Content className="p-8">
+            <h1 className="text-xl font-semibold">ตั้งค่า Firebase</h1>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              ยังไม่ได้ตั้งค่า Firebase กรุณาเพิ่มค่าในไฟล์{" "}
+              <code className="rounded bg-default px-1.5 py-0.5">.env.local</code>
+            </p>
+          </Card.Content>
+        </Card>
       </div>
     );
   }
 
-  if (loading || !user || accessStatus !== "approved") {
+  if (sessionPhase !== "approved") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f1f3f6]">
-        <div className="w-full max-w-lg space-y-4 p-6">
-          <Skeleton className="h-10 w-full rounded-xl" />
-          <Skeleton className="h-64 w-full rounded-2xl" />
-        </div>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-surface-secondary">
+        <Spinner size="lg" />
+        <p className="text-sm text-muted-foreground">กำลังตรวจสอบ session…</p>
       </div>
     );
   }

@@ -176,7 +176,7 @@ export function UsersPage() {
     <div className="min-h-screen">
       <AppHeader
         title="จัดการผู้ใช้"
-        subtitle="ตรวจสอบคำขอและควบคุมสิทธิ์เข้าใช้งาน DOC FLOW"
+        subtitle="ตรวจสอบคำขอและควบคุมสิทธิ์เข้าใช้งาน Beyond Doc"
         showTrialBanner={false}
       />
 

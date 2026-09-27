@@ -14,7 +14,7 @@ export const mockCompany: Partial<Company> & { name: string } = {
   branch: "สำนักงานใหญ่",
   address: "เลขที่ 88 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110",
   phone: "02-123-4567",
-  email: "contact@docflow.example",
+  email: "contact@beyonddoc.example",
 };
 
 export const mockCustomers: Omit<

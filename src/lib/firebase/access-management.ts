@@ -71,41 +71,55 @@ export async function resolveInitialAccess(user: User): Promise<{
   if (!db) throw new Error("Firestore ยังไม่พร้อม");
 
   const controlRef = doc(db, "accessControl", user.uid);
-  const controlSnap = await getDoc(controlRef);
-  if (controlSnap.exists()) {
+  const requestRef = doc(db, "accessRequests", user.uid);
+  const [controlSnap, requestSnap] = await Promise.all([
+    getDoc(controlRef),
+    getDoc(requestRef),
+  ]);
+
+  if (controlSnap.exists() && controlSnap.data().status === "approved") {
     const data = controlSnap.data();
-    const status = asAccessStatus(data.status);
     return {
-      status,
-      role:
-        status === "approved" && data.role === "admin"
-          ? "admin"
-          : status === "approved"
-            ? "user"
-            : null,
+      status: "approved",
+      role: data.role === "admin" ? "admin" : "user",
     };
   }
 
-  const requestRef = doc(db, "accessRequests", user.uid);
-  const requestSnap = await getDoc(requestRef);
-  if (requestSnap.exists() && requestSnap.data().status === "rejected") {
+  if (requestSnap.exists() && requestSnap.data().status === "pending") {
+    return { status: "pending", role: null };
+  }
+
+  if (
+    (requestSnap.exists() && requestSnap.data().status === "rejected") ||
+    (controlSnap.exists() && controlSnap.data().status === "rejected")
+  ) {
     return { status: "rejected", role: null };
   }
 
+  await requestAccess(user, false);
+
+  return { status: "pending", role: null };
+}
+
+export async function requestAccess(user: User, restart = true) {
+  const db = getFirebaseDb();
+  if (!db) throw new Error("Firestore ยังไม่พร้อม");
+
+  const requestRef = doc(db, "accessRequests", user.uid);
+  const requestSnap = await getDoc(requestRef);
   await setDoc(
     requestRef,
     {
       ...userIdentity(user),
       status: "pending",
-      requestedAt: requestSnap.exists()
-        ? (requestSnap.data().requestedAt ?? serverTimestamp())
-        : serverTimestamp(),
+      requestedAt:
+        restart || !requestSnap.exists()
+          ? serverTimestamp()
+          : (requestSnap.data().requestedAt ?? serverTimestamp()),
       updatedAt: serverTimestamp(),
     },
     { merge: true },
   );
-
-  return { status: "pending", role: null };
 }
 
 export function subscribeOwnAccess(
@@ -116,27 +130,65 @@ export function subscribeOwnAccess(
   const db = getFirebaseDb();
   if (!db) throw new Error("Firestore ยังไม่พร้อม");
 
-  return onSnapshot(
+  let controlLoaded = false;
+  let requestLoaded = false;
+  let control: DocumentData | null = null;
+  let request: DocumentData | null = null;
+  let reportedError = false;
+
+  const reportError = (error: Error) => {
+    if (reportedError) return;
+    reportedError = true;
+    onError(error);
+  };
+
+  const emit = () => {
+    if (!controlLoaded || !requestLoaded) return;
+
+    if (control?.status === "approved") {
+      callback({
+        status: "approved",
+        role: control.role === "admin" ? "admin" : "user",
+      });
+      return;
+    }
+
+    if (request?.status === "pending") {
+      callback({ status: "pending", role: null });
+      return;
+    }
+
+    if (request?.status === "rejected" || control?.status === "rejected") {
+      callback({ status: "rejected", role: null });
+      return;
+    }
+
+    callback({ status: "pending", role: null });
+  };
+
+  const stopControl = onSnapshot(
     doc(db, "accessControl", uid),
     (snapshot) => {
-      if (!snapshot.exists()) {
-        callback({ status: "pending", role: null });
-        return;
-      }
-      const data = snapshot.data();
-      const status = asAccessStatus(data.status);
-      callback({
-        status,
-        role:
-          status === "approved" && data.role === "admin"
-            ? "admin"
-            : status === "approved"
-              ? "user"
-              : null,
-      });
+      controlLoaded = true;
+      control = snapshot.exists() ? snapshot.data() : null;
+      emit();
     },
-    (error) => onError(error),
+    reportError,
   );
+  const stopRequest = onSnapshot(
+    doc(db, "accessRequests", uid),
+    (snapshot) => {
+      requestLoaded = true;
+      request = snapshot.exists() ? snapshot.data() : null;
+      emit();
+    },
+    reportError,
+  );
+
+  return () => {
+    stopControl();
+    stopRequest();
+  };
 }
 
 function mapRequest(id: string, data: DocumentData): AccessRequestRecord {

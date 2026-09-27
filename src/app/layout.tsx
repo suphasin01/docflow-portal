@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DOC FLOW — จัดการเอกสารธุรกิจ",
+  title: "Beyond Doc — จัดการเอกสารธุรกิจ",
   description:
     "แอปพลิเคชันจัดการเอกสารสำหรับ SME ไทย — แดชบอร์ด ออกเอกสาร ติดตามชำระเงิน และรายงาน",
 };

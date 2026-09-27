@@ -27,7 +27,7 @@ export function SidebarHeader({
       </div>
       {!collapsed ? (
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold tracking-tight">DOC FLOW</p>
+          <p className="truncate text-sm font-semibold tracking-tight">Beyond Doc</p>
           <p className="truncate text-xs text-white/60">จัดการเอกสารธุรกิจ</p>
         </div>
       ) : null}

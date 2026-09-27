@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -20,6 +21,7 @@ import {
 import { doc, getDoc } from "firebase/firestore";
 import { isBootstrapAdminEmail } from "@/config/allowed-auth";
 import {
+  requestAccess as submitAccessRequest,
   resolveInitialAccess,
   subscribeOwnAccess,
   type AccessRole,
@@ -31,17 +33,30 @@ import { bootstrapUserCompanies } from "@/lib/firebase/bootstrap-profile";
 import { useCompanyStore } from "@/stores/company-store";
 import type { UserProfile } from "@/types";
 
+export type SessionPhase =
+  | "unconfigured"
+  | "initializing"
+  | "signed_out"
+  | "checking"
+  | "pending"
+  | "rejected"
+  | "approved";
+
 type AuthState = {
   user: User | null;
   loading: boolean;
+  profileLoading: boolean;
   profile: UserProfile | null;
   firebaseReady: boolean;
+  sessionPhase: SessionPhase;
   accessStatus: AccessStatus;
   accessRole: AccessRole | null;
   accessError: string | null;
   signInGoogle: () => Promise<void>;
   signInEmail: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  refreshAccess: () => Promise<void>;
+  requestAccess: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 };
 
@@ -50,12 +65,14 @@ const AuthContext = createContext<AuthState | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [accessStatus, setAccessStatus] =
     useState<AccessStatus>("checking");
   const [accessRole, setAccessRole] = useState<AccessRole | null>(null);
   const [accessError, setAccessError] = useState<string | null>(null);
   const firebaseReady = isFirebaseConfigured();
+  const activeUidRef = useRef<string | null>(null);
 
   const { setCompanies, setCompaniesLoading, resetCompanyStore } =
     useCompanyStore();
@@ -64,20 +81,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (currentUser: User) => {
       const db = getFirebaseDb();
       if (!db) return;
+      const isStillActive = () => activeUidRef.current === currentUser.uid;
 
+      setProfileLoading(true);
       setCompaniesLoading(true);
       try {
         const companies = await bootstrapUserCompanies(currentUser);
+        if (!isStillActive()) return;
         setCompanies(companies);
-      } catch (error) {
-        console.error("bootstrap companies error:", error);
         setCompaniesLoading(false);
-        throw error;
-      }
 
-      const ref = doc(db, "users", currentUser.uid);
-      const snapshot = await getDoc(ref);
-      setProfile(snapshot.exists() ? (snapshot.data() as UserProfile) : null);
+        const ref = doc(db, "users", currentUser.uid);
+        const snapshot = await getDoc(ref);
+        if (!isStillActive()) return;
+        setProfile(snapshot.exists() ? (snapshot.data() as UserProfile) : null);
+      } finally {
+        if (isStillActive()) {
+          setProfileLoading(false);
+          setCompaniesLoading(false);
+        }
+      }
     },
     [setCompanies, setCompaniesLoading],
   );
@@ -95,40 +118,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     let disposed = false;
+    let revision = 0;
     let stopAccessListener: (() => void) | undefined;
     let profileLoadedForUid: string | null = null;
 
-    async function applyApprovedAccess(
+    const isCurrent = (value: number) => !disposed && revision === value;
+
+    const applyApprovedAccess = (
       currentUser: User,
       role: AccessRole,
-    ) {
-      if (disposed) return;
+      currentRevision: number,
+    ) => {
+      if (!isCurrent(currentRevision)) return;
+
       setAccessStatus("approved");
       setAccessRole(role);
       setAccessError(null);
+      // ปลดหน้าแอปทันทีเมื่อสิทธิ์ผ่าน ไม่ผูก session กับการโหลดข้อมูลบริษัท
+      setLoading(false);
 
-      if (profileLoadedForUid !== currentUser.uid) {
-        profileLoadedForUid = currentUser.uid;
-        try {
-          await loadProfile(currentUser);
-        } catch (error) {
-          if (disposed) return;
-          setAccessError(
-            error instanceof Error ? error.message : "โหลดข้อมูลผู้ใช้ไม่สำเร็จ",
-          );
-        }
-      }
-      if (!disposed) setLoading(false);
-    }
+      if (profileLoadedForUid === currentUser.uid) return;
+      profileLoadedForUid = currentUser.uid;
+      void loadProfile(currentUser).catch((error) => {
+        if (!isCurrent(currentRevision)) return;
+        console.error("load profile error:", error);
+        setAccessError(
+          error instanceof Error ? error.message : "โหลดข้อมูลผู้ใช้ไม่สำเร็จ",
+        );
+      });
+    };
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
+      const currentRevision = ++revision;
       stopAccessListener?.();
       stopAccessListener = undefined;
       profileLoadedForUid = null;
 
-      if (disposed) return;
+      if (!isCurrent(currentRevision)) return;
+      activeUidRef.current = currentUser?.uid ?? null;
       setUser(currentUser);
       setProfile(null);
+      setProfileLoading(false);
       setAccessError(null);
       setAccessRole(null);
       setAccessStatus("checking");
@@ -146,16 +176,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           currentUser.emailVerified,
         )
       ) {
-        await applyApprovedAccess(currentUser, "admin");
+        applyApprovedAccess(currentUser, "admin", currentRevision);
         return;
       }
 
       try {
         const initial = await resolveInitialAccess(currentUser);
-        if (disposed) return;
+        if (!isCurrent(currentRevision)) return;
 
         if (initial.status === "approved" && initial.role) {
-          await applyApprovedAccess(currentUser, initial.role);
+          applyApprovedAccess(currentUser, initial.role, currentRevision);
         } else {
           setAccessStatus(initial.status);
           setAccessRole(null);
@@ -165,9 +195,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         stopAccessListener = subscribeOwnAccess(
           currentUser.uid,
           (next) => {
-            if (disposed) return;
+            if (!isCurrent(currentRevision)) return;
             if (next.status === "approved" && next.role) {
-              void applyApprovedAccess(currentUser, next.role);
+              applyApprovedAccess(currentUser, next.role, currentRevision);
               return;
             }
 
@@ -179,20 +209,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setLoading(false);
           },
           (error) => {
-            if (disposed) return;
+            if (!isCurrent(currentRevision)) return;
             console.error("access listener error:", error);
             setAccessError(error.message);
             setLoading(false);
           },
         );
       } catch (error) {
-        if (disposed) return;
+        if (!isCurrent(currentRevision)) return;
         console.error("resolve access error:", error);
         setAccessStatus("pending");
         setAccessError(
           error instanceof Error
             ? error.message
-            : "ไม่สามารถส่งคำขอเข้าใช้งานได้",
+            : "ไม่สามารถตรวจสอบสิทธิ์เข้าใช้งานได้",
         );
         setLoading(false);
       }
@@ -200,6 +230,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       disposed = true;
+      revision += 1;
+      activeUidRef.current = null;
       stopAccessListener?.();
       unsubscribeAuth();
     };
@@ -222,38 +254,98 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     const auth = getFirebaseAuth();
     if (!auth) return;
-    await firebaseSignOut(auth);
+    setLoading(true);
+    try {
+      await firebaseSignOut(auth);
+    } catch (error) {
+      setLoading(false);
+      throw error;
+    }
   }, []);
+
+  const refreshAccess = useCallback(async () => {
+    if (!user) return;
+
+    setAccessError(null);
+    setAccessStatus("checking");
+    setLoading(true);
+    try {
+      const next = await resolveInitialAccess(user);
+      setAccessStatus(next.status);
+      setAccessRole(next.role);
+      if (next.status === "approved" && next.role) {
+        setLoading(false);
+        void loadProfile(user).catch((error) => {
+          console.error("refresh profile error:", error);
+          setAccessError(
+            error instanceof Error
+              ? error.message
+              : "โหลดข้อมูลผู้ใช้ไม่สำเร็จ",
+          );
+        });
+      }
+    } catch (error) {
+      setAccessError(
+        error instanceof Error ? error.message : "ตรวจสอบสิทธิ์ไม่สำเร็จ",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [loadProfile, user]);
+
+  const requestAccess = useCallback(async () => {
+    if (!user) return;
+    setAccessError(null);
+    await submitAccessRequest(user);
+    setAccessStatus("pending");
+    setAccessRole(null);
+  }, [user]);
 
   const refreshProfile = useCallback(async () => {
     if (user && accessStatus === "approved") await loadProfile(user);
   }, [accessStatus, loadProfile, user]);
 
+  const sessionPhase = useMemo<SessionPhase>(() => {
+    if (!firebaseReady) return "unconfigured";
+    if (loading && !user) return "initializing";
+    if (!user) return "signed_out";
+    if (loading || accessStatus === "checking") return "checking";
+    return accessStatus;
+  }, [accessStatus, firebaseReady, loading, user]);
+
   const value = useMemo(
     () => ({
       user,
       loading,
+      profileLoading,
       profile,
       firebaseReady,
+      sessionPhase,
       accessStatus,
       accessRole,
       accessError,
       signInGoogle,
       signInEmail,
       signOut,
+      refreshAccess,
+      requestAccess,
       refreshProfile,
     }),
     [
       user,
       loading,
+      profileLoading,
       profile,
       firebaseReady,
+      sessionPhase,
       accessStatus,
       accessRole,
       accessError,
       signInGoogle,
       signInEmail,
       signOut,
+      refreshAccess,
+      requestAccess,
       refreshProfile,
     ],
   );

@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "@heroui/styles";
+@import "@heroui-pro/react/css";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
@@ -145,6 +147,12 @@
   html {
     @apply font-sans;
   }
+}
+
+/* HeroUI ใช้ `muted` เป็นสีตัวอักษร ขณะที่ธีมเดิมใช้ token เดียวกันเป็นพื้นหลัง */
+.sidebar__group-label,
+.sidebar__menu-icon {
+  color: var(--muted-foreground);
 }
 
 /* ── ไม่มี @media print แล้ว — ใช้ html2canvas render ทั้ง print และ download ── */

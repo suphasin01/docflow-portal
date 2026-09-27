@@ -9,7 +9,8 @@ import {
 import type { Company } from "@/types";
 
 /** ต้องตรงกับ `name` ใน persist — ใช้อ่านก่อน rehydrate เสร็จ */
-const ACTIVE_COMPANY_STORAGE_KEY = "docflow-active-company";
+const ACTIVE_COMPANY_STORAGE_KEY = "beyond-doc-active-company";
+const LEGACY_ACTIVE_COMPANY_STORAGE_KEY = "docflow-active-company";
 
 type PersistedCompanySlice = { activeCompanyId: string | null };
 
@@ -51,7 +52,9 @@ function createLazyLocalStorage(): PersistStorage<PersistedCompanySlice> {
 function readPersistedActiveCompanyId(): string | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem(ACTIVE_COMPANY_STORAGE_KEY);
+    const raw =
+      window.localStorage.getItem(ACTIVE_COMPANY_STORAGE_KEY) ??
+      window.localStorage.getItem(LEGACY_ACTIVE_COMPANY_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as StorageValue<PersistedCompanySlice>;
     const id = parsed?.state?.activeCompanyId;

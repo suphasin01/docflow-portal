@@ -9,8 +9,10 @@ import { useUserCompanies } from "@/hooks/use-workspace-data";
  * ต้องอยู่ใต้ AuthProvider
  */
 function CompanyProviderInner({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
-  useUserCompanies(user?.uid ?? null);
+  const { user, accessStatus } = useAuth();
+  // อย่าเปิด listener ของข้อมูลบริษัทก่อนตรวจสิทธิ์เสร็จ เพราะจะเกิด
+  // permission-denied ระหว่างหน้า login และทำให้ session ดูเหมือนค้าง
+  useUserCompanies(accessStatus === "approved" ? (user?.uid ?? null) : null);
   return <>{children}</>;
 }
 
