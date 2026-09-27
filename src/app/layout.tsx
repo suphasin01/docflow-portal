@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Manrope, Noto_Sans_Thai } from "next/font/google";
 import "./globals.css";
 import { AppProviders } from "@/components/providers/app-providers";
@@ -23,6 +23,12 @@ export const metadata: Metadata = {
   title: "Beyond Doc — จัดการเอกสารธุรกิจ",
   description:
     "แอปพลิเคชันจัดการเอกสารสำหรับ SME ไทย — แดชบอร์ด ออกเอกสาร ติดตามชำระเงิน และรายงาน",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

@@ -81,7 +81,7 @@ function SectionCard({
 }) {
   return (
     <div className="glass-panel overflow-hidden">
-      <div className="flex items-center gap-3 border-b border-separator px-6 py-4">
+      <div className="flex items-center gap-3 border-b border-separator px-4 py-4 sm:px-6">
         <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-surface-secondary text-muted-foreground">
           <Icon className="size-4" />
         </span>
@@ -96,7 +96,7 @@ function SectionCard({
         )}
         {action && <div className="ml-auto">{action}</div>}
       </div>
-      <div className="px-6 py-5">{children}</div>
+      <div className="px-4 py-5 sm:px-6">{children}</div>
     </div>
   );
 }
@@ -224,7 +224,7 @@ function OfficeTypeFields({
       </div>
 
       {officeType === "branch" && (
-        <div className="grid grid-cols-2 gap-4 rounded-xl border border-separator bg-surface-secondary p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-xl border border-separator bg-surface-secondary p-4">
           <div className="space-y-2">
             <Label className="text-sm font-medium">
               ชื่อสาขา <span className="text-destructive">*</span>
@@ -564,7 +564,7 @@ export function DocumentCreateStep1({
 
   if (!settingsLoaded && activeCompanyId) {
     return (
-      <div className="space-y-4 px-6 py-8">
+      <div className="space-y-4 px-4 py-6 sm:px-6 sm:py-8">
         {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-48 w-full rounded-2xl" />
         ))}
@@ -573,7 +573,7 @@ export function DocumentCreateStep1({
   }
 
   return (
-    <form onSubmit={handleSubmit(onNext)} className="space-y-5 px-6 py-8">
+    <form onSubmit={handleSubmit(onNext)} className="space-y-5 px-4 py-6 sm:px-6 sm:py-8">
       {/* ═══════════════════════════════════════════════════════
             SECTION 1: ออกเอกสารในนาม
         ════════════════════════════════════════════════════════ */}
@@ -616,8 +616,8 @@ export function DocumentCreateStep1({
             expanded={companyExpanded}
             onToggle={() => setCompanyExpanded((v) => !v)}
           >
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2 space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="col-span-full space-y-2">
                 <Label className="text-sm font-medium">
                   ชื่อบริษัท <span className="text-destructive">*</span>
                 </Label>
@@ -631,7 +631,7 @@ export function DocumentCreateStep1({
                   </p>
                 )}
               </div>
-              <div className="col-span-2 space-y-2">
+              <div className="col-span-full space-y-2">
                 <Label className="text-sm font-medium">ที่อยู่</Label>
                 <Textarea
                   className="min-h-[72px] resize-none rounded-xl"
@@ -659,7 +659,7 @@ export function DocumentCreateStep1({
                   {...register("companySnapshot.taxId")}
                 />
               </div>
-              <div className="col-span-2">
+              <div className="col-span-full">
                 <OfficeTypeFields prefix="companySnapshot" form={form} />
               </div>
             </div>
@@ -923,8 +923,8 @@ export function DocumentCreateStep1({
           </div>
 
           <div className="space-y-4 rounded-xl border border-separator p-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2 space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="col-span-full space-y-2">
                 <Label className="text-sm font-medium">
                   {partnerRole === "vendor" ? "ชื่อผู้ขาย" : "ชื่อลูกค้า"}
                 </Label>
@@ -961,14 +961,14 @@ export function DocumentCreateStep1({
                   {...register("partnerSnapshot.email")}
                 />
               </div>
-              <div className="col-span-2 space-y-2">
+              <div className="col-span-full space-y-2">
                 <Label className="text-sm font-medium">ที่อยู่</Label>
                 <Textarea
                   className="min-h-[72px] resize-none rounded-xl"
                   {...register("partnerSnapshot.address")}
                 />
               </div>
-              <div className="col-span-2">
+              <div className="col-span-full">
                 <OfficeTypeFields prefix="partnerSnapshot" form={form} />
               </div>
             </div>
@@ -982,7 +982,7 @@ export function DocumentCreateStep1({
       {/* ═══════════════════════════════════════════════════════
             FOOTER ACTIONS
         ════════════════════════════════════════════════════════ */}
-      <div className="glass-toolbar sticky bottom-0 flex items-center justify-between gap-3 rounded-2xl border px-6 py-4">
+      <div className="wizard-actions glass-toolbar sticky bottom-0 flex flex-wrap items-center justify-between gap-2 rounded-2xl border px-4 py-4 sm:px-6">
         <Button
           type="button"
           variant="ghost"
@@ -993,7 +993,7 @@ export function DocumentCreateStep1({
           รีเซ็ต
         </Button>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
             variant="outline"

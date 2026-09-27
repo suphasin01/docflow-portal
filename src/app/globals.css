@@ -175,4 +175,75 @@ html[data-theme="glass-dark"] {
   color: var(--muted);
 }
 
+/* Layout rules stay scoped to the workspace, not the printable document. */
+.workspace-layout {
+  padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
+}
+
+.workspace-layout .app-layout__main {
+  scroll-padding-block: 1rem 7rem;
+}
+
+.wizard-actions {
+  z-index: 25;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+[data-slot="dialog-content"] {
+  max-height: calc(100dvh - 2rem);
+}
+
+[data-slot="dialog-header"],
+[data-slot="dialog-footer"] {
+  flex-shrink: 0;
+}
+
+[data-slot="dialog-header"] { padding-right: 2.5rem; }
+[data-slot="select-content"] { max-width: calc(100vw - 2rem); }
+
+@media (max-width: 639px) {
+  .wizard-actions { padding-inline: 0.75rem; }
+  .wizard-actions .button { min-height: 2.75rem; padding-inline: 0.75rem; }
+  .workspace-layout .navbar__header { padding-top: env(safe-area-inset-top); }
+}
+
+@media (pointer: coarse) {
+  /* Avoid iOS focus zoom without disabling the user's ability to zoom. */
+  :is(.workspace-layout, [data-slot="dialog-content"]) :is(input, textarea, select) {
+    font-size: max(1rem, 1em);
+  }
+  .workspace-layout .button,
+  [data-slot="dialog-content"] .button { min-height: 2.75rem; }
+}
+
 /* ── ไม่มี @media print แล้ว — ใช้ html2canvas render ทั้ง print และ download ── */
+
+/* Opacity-only page transitions preserve sticky/fixed positioning in forms. */
+@keyframes page-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes section-enter {
+  from { opacity: 0; translate: 0 6px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page-enter { animation: page-enter 180ms ease-out; }
+  .dashboard-sections > *, .dashboard-metrics > * {
+    animation: section-enter 320ms cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  }
+  .dashboard-sections > :nth-child(2), .dashboard-metrics > :nth-child(2) { animation-delay: 35ms; }
+  .dashboard-sections > :nth-child(3), .dashboard-metrics > :nth-child(3) { animation-delay: 70ms; }
+  .dashboard-sections > :nth-child(n+4), .dashboard-metrics > :nth-child(4) { animation-delay: 105ms; }
+  .quick-action { transition: translate 160ms ease-out, background-color 160ms ease-out; }
+  .quick-action:hover { translate: 0 -2px; }
+  .quick-action:active { translate: 0 0; }
+}
+
+[data-reduce-motion="true"] :is(.page-enter, .dashboard-sections > *, .dashboard-metrics > *, .quick-action) {
+  animation: none;
+  transition: none;
+  translate: none;
+}

@@ -233,7 +233,7 @@ function CatalogFormModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[90vh] flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:max-w-xl">
-        <DialogHeader className="flex-shrink-0 border-b border-border/60 px-6 py-5">
+        <DialogHeader className="flex-shrink-0 border-b border-border/60 px-4 py-5 sm:px-6">
           <DialogTitle className="text-lg font-semibold">
             {modalTitle}
           </DialogTitle>
@@ -243,7 +243,7 @@ function CatalogFormModal({
           <form
             id="catalog-form"
             onSubmit={handleSubmit(onSubmit)}
-            className="space-y-5 px-6 py-5"
+            className="space-y-5 px-4 py-5 sm:px-6"
           >
             {/* ─── รหัส ─── */}
             <div className="space-y-2">
@@ -331,7 +331,7 @@ function CatalogFormModal({
             </div>
 
             {/* ─── ราคาขาย / ราคาซื้อ ─── */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-sm font-medium">
                   ราคาขาย <span className="text-destructive">*</span>
@@ -438,7 +438,7 @@ function CatalogFormModal({
         </ScrollArea>
 
         {/* ─── Footer ─── */}
-        <div className="flex shrink-0 items-center justify-end gap-3 border-t border-border/60 bg-surface px-6 py-4">
+        <div className="flex shrink-0 items-center justify-end gap-3 border-t border-border/60 bg-surface px-4 py-4 sm:px-6">
           <Button
             type="button"
             variant="outline"
@@ -583,7 +583,7 @@ export function CatalogPage() {
     });
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-[calc(100dvh-4rem)]">
       <AppHeader
         title="สินค้า / บริการ"
         subtitle="จัดการสินค้าและบริการ"
@@ -600,10 +600,10 @@ export function CatalogPage() {
         }
       />
 
-      <div className="space-y-5 px-6 py-8">
+      <div className="space-y-5 px-4 py-6 sm:px-6 sm:py-8">
         {/* ─── Search + filter ─── */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative min-w-[260px] flex-1">
+          <div className="relative min-w-0 basis-full sm:basis-64 flex-1">
             <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               className="rounded-xl pl-10"

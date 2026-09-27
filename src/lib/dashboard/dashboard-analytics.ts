@@ -199,6 +199,29 @@ export function computeKpis(docs: DashDoc[]): DashboardKpis {
   return { salesTotal, paidTotal, outstandingTotal, documentCount };
 }
 
+export type PaymentDistribution = {
+  key: string;
+  name: string;
+  value: number;
+  fill: string;
+};
+
+/** Count payment-enabled documents, not money: partial payments have no paid-amount field. */
+export function computePaymentDistribution(docs: DashDoc[]): PaymentDistribution[] {
+  const buckets: PaymentDistribution[] = [
+    { key: "paid", name: "ชำระแล้ว", value: 0, fill: "var(--success)" },
+    { key: "partial", name: "ชำระบางส่วน", value: 0, fill: "var(--chart-2)" },
+    { key: "unpaid", name: "ยังไม่ชำระ", value: 0, fill: "var(--muted)" },
+    { key: "overdue", name: "เกินกำหนด", value: 0, fill: "var(--danger)" },
+  ];
+  for (const doc of docs) {
+    if (doc.status === "cancelled" || doc.status === "draft" || !documentTypeSupportsPaymentStatus(doc.type)) continue;
+    const bucket = buckets.find((item) => item.key === effectivePaymentKey(doc));
+    if (bucket) bucket.value += 1;
+  }
+  return buckets;
+}
+
 /** แนวโน้ม 6 เดือน — ไม่ใช้ตัวกรองวันที่ของแดชบอร์ด ใช้แค่ flow + ประเภท */
 export function computeSixMonthTrend(
   allDocs: DashDoc[],

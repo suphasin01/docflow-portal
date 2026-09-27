@@ -6,11 +6,11 @@ import { cn } from "@/lib/utils";
 
 export function DashboardQuickActions() {
   return (
-    <div className="flex flex-wrap gap-3">
+    <div className="flex flex-wrap gap-3 [&>a]:focus-visible:outline-2 [&>a]:focus-visible:outline-offset-4 [&>a]:focus-visible:outline-focus">
       <Link
         href="/documents/create"
         className={cn(
-          "inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-accent px-6 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-hover",
+          "quick-action inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-accent px-6 text-sm font-medium text-accent-foreground hover:bg-accent-hover",
         )}
       >
         <FileEdit className="size-4" />
@@ -19,7 +19,7 @@ export function DashboardQuickActions() {
       <Link
         href="/payments"
         className={cn(
-          "glass-surface inline-flex h-11 items-center justify-center gap-2 rounded-xl border px-6 text-sm font-medium transition-colors hover:bg-surface-hover",
+          "quick-action glass-surface inline-flex h-11 items-center justify-center gap-2 rounded-xl border px-6 text-sm font-medium hover:bg-surface-hover",
         )}
       >
         <Wallet className="size-4" />
@@ -28,7 +28,7 @@ export function DashboardQuickActions() {
       <Link
         href="/documents/history"
         className={cn(
-          "glass-surface inline-flex h-11 items-center justify-center gap-2 rounded-xl border px-6 text-sm font-medium transition-colors hover:bg-surface-hover",
+          "quick-action glass-surface inline-flex h-11 items-center justify-center gap-2 rounded-xl border px-6 text-sm font-medium hover:bg-surface-hover",
         )}
       >
         <ClipboardList className="size-4" />

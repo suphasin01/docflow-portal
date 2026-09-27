@@ -321,7 +321,7 @@ function SignatureBlockCard({
           {/* Signature image */}
           <div className="space-y-1">
             <Label className="text-xs text-muted-foreground">รูปลายเซ็น</Label>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2">
               {imgUrl ? (
                 <div className="relative">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -896,7 +896,7 @@ export function mergeStep3Initial(
 interface Step3Props {
   step1Data: Step1FormValues | null;
   step2Data: Step2FormValues | null;
-  onBack: () => void;
+  onBack: (values: Step3FormValues) => void;
   onSave: (values: Step3FormValues) => void;
   onPreview?: (values: Step3FormValues) => void;
   initialValues?: Step3FormValues | null;
@@ -926,7 +926,7 @@ export function DocumentCreateStep3({
     ? (DOC_TYPE_CONFIG[step1Data.documentType as ExtDocType]?.label ?? "เอกสาร")
     : "เอกสาร";
 
-  const { control, watch, setValue, handleSubmit } = useForm<Step3FormValues>({
+  const { control, watch, setValue, handleSubmit, getValues } = useForm<Step3FormValues>({
     defaultValues: mergeStep3Initial(initialValues ?? undefined),
   });
 
@@ -1098,13 +1098,13 @@ export function DocumentCreateStep3({
       onSubmit={handleSubmit(onSave)}
       className="flex flex-col min-h-0 bg-surface-secondary/20"
     >
-      <div className="flex-1 px-6 py-6">
-        <div className="flex gap-6 items-start">
+      <div className="flex-1 px-4 py-6 sm:px-6">
+        <div className="flex flex-col items-stretch gap-6 xl:flex-row xl:items-start">
           {/* ── LEFT ── */}
           <div className="flex-1 min-w-0 space-y-5">
             {/* Section 1: Signature blocks */}
             <SectionCard title="ลงนามและตราประทับ" icon={PenLine}>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
                 {ROLES.map((role) => (
                   <SignatureBlockCard
                     key={role}
@@ -1373,25 +1373,25 @@ export function DocumentCreateStep3({
           </div>
 
           {/* ── RIGHT: sticky totals from Step 2 ── */}
-          <div className="w-72 shrink-0 sticky top-24">
+          <div className="w-full shrink-0 xl:sticky xl:top-24 xl:w-72">
             <Step3TotalsCard step2Data={step2Data} />
           </div>
         </div>
       </div>
 
       {/* Sticky footer */}
-      <div className="glass-toolbar sticky bottom-0 border-t px-6 py-4">
-        <div className="flex items-center justify-between gap-3">
+      <div className="wizard-actions glass-toolbar sticky bottom-0 border-t px-4 py-4 sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <Button
             type="button"
             variant="outline"
-            onClick={onBack}
+            onClick={() => onBack(getValues())}
             className="gap-2"
           >
             <ArrowLeft className="size-4" />
             ย้อนกลับ
           </Button>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               type="button"
               variant="outline"

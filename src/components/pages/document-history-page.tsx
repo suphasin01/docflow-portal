@@ -627,13 +627,13 @@ export function DocumentHistoryPage() {
   );
 
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="min-h-[calc(100dvh-4rem)] bg-transparent">
       <AppHeader
         title="ประวัติเอกสาร"
         subtitle="ดูและจัดการเอกสารที่บันทึกไว้"
       />
 
-      <div className="space-y-6 px-6 py-8">
+      <div className="space-y-6 px-4 py-6 sm:px-6 sm:py-8">
         <Card className="rounded-2xl border-border/80 bg-surface shadow-sm">
           <CardContent className="space-y-4 p-6">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
@@ -1059,8 +1059,8 @@ export function DocumentHistoryPage() {
       </div>
 
       {viewMode === "list" && selectedCount > 0 ? (
-        <div className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
-          <div className="pointer-events-auto flex flex-wrap items-center gap-3 rounded-full border border-separator bg-overlay px-5 py-3 text-sm text-overlay-foreground shadow-overlay">
+        <div className="pointer-events-none sticky bottom-4 z-40 flex justify-center px-4 pb-[env(safe-area-inset-bottom)]">
+          <div className="pointer-events-auto flex max-w-full flex-wrap items-center justify-center gap-2 rounded-2xl border border-separator bg-overlay px-4 py-3 text-sm text-overlay-foreground shadow-overlay sm:rounded-full">
             <span className="font-medium">
               เลือกแล้ว {selectedCount} รายการ
             </span>
@@ -1069,7 +1069,7 @@ export function DocumentHistoryPage() {
               type="button"
               variant="ghost"
               size="sm"
-              className="gap-2 rounded-full text-white hover:bg-surface/10 hover:text-white"
+              className="gap-2 rounded-full text-overlay-foreground hover:bg-default"
               disabled={bulkBusy}
               onClick={() => void handleBulkPrint()}
             >
@@ -1080,7 +1080,7 @@ export function DocumentHistoryPage() {
               type="button"
               variant="ghost"
               size="sm"
-              className="gap-2 rounded-full text-white hover:bg-surface/10 hover:text-white"
+              className="gap-2 rounded-full text-overlay-foreground hover:bg-default"
               disabled={bulkBusy}
               onClick={() => void handleBulkPdf()}
             >

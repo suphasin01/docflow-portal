@@ -7,12 +7,14 @@ import { DashboardKpiCards } from "@/components/dashboard/dashboard-kpi-cards";
 import { DashboardQuickActions } from "@/components/dashboard/dashboard-quick-actions";
 import { PendingWorkflowCard } from "@/components/dashboard/pending-workflow-card";
 import { SalesTrendChart } from "@/components/dashboard/sales-trend-chart";
+import { PaymentStatusChart } from "@/components/dashboard/payment-status-chart";
 import { TopCustomersCard } from "@/components/dashboard/top-customers-card";
 import { TopItemsCard } from "@/components/dashboard/top-items-card";
 import { UnpaidDocumentsCard } from "@/components/dashboard/unpaid-documents-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   computeKpis,
+  computePaymentDistribution,
   computePendingWorkflow,
   computeSixMonthTrend,
   computeTopItems,
@@ -67,6 +69,7 @@ export function DashboardPage() {
   );
 
   const kpis = useMemo(() => computeKpis(filteredDocs), [filteredDocs]);
+  const paymentDistribution = useMemo(() => computePaymentDistribution(filteredDocs), [filteredDocs]);
 
   const trend = useMemo(
     () => computeSixMonthTrend(rows, flow, docType),
@@ -97,9 +100,9 @@ export function DashboardPage() {
   );
 
   return (
-    <div className="min-h-screen bg-surface-secondary">
+    <div className="min-h-[calc(100dvh-4rem)]">
       <AppHeader title="แดชบอร์ด" subtitle="สรุปภาพรวมเอกสารและการเงิน" />
-      <div className="space-y-6 px-6 py-8">
+      <div className="dashboard-sections mx-auto max-w-[1600px] space-y-6 px-4 py-8 sm:px-6">
         <DashboardFilterBar
           datePreset={datePreset}
           onDatePresetChange={setDatePreset}
@@ -123,31 +126,34 @@ export function DashboardPage() {
             ))}
           </div>
         ) : (
-          <DashboardKpiCards kpis={kpis} periodHint={periodHint} />
+          <DashboardKpiCards kpis={kpis} periodHint={periodHint} flow={flow} />
         )}
 
         <div className="grid gap-6 xl:grid-cols-3">
-          <div className="space-y-6 xl:col-span-2">
+          <div className="min-w-0 xl:col-span-2">
             {loading ? (
               <Skeleton className="h-[380px] w-full rounded-2xl" />
             ) : (
-              <SalesTrendChart data={trend} />
+              <SalesTrendChart data={trend} flow={flow} />
             )}
           </div>
-          <div className="xl:col-span-1">
+          <div className="min-w-0 xl:col-span-1">
             {loading ? (
               <Skeleton className="h-[380px] w-full rounded-2xl" />
             ) : (
-              <TopCustomersCard rows={topPartners} title={topPartnersTitle} />
+              <PaymentStatusChart data={paymentDistribution} />
             )}
           </div>
         </div>
 
+        <div className="grid gap-6 xl:grid-cols-2">
+        {loading ? <Skeleton className="h-72 rounded-2xl" /> : <TopCustomersCard rows={topPartners} title={topPartnersTitle} />}
         {loading ? (
           <Skeleton className="h-72 w-full rounded-2xl" />
         ) : (
           <TopItemsCard rows={topItems} />
         )}
+        </div>
 
         {loading ? (
           <Skeleton className="h-64 w-full rounded-2xl" />

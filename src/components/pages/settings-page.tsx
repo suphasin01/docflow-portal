@@ -115,7 +115,7 @@ function SettingsCard({
 }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-border/60 bg-surface">
-      <div className="border-b border-border/60 px-6 py-5">
+      <div className="border-b border-border/60 px-4 py-5 sm:px-6">
         <div className="flex items-center gap-3">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-surface-secondary/60 text-muted-foreground">
             <Icon className="size-4" />
@@ -128,7 +128,7 @@ function SettingsCard({
           </div>
         </div>
       </div>
-      <div className="px-6 py-6">{children}</div>
+      <div className="px-4 py-6 sm:px-6">{children}</div>
     </div>
   );
 }
@@ -259,9 +259,9 @@ export function SettingsPage() {
 
   if (loadingSettings) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-[calc(100dvh-4rem)]">
         <AppHeader title="ตั้งค่า" subtitle="ฟอนต์ ธีม และค่าเริ่มต้น" />
-        <div className="space-y-5 px-6 py-8">
+        <div className="space-y-5 px-4 py-6 sm:px-6 sm:py-8">
           {[1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-48 w-full rounded-2xl" />
           ))}
@@ -271,7 +271,7 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-[calc(100dvh-4rem)]">
       <AppHeader
         title="ตั้งค่า"
         subtitle={
@@ -294,11 +294,11 @@ export function SettingsPage() {
       <form
         id="settings-form"
         onSubmit={handleSubmit(onSubmit)}
-        className="space-y-5 px-6 py-8"
+        className="space-y-5 px-4 py-6 sm:px-6 sm:py-8"
       >
         {/* ─────────────── CARD 1: ค่าเริ่มต้นเอกสาร ─────────────── */}
         <SettingsCard icon={FileText} title="ค่าเริ่มต้นเอกสาร">
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label className="text-sm font-medium">อัตรา VAT (%)</Label>
               <div className="relative">
@@ -393,7 +393,7 @@ export function SettingsPage() {
             </div>
 
             {/* จำนวนหลัก + ตัวคั่น */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-sm font-medium">จำนวนหลักลำดับ</Label>
                 <Input

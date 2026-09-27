@@ -209,7 +209,7 @@ function DocumentGroupTabs({
           onChange(v);
       }}
     >
-      <TabsList className="h-10 flex-wrap rounded-xl bg-surface-secondary p-1">
+      <TabsList className="grid w-full grid-cols-2 gap-1 rounded-xl bg-surface-secondary p-1 group-data-horizontal/tabs:h-auto sm:flex sm:w-fit [&>[role=tab]]:min-h-9">
         <TabsTrigger
           value="all"
           className="rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
@@ -276,7 +276,7 @@ function ReportSummaryCards({ stats }: { stats: SummaryStats }) {
         <span className="font-medium text-foreground"> ชำระแล้ว </span>
         (ประเภทที่ติดตามการชำระเงินในระบบ)
       </p>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map((c) => (
           <div
             key={c.title}
@@ -818,7 +818,7 @@ export function ReportsPage() {
     : "document_list";
 
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="min-h-[calc(100dvh-4rem)] bg-transparent">
       <AppHeader
         title="รายงานสรุปเอกสาร"
         subtitle="สรุปเอกสาร · งบกำไรขาดทุน"
@@ -844,7 +844,7 @@ export function ReportsPage() {
         initialCustomTo={customTo}
         initialReportType={initialExportReportType}
       />
-      <div className="space-y-6 px-6 py-8">
+      <div className="space-y-6 px-4 py-6 sm:px-6 sm:py-8">
         {loading ? (
           <p className="text-sm text-muted-foreground">กำลังโหลด…</p>
         ) : (

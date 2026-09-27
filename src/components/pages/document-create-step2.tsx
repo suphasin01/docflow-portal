@@ -258,7 +258,7 @@ function ItemPickerModal({
                     {item.itemType === "product" ? "สินค้า" : "บริการ"}
                   </Badge>
                 </div>
-                <div className="flex items-center gap-3 mt-0.5">
+                <div className="flex flex-wrap items-center gap-2 mt-0.5">
                   <span className="text-xs text-muted-foreground">
                     {item.code}
                   </span>
@@ -339,7 +339,7 @@ function SortableItemRow({
       className="glass-panel rounded-xl"
     >
       {/* Row top bar */}
-      <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+      <div className="flex flex-wrap items-center gap-2 px-3 pt-3 pb-2">
         <button
           type="button"
           className="cursor-grab touch-none text-muted-foreground hover:text-foreground transition-colors"
@@ -384,8 +384,8 @@ function SortableItemRow({
           )}
         </button>
 
-        {/* Title */}
-        <div className="flex-1 min-w-0">
+        {/* Give the item name its own row on phones. */}
+        <div className="order-last min-w-0 basis-full sm:order-none sm:flex-1 sm:basis-auto">
           {sourceType === "master" ? (
             <button
               type="button"
@@ -419,6 +419,7 @@ function SortableItemRow({
         <button
           type="button"
           onClick={onRemove}
+          aria-label={`ลบรายการที่ ${index + 1}`}
           disabled={totalRows <= 1}
           className="text-muted-foreground hover:text-destructive disabled:opacity-30 transition-colors"
         >
@@ -428,7 +429,7 @@ function SortableItemRow({
 
       {/* Description */}
       {columns.description && (
-        <div className="px-10 pb-2">
+        <div className="px-3 pb-2 sm:px-10">
           <Controller
             control={control}
             name={`items.${index}.description`}
@@ -445,7 +446,7 @@ function SortableItemRow({
       )}
 
       {/* Numeric fields row */}
-      <div className="flex flex-wrap items-end gap-3 px-10 pb-3">
+      <div className="flex flex-wrap items-end gap-3 px-3 pb-3 sm:px-10">
         {columns.quantity && (
           <div className="space-y-1">
             <Label className="text-xs text-muted-foreground">จำนวน</Label>
@@ -611,7 +612,7 @@ function SortableSummaryBlock({
       case "document_discount": {
         const enabled = watchFn("documentDiscount.enabled");
         return (
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex flex-wrap items-center gap-2">
             <Controller
               control={control}
               name="documentDiscount.enabled"
@@ -632,7 +633,7 @@ function SortableSummaryBlock({
               )}
             />
             {enabled && (
-              <div className="flex items-center gap-2 ml-auto">
+              <div className="flex flex-wrap items-center gap-2 ml-auto">
                 <Controller
                   control={control}
                   name="documentDiscount.type"
@@ -674,7 +675,7 @@ function SortableSummaryBlock({
       case "vat": {
         const enabled = watchFn("vat.enabled");
         return (
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex flex-wrap items-center gap-2">
             <Controller
               control={control}
               name="vat.enabled"
@@ -695,7 +696,7 @@ function SortableSummaryBlock({
               )}
             />
             {enabled && (
-              <div className="flex items-center gap-3 ml-auto flex-wrap">
+              <div className="flex flex-wrap items-center gap-2 ml-auto">
                 <div className="flex items-center gap-1.5">
                   <Label className="text-xs text-muted-foreground whitespace-nowrap">
                     อัตรา
@@ -748,7 +749,7 @@ function SortableSummaryBlock({
       case "wht": {
         const enabled = watchFn("wht.enabled");
         return (
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex flex-wrap items-center gap-2">
             <Controller
               control={control}
               name="wht.enabled"
@@ -769,7 +770,7 @@ function SortableSummaryBlock({
               )}
             />
             {enabled && (
-              <div className="flex items-center gap-2 ml-auto">
+              <div className="flex flex-wrap items-center gap-2 ml-auto">
                 <Controller
                   control={control}
                   name="wht.type"
@@ -811,7 +812,7 @@ function SortableSummaryBlock({
       case "additional_fee": {
         const enabled = watchFn("additionalFee.enabled");
         return (
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex flex-wrap items-center gap-2">
             <Controller
               control={control}
               name="additionalFee.enabled"
@@ -832,7 +833,7 @@ function SortableSummaryBlock({
               )}
             />
             {enabled && (
-              <div className="flex items-center gap-2 ml-auto flex-wrap">
+              <div className="flex flex-wrap items-center gap-2 ml-auto">
                 <Controller
                   control={control}
                   name="additionalFee.label"
@@ -909,7 +910,7 @@ function SortableSummaryBlock({
       >
         <GripVertical className="size-4" />
       </button>
-      <div className="flex-1">{renderFields()}</div>
+      <div className="min-w-0 flex-1">{renderFields()}</div>
     </div>
   );
 }
@@ -1092,7 +1093,7 @@ export function mergeStep2Initial(
 
 interface Step2Props {
   step1Data: Step1FormValues | null;
-  onBack: () => void;
+  onBack: (values: Step2FormValues) => void;
   onNext: (values: Step2FormValues) => void;
   onPreview?: (values: Step2FormValues) => void;
   initialValues?: Step2FormValues | null;
@@ -1195,14 +1196,14 @@ export function DocumentCreateStep2({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col min-h-0">
       {/* Main content */}
-      <div className="flex-1 px-6 py-6">
-        <div className="flex gap-6 items-start">
+      <div className="flex-1 px-4 py-6 sm:px-6">
+        <div className="flex flex-col items-stretch gap-6 xl:flex-row xl:items-start">
           {/* ── LEFT ── */}
           <div className="flex-1 min-w-0 space-y-5">
             {/* Item list card */}
             <div className="glass-panel overflow-hidden">
               {/* Card header */}
-              <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-border/50">
+              <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-4 border-b border-border/50">
                 <h2 className="font-semibold text-sm">รายการสินค้า/บริการ</h2>
                 <div className="flex items-center gap-2">
                   <ColumnSelectorPopover
@@ -1327,7 +1328,7 @@ export function DocumentCreateStep2({
           </div>
 
           {/* ── RIGHT: sticky totals ── */}
-          <div className="w-72 shrink-0 sticky top-24">
+          <div className="w-full shrink-0 xl:sticky xl:top-24 xl:w-72">
             <TotalsCard
               totals={totals}
               summaryOrder={summaryOrder}
@@ -1344,18 +1345,18 @@ export function DocumentCreateStep2({
       </div>
 
       {/* Sticky footer */}
-      <div className="glass-toolbar sticky bottom-0 border-t px-6 py-4">
-        <div className="flex items-center justify-between gap-3">
+      <div className="wizard-actions glass-toolbar sticky bottom-0 border-t px-4 py-4 sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <Button
             type="button"
             variant="outline"
-            onClick={onBack}
+            onClick={() => onBack(getValues())}
             className="gap-2"
           >
             <ArrowLeft className="size-4" />
             ย้อนกลับ
           </Button>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               type="button"
               variant="outline"

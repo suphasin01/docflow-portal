@@ -54,7 +54,7 @@ export function DataTable<T extends { id: string }>({
   });
 
   return (
-    <div className="space-y-3">
+    <div className="min-w-0 space-y-3">
       <div className="glass-panel overflow-hidden">
         <Table>
           <TableHeader className="sticky top-0 z-10 bg-surface-secondary shadow-[0_1px_0_0_hsl(var(--border))]">
@@ -110,6 +110,7 @@ export function DataTable<T extends { id: string }>({
             size="sm"
             className="rounded-lg"
             disabled={!table.getCanPreviousPage()}
+            aria-label="หน้าก่อนหน้า"
             onClick={() => table.previousPage()}
           >
             <ChevronLeft className="size-4" />
@@ -120,6 +121,7 @@ export function DataTable<T extends { id: string }>({
             size="sm"
             className="rounded-lg"
             disabled={!table.getCanNextPage()}
+            aria-label="หน้าถัดไป"
             onClick={() => table.nextPage()}
           >
             <ChevronRight className="size-4" />

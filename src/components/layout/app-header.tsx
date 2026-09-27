@@ -29,18 +29,18 @@ export function AppHeader({
     );
   }
   return (
-    <header className="glass-toolbar sticky top-0 z-30 border-b">
+    <header className="glass-toolbar relative z-20 border-b lg:sticky lg:top-0">
       {showTrialBanner ? (
-        <div className="flex items-center justify-between gap-3 border-b border-separator bg-transparent px-6 py-2 text-xs text-muted-foreground">
-          <span>ข้อมูลของคุณแยกตามบริษัท (workspace เดียวต่อผู้ใช้)</span>
+        <div className="flex items-center justify-between gap-3 border-b border-separator bg-transparent px-4 py-2 text-xs text-muted-foreground sm:px-6">
+          <span>พื้นที่ทำงานแยกตามบริษัท<span className="hidden sm:inline"> · workspace เดียวต่อผู้ใช้</span></span>
         </div>
       ) : null}
-      <div className="flex flex-wrap items-start justify-between gap-4 px-6 py-4">
+      <div className="flex flex-wrap items-start justify-between gap-3 px-4 py-4 sm:gap-4 sm:px-6">
         <div className="min-w-0">
           {title ? (
             <h1
               className={cn(
-                "text-2xl font-semibold tracking-tight text-foreground",
+                "text-xl font-semibold tracking-tight text-foreground sm:text-2xl",
                 titleClassName,
               )}
             >
@@ -59,7 +59,7 @@ export function AppHeader({
           ) : null}
         </div>
         {actions ? (
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <div className="flex max-w-full flex-wrap items-center gap-2">
             {actions}
           </div>
         ) : null}

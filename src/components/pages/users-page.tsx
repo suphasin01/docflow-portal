@@ -155,7 +155,7 @@ export function UsersPage() {
 
   if (accessRole !== "admin") {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-[calc(100dvh-4rem)]">
         <AppHeader title="จัดการผู้ใช้" showTrialBanner={false} />
         <div className="p-6">
           <Card className="mx-auto max-w-xl rounded-2xl bg-surface">
@@ -173,7 +173,7 @@ export function UsersPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-[calc(100dvh-4rem)]">
       <AppHeader
         title="จัดการผู้ใช้"
         subtitle="ตรวจสอบคำขอและควบคุมสิทธิ์เข้าใช้งาน Beyond Doc"

@@ -7,19 +7,20 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import type { DashboardKpis } from "@/lib/dashboard/dashboard-analytics";
+import type { DashboardKpis, DashboardFlowFilter } from "@/lib/dashboard/dashboard-analytics";
 import { fmtBaht } from "@/lib/dashboard/dashboard-analytics";
 import { cn } from "@/lib/utils";
 
 type Props = {
   kpis: DashboardKpis;
   periodHint: string;
+  flow: DashboardFlowFilter;
 };
 
-export function DashboardKpiCards({ kpis, periodHint }: Props) {
+export function DashboardKpiCards({ kpis, periodHint, flow }: Props) {
   const cards = [
     {
-      title: "ยอดขาย",
+      title: flow === "income" ? "มูลค่าเอกสารรายรับ" : "มูลค่าเอกสารรายจ่าย",
       value: fmtBaht(kpis.salesTotal),
       sub: periodHint,
       icon: TrendingUp,
@@ -53,11 +54,11 @@ export function DashboardKpiCards({ kpis, periodHint }: Props) {
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div className="dashboard-metrics grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {cards.map((c) => (
         <Card
           key={c.title}
-          className="glass-surface rounded-2xl border-border/80 transition-colors hover:bg-surface-hover"
+          className="glass-surface rounded-2xl border-border/80"
         >
           <CardContent className="p-5">
             <div className="flex items-start justify-between gap-3">

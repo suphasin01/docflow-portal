@@ -1,83 +1,59 @@
 "use client";
 
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { fmtBaht } from "@/lib/dashboard/dashboard-analytics";
+import { useId } from "react";
+import { useReducedMotion } from "motion/react";
+import { Card } from "@heroui/react";
+import { ChartTooltip } from "@heroui-pro/react";
+import { AreaChart } from "@heroui-pro/react/area-chart";
+import { fmtBaht, type DashboardFlowFilter } from "@/lib/dashboard/dashboard-analytics";
 
 type Point = { key: string; label: string; amount: number };
 
-type Props = {
-  data: Point[];
-};
-
-export function SalesTrendChart({ data }: Props) {
-  const chartData = data.map((d) => ({
-    ...d,
-    ยอด: d.amount,
-  }));
+export function SalesTrendChart({ data, flow }: { data: Point[]; flow: DashboardFlowFilter }) {
+  const gradientId = useId().replace(/:/g, "");
+  const reduceMotion = useReducedMotion();
+  const empty = data.every((point) => point.amount === 0);
+  const title = `มูลค่าเอกสาร${flow === "income" ? "รายรับ" : "รายจ่าย"} 6 เดือน`;
 
   return (
-    <Card className="glass-surface rounded-2xl border-border/80">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold">
-          แนวโน้มยอดขาย 6 เดือน
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="h-[320px]">
-        {chartData.every((d) => d.amount === 0) ? (
-          <p className="py-12 text-center text-sm text-muted-foreground">
-            ยังไม่มีข้อมูลในช่วงเวลานี้
-          </p>
-        ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={chartData}
-              margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
-            >
-              <defs>
-                <linearGradient id="dashFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#2563eb" stopOpacity={0.35} />
-                  <stop offset="100%" stopColor="#2563eb" stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-              <YAxis
-                tick={{ fontSize: 11 }}
-                tickFormatter={(v) =>
-                  Number(v).toLocaleString("th-TH", { maximumFractionDigits: 0 })
-                }
-              />
-              <Tooltip
-                formatter={(value) =>
-                  typeof value === "number" ? fmtBaht(value) : String(value ?? "")
-                }
-                labelFormatter={(_, payload) =>
-                  String(
-                    (payload?.[0]?.payload as { label?: string } | undefined)
-                      ?.label ?? "",
-                  )
-                }
-              />
-              <Area
-                type="monotone"
-                dataKey="ยอด"
-                stroke="#2563eb"
-                strokeWidth={2}
-                fill="url(#dashFill)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        )}
-      </CardContent>
+    <Card className="glass-surface h-full min-w-0">
+      <Card.Header>
+        <Card.Title className="text-base">{title}</Card.Title>
+        <Card.Description>ย้อนหลัง 6 เดือน · ตามประเภทเอกสารที่เลือก</Card.Description>
+      </Card.Header>
+      <Card.Content className="min-w-0">
+        <AreaChart data={data} height={260} aria-label={title}>
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.25} />
+              <stop offset="100%" stopColor="var(--accent)" stopOpacity={0.01} />
+            </linearGradient>
+          </defs>
+          <AreaChart.Grid vertical={false} stroke="var(--separator)" strokeDasharray="3 5" />
+          <AreaChart.XAxis dataKey="label" tick={{ fill: "var(--muted)", fontSize: 11 }} tickLine={false} axisLine={false} minTickGap={18} tickMargin={10} />
+          <AreaChart.YAxis width={48} tick={{ fill: "var(--muted)", fontSize: 11 }} tickLine={false} axisLine={false}
+            domain={empty ? [0, 1] : [0, "auto"]}
+            ticks={empty ? [0] : undefined}
+            tickFormatter={(value: number) => new Intl.NumberFormat("th-TH", { notation: "compact", maximumFractionDigits: 1 }).format(value)} />
+          <AreaChart.Area dataKey="amount" name="มูลค่าเอกสาร" type="monotone" stroke="var(--accent)" strokeWidth={2.5} fill={`url(#${gradientId})`} dot={false}
+            isAnimationActive={reduceMotion === false} animationDuration={600} />
+          <AreaChart.Tooltip content={({ active, label, payload }) => {
+            if (!active || !payload?.length) return null;
+            return <ChartTooltip><ChartTooltip.Header>{label}</ChartTooltip.Header><ChartTooltip.Item>
+              <ChartTooltip.Indicator color="var(--accent)" /><ChartTooltip.Label>มูลค่าเอกสาร</ChartTooltip.Label>
+              <ChartTooltip.Value>{fmtBaht(Number(payload[0].value ?? 0))}</ChartTooltip.Value>
+            </ChartTooltip.Item></ChartTooltip>;
+          }} />
+        </AreaChart>
+        <p className="mt-3 text-xs text-muted">{empty ? "ยังไม่มีมูลค่าเอกสารในช่วง 6 เดือนนี้" : "ยอดรวมตามวันที่ออกเอกสาร ไม่ใช่ยอดเงินสดรับ–จ่าย"}</p>
+        <details className="mt-2 text-xs text-muted">
+          <summary className="w-fit cursor-pointer rounded focus-visible:outline-2 focus-visible:outline-focus">ดูข้อมูลรายเดือน</summary>
+          <table className="mt-2 w-full text-left tabular-nums"><caption className="sr-only">{title}</caption>
+            <thead><tr><th scope="col">เดือน</th><th scope="col" className="text-right">มูลค่า</th></tr></thead>
+            <tbody>{data.map((point) => <tr key={point.key}><th scope="row" className="py-1 font-normal">{point.label}</th><td className="text-right">{fmtBaht(point.amount)}</td></tr>)}</tbody>
+          </table>
+        </details>
+      </Card.Content>
     </Card>
   );
 }

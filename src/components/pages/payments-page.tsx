@@ -448,10 +448,10 @@ export function PaymentsPage() {
   }, [paidModal, persistStatus, maybeOfferPaidFollowUp]);
 
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="min-h-[calc(100dvh-4rem)] bg-transparent">
       <AppHeader title="ติดตามชำระเงิน" subtitle="จัดการสถานะการชำระเงิน" />
 
-      <div className="space-y-6 px-6 py-8">
+      <div className="space-y-6 px-4 py-6 sm:px-6 sm:py-8">
         <Card className="rounded-2xl border-border/80 bg-surface shadow-sm">
           <CardContent className="space-y-5 p-6">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">

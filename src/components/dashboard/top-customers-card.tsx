@@ -15,7 +15,7 @@ export function TopCustomersCard({
   title = "ลูกค้ายอดนิยม",
 }: Props) {
   return (
-    <Card className="glass-surface rounded-2xl border-border/80">
+    <Card className="glass-surface h-full min-w-0 rounded-2xl border-border/80">
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold">{title}</CardTitle>
       </CardHeader>
@@ -29,7 +29,7 @@ export function TopCustomersCard({
             {rows.map((r) => (
               <li
                 key={`${r.rank}-${r.name}`}
-                className="flex items-center gap-3 rounded-xl border border-border/60 bg-surface-secondary px-3 py-2.5 transition-colors hover:bg-surface-tertiary"
+                className="flex items-center gap-3 rounded-xl bg-surface-secondary px-3 py-2.5"
               >
                 <span
                   className={cn(

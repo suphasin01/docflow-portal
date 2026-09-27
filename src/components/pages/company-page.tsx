@@ -239,7 +239,7 @@ export function CompanyPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-[calc(100dvh-4rem)]">
       <AppHeader
         title="บริษัทของฉัน"
         subtitle="จัดการข้อมูลบริษัทและสลับบริษัทที่ใช้งาน"
@@ -251,9 +251,9 @@ export function CompanyPage() {
         }
       />
 
-      <div className="space-y-5 px-6 py-8">
+      <div className="space-y-5 px-4 py-6 sm:px-6 sm:py-8">
         {companiesLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
@@ -279,7 +279,7 @@ export function CompanyPage() {
             className="max-w-xl"
           />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
             {companies.map((company) => (
               <CompanyCard
                 key={company.id}
@@ -298,14 +298,14 @@ export function CompanyPage() {
 
       {/* Dialog สร้าง / แก้ไขบริษัท */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90vh] overflow-visible rounded-2xl sm:max-w-4xl">
+        <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-2xl sm:max-w-4xl">
           <DialogHeader>
             <DialogTitle>
               {editingCompany ? "แก้ไขข้อมูลบริษัท" : "เพิ่มบริษัท"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="max-h-[calc(90vh-140px)] overflow-y-auto pr-1 pl-1">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-1">
             <div className="grid gap-4 py-2">
               {/* Logo + ชื่อ */}
               <div className="grid gap-4 lg:grid-cols-[156px_1fr]">
@@ -440,7 +440,7 @@ export function CompanyPage() {
               <div
                 className={cn(
                   "overflow-hidden transition-all duration-200 ease-out",
-                  isBranch ? "max-h-44 opacity-100" : "max-h-0 opacity-0",
+                  isBranch ? "max-h-96 opacity-100" : "max-h-0 opacity-0",
                 )}
               >
                 <div className="grid gap-3 md:grid-cols-2">
@@ -544,7 +544,7 @@ function CompanyCard({
     >
       {/* active badge */}
       {isActive && (
-        <span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+        <span className="inline-flex items-center gap-1 self-start rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
           <Check className="size-3" />
           ใช้งานอยู่
         </span>
@@ -594,7 +594,7 @@ function CompanyCard({
               {company.phone && (
                 <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <span className="w-16 shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground/60">โทรศัพท์</span>
-                  {company.phone}
+                  <span className="min-w-0 break-all">{company.phone}</span>
                 </p>
               )}
               {company.email && (
@@ -615,7 +615,7 @@ function CompanyCard({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-2 pt-1">
+      <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
         {!isActive && (
           <Button
             type="button"
@@ -634,6 +634,7 @@ function CompanyCard({
           size="sm"
           className="h-8 rounded-lg px-3"
           onClick={onEdit}
+          aria-label={`แก้ไข ${company.name}`}
         >
           <Edit2 className="size-3.5" />
         </Button>
@@ -644,6 +645,7 @@ function CompanyCard({
             size="sm"
             className="h-8 rounded-lg px-3 text-destructive hover:bg-destructive/10 hover:text-destructive"
             onClick={onArchive}
+            aria-label={`เก็บถาวร ${company.name}`}
             disabled={archiving}
           >
             <Trash2 className="size-3.5" />

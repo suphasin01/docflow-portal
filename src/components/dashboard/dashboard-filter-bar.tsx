@@ -61,6 +61,7 @@ export function DashboardFilterBar({
                 type="button"
                 size="sm"
                 variant={datePreset === key ? "primary" : "secondary"}
+                aria-pressed={datePreset === key}
                 onPress={() => onDatePresetChange(key)}
               >
                 {DASHBOARD_PRESET_LABELS[key]}
@@ -68,9 +69,11 @@ export function DashboardFilterBar({
             ))}
           </div>
           {datePreset === "custom" ? (
-            <div className="flex flex-wrap items-center gap-2 pl-6">
+            <div className="page-enter flex flex-wrap items-center gap-2 pl-6">
               <Input
                 type="date"
+                aria-label="วันที่เริ่มต้น"
+                max={customTo || undefined}
                 className="h-9 w-[150px] rounded-xl text-sm"
                 value={customFrom}
                 onChange={(e) => onCustomChange(e.target.value, customTo)}
@@ -78,6 +81,8 @@ export function DashboardFilterBar({
               <span className="text-sm text-muted-foreground">ถึง</span>
               <Input
                 type="date"
+                aria-label="วันที่สิ้นสุด"
+                min={customFrom || undefined}
                 className="h-9 w-[150px] rounded-xl text-sm"
                 value={customTo}
                 onChange={(e) => onCustomChange(customFrom, e.target.value)}

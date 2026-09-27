@@ -471,7 +471,7 @@ export function DocumentDetailPage({
 
   if (loading || !currentDocument) {
     return (
-      <div className="min-h-screen bg-transparent">
+      <div className="min-h-[calc(100dvh-4rem)] bg-transparent">
         <AppHeader
           title="รายละเอียดเอกสาร"
           subtitle="กำลังโหลดข้อมูลเอกสาร..."
@@ -483,7 +483,7 @@ export function DocumentDetailPage({
   }
 
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="min-h-[calc(100dvh-4rem)] bg-transparent">
       <AppHeader
         title={`${documentTypeLabels[currentDocument.type] ?? currentDocument.type} ${currentDocument.docNumber}`}
         titleClassName="text-xl font-semibold"

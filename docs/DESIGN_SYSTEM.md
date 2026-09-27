@@ -32,3 +32,21 @@ The application uses semantic HeroUI tokens. Components must not branch on light
 - Focus styling must use the accent-derived `--focus` token.
 - Status must be communicated by text or icon as well as color.
 - Interactive targets should remain comfortable on touch devices.
+
+## Charts and motion
+
+- Use HeroUI Pro chart subpath imports with semantic colors and theme-aware tooltips.
+- The six-month trend represents document value, not cash flow. Payment distribution counts non-draft, non-cancelled payment-enabled documents; it does not estimate partially paid amounts.
+- Keep empty states truthful: zero baselines or a neutral empty ring, with no synthetic business data.
+- Page and wizard transitions fade for 180ms. Dashboard sections enter over 320ms with small stagger delays; charts animate over 600ms.
+- Respect `prefers-reduced-motion`; CSS motion also respects HeroUI's `data-reduce-motion` override. Avoid transform-based page wrappers so sticky and fixed form controls retain their positioning.
+- Keep navigation immediate and animate only actionable quick links on hover. Preserve form values when moving backwards through the wizard.
+
+## Responsive layout
+
+- Keep HeroUI's native mobile drawer at widths up to 768px. Default to the icon sidebar on tablets up to 1024px; users can still expand it manually.
+- Use 16px outer gutters on phones and 24px from the small breakpoint. Stack form fields and wizard totals before adding desktop columns.
+- Do not position status badges over names. Wrap actions and preserve readable input widths, especially item names.
+- Tables scroll inside their own container, never by widening the application. Dialogs use dynamic viewport height and scrollable bodies.
+- Preserve browser zoom, use at least 16px input text on coarse pointers, and account for safe-area insets in shell and sticky actions.
+- Validate at 320, 390, 768, 834, 1024 and 1440px widths plus a short landscape viewport. Viewport checks do not replace testing on physical Safari/iOS devices.

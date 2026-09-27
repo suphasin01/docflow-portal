@@ -49,7 +49,7 @@ const STEPS = [
 
 function StepperHeader({ current }: { current: number }) {
   return (
-    <div className="glass-toolbar sticky top-14 z-20 border-b px-4 py-4 sm:px-6">
+    <div className="glass-toolbar relative z-10 border-b px-4 py-4 sm:px-6">
       <Stepper
         aria-label="ขั้นตอนการออกเอกสาร"
         className="mx-auto max-w-3xl"
@@ -83,6 +83,11 @@ export function DocumentCreatePage() {
   const setActiveCompanyId = useCompanyStore((s) => s.setActiveCompanyId);
 
   const [step, setStep] = useState(1);
+  const pageRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    pageRef.current?.closest("main")?.scrollTo({ top: 0 });
+  }, [step]);
   const [step1Data, setStep1Data] = useState<Step1FormValues | null>(null);
   const [step2Data, setStep2Data] = useState<Step2FormValues | null>(null);
   const [step3Data, setStep3Data] = useState<Step3FormValues | null>(null);
@@ -327,7 +332,7 @@ export function DocumentCreatePage() {
   );
 
   return (
-    <div className="min-h-screen">
+    <div ref={pageRef} className="min-h-[calc(100dvh-4rem)]">
       <AppHeader
         title={isEditMode ? "แก้ไขเอกสาร" : "ออกเอกสาร"}
         subtitle={
@@ -359,10 +364,11 @@ export function DocumentCreatePage() {
         </div>
       )}
 
+      <div key={`${formRootKey}-${step}`} className="page-enter">
       {!showPageLoader && step === 1 && (
         <DocumentCreateStep1
           key={`${formRootKey}-1`}
-          initialValues={initialStep1ForEdit}
+          initialValues={step1Data ?? initialStep1ForEdit}
           lockChainReference={!!sourceDocumentForCreate}
           onNext={(values) => {
             setStep1Data(values);
@@ -379,7 +385,10 @@ export function DocumentCreatePage() {
           key={`${formRootKey}-2`}
           step1Data={step1Data}
           initialValues={step2Data}
-          onBack={() => setStep(1)}
+          onBack={(values) => {
+            setStep2Data(values);
+            setStep(1);
+          }}
           onNext={(values) => {
             setStep2Data(values);
             setStep(3);
@@ -397,7 +406,10 @@ export function DocumentCreatePage() {
           step2Data={step2Data}
           initialValues={mergeStep3Initial(step3Data ?? previewSnapshot.s3)}
           previewStampLayout={previewStampLayout}
-          onBack={() => setStep(2)}
+          onBack={(values) => {
+            setStep3Data(values);
+            setStep(2);
+          }}
           onSave={async (values) => {
             if (!user || !companyId || !step1Data || !step2Data) {
               toast.error("ข้อมูลเอกสารยังไม่พร้อมสำหรับบันทึก");
@@ -448,6 +460,7 @@ export function DocumentCreatePage() {
         />
       )}
 
+      </div>
       {/* Single shared PreviewDialog across all steps */}
       <PreviewDialog
         open={previewOpen}
